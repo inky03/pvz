@@ -23,15 +23,6 @@ local hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'))
 function love.load()
 	love.mouse.setCursor(cursor)
 	
-	frost = love.graphics.newShader([[
-		vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords) {
-			vec4 texColor = Texel(tex, texture_coords);
-			vec4 frost = vec4(texColor.rgb * .6, 1.);
-			frost.b += texColor.b;
-			return min(frost, texColor.a) * color;
-		}
-	]])
-	
 	lawn = Lawn:new()
 	seeds = SeedBank:new()
 	

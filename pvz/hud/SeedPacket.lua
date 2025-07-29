@@ -8,7 +8,6 @@ function SeedPacket:init(plant)
 	self.entity = Cache.module(Cache.plants(plant))
 	self.display = Sprite:new()
 	if self.entity then
-		print(self.entity:getReanim())
 		self.display:setReanim(Cache.reanim(self.entity:getReanim()))
 		self.display:playAnimation(self.entity:getPreviewAnimation(), true)
 		self.display:setFrame(self.display.animation.curFrame + self.entity:getPreviewFrame())

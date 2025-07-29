@@ -4,7 +4,6 @@ function SunFlower:init(x, y)
 	Plant.init(self, x, y)
 	self.hp = 300
 	
-	trace(self:getAnimation('idle'))
 	self:playAnimation('idle', true)
 end
 

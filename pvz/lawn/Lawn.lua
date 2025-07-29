@@ -31,6 +31,7 @@ function Lawn:plant(unit, x, y)
 	unit.board = self
 	
 	self:refreshUnits()
+	return unit
 end
 
 function Lawn:update(dt)
