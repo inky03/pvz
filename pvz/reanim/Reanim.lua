@@ -67,6 +67,7 @@ function Reanim.loadXML(path, kind)
 			
 			table.insert(frames, ReanimFrame:new(previousFrame))
 		end
+		if anim.last < anim.first then anim.last = #track.t end
 		
 		table.insert(reanim.guides, anim)
 		table.insert(reanim.layers, {
@@ -146,6 +147,7 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 			
 			table.insert(frames, ReanimFrame:new(previousFrame))
 		end
+		if anim.last < anim.first then anim.last = transforms[i] end
 		
 		local lastImg, lastText, lastFont
 		if (anim.name == '_ground') then

@@ -1,4 +1,5 @@
 utils = require 'utils'
+require 'table.clear'
 
 Gamera = require 'lib.gamera'
 class = require 'lib.30log'
@@ -12,10 +13,9 @@ Sprite = require 'pvz.Sprite'
 Entity = require 'pvz.lawn.Entity'
 Plant = require 'pvz.lawn.Plant'
 
-local hud = nil
 local lawn = nil
+local seeds = nil
 local camera = nil
-local entities = {}
 
 local cursor = love.mouse.newCursor(love.image.newImageData('resources/cursor.png'))
 local hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'))
@@ -33,7 +33,7 @@ function love.load()
 	]])
 	
 	lawn = Lawn:new()
-	hud = SeedBank:new()
+	seeds = SeedBank:new()
 	
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('rough')
@@ -41,18 +41,20 @@ function love.load()
 	camera = Gamera.new(0, 0, 1880, 720)
 	camera:setPosition(240 + 220 + 400, 360)
 	
-	local PeaShooter = require 'pvz.lawn.plants.PeaShooter'
-	local test = PeaShooter:new(600, 200)
-	test:playAnimation('idle', true)
-	table.insert(entities, test)
+	local PeaShooter = Cache.module(Cache.plants('PeaShooter'))
+	local SunFlower = Cache.module(Cache.plants('SunFlower'))
+	for i = 1, 5 do
+		lawn:plant(SunFlower:new(), 1, i)
+		lawn:plant(SunFlower:new(), 2, i)
+		lawn:plant(PeaShooter:new(), 3, i)
+	end
 end
 
 function makeZomby()
 	local mX, mY = camera:toWorld(love.mouse.getPosition())
 	local zomby = Entity:new(mX - 40, mY - 80)
-	table.insert(entities, zomby)
+	-- table.insert(entities, zomby)
 	-- zomby.shader = frost
-	sortDrawables()
 	
 	zomby:playAnimation(random.bool(50) and 'walk' or 'walk2')
 	
@@ -71,13 +73,11 @@ function makeZomby()
 	zomby:toggleLayer('tongue', random.bool(50))
 	zomby:toggleLayer('Zombie_duckytube', random.bool(50))
 	zomby:toggleLayer('bucket', zomby:layerIsHidden('cone') and random.bool(50) or false)
-	
-	zomby.animation.speed = random.number(1, 1.25)
 end
 
 function love.keypressed(key)
 	if key == 'return' then
-		entities[1]:doBlink()
+		-- entities[1]:doBlink()
 		-- sprite:playAnimation(sprite.animation.name == 'idle' and 'eat' or 'idle')
 	end
 	if key == 'a' then
@@ -86,28 +86,22 @@ function love.keypressed(key)
 end
 
 function love.update(dt)
-	for _, sprite in ipairs(entities) do
-		sprite:update(dt)
-	end
-end
-
-function sortDrawables()
-	table.sort(entities, function(a, b) return (a.y < b.y) end)
+	lawn:update(dt)
 end
 
 function drawBottom()
 	lawn:draw()
 end
-
+function drawHUD()
+	seeds:draw(10, 0)
+end
 function drawTop()
-	for _, sprite in ipairs(entities) do
-		sprite:draw(sprite.x, sprite.y)
-	end
+	lawn:drawUnits()
 end
 
 function love.draw()
 	love.graphics.setColor(1, 1, 1)
 	camera:draw(drawBottom)
-	hud:draw()
+	drawHUD()
 	camera:draw(drawTop)
 end

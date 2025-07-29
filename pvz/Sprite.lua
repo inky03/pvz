@@ -10,14 +10,18 @@ function Sprite:init(kind, x, y)
 	self.y = (y or 0)
 	self.shader = nil
 	self.visible = true
+	self.hiddenLayers = {}
 	
 	self.transform = ReanimFrame:new()
 	self.transform.scaleCoords = true
 	self.animation = {
 		current = {name = nil; first = 1; last = 1};
+		nextFrame = 1;
+		curFrame = 1;
 		name = 'nil';
 		
 		finished = false;
+		paused = false;
 		speed = 1.0;
 		loop = true;
 		
@@ -30,15 +34,15 @@ function Sprite:init(kind, x, y)
 	self.groundVelocity = 0
 	self.groundFrame = ReanimFrame:new()
 	
-	self:setReanim(Cache.reanim(kind))
+	if kind then
+		self:setReanim(Cache.reanim(kind))
+	end
 end
 
 function Sprite:setReanim(reanim)
 	self.reanim = reanim
 	self.images = table.copy(self.reanim.images)
-	self.hiddenLayers = {}
 	
-	self.triangles = {}
 	self.animation.current = {name = 'nil'; first = 1; last = 1}
 	self.animation.name = 'nil'
 	self.animation.lerp = 0
@@ -150,6 +154,7 @@ function Sprite:playAnimation(animation, force)
 		end
 		
 		self.animation.lerp = 0
+		self.animation.paused = false
 		self.animation.finished = false
 			
 		if not force then
@@ -157,17 +162,22 @@ function Sprite:playAnimation(animation, force)
 			self:copyFrames(self.animation.startLayers, self.animation.curLayers)
 			self:copyFrames(self.animation.nextLayers, self.animation.nextFrame)
 		else
-			self.animation.curFrame = self.animation.current.first
-			self.animation.nextFrame = self.animation.current.first
-			self:copyFrames(self.animation.startLayers, self.animation.curFrame)
-			self:copyFrames(self.animation.nextLayers, self.animation.nextFrame)
-			self:copyFrames(self.animation.curLayers, self.animation.startLayers)
+			self:setFrame(self.animation.current.first)
 		end
 		
 		if self.ground then
 			self.groundFrame:copy(self:getLayer('_ground', self.animation.nextLayers).frame)
 		end
 	end
+end
+function Sprite:setFrame(index)
+	local index = math.clamp(math.round(index), 1, self.reanim.length)
+	
+	self.animation.curFrame = index
+	self.animation.nextFrame = index
+	self:copyFrames(self.animation.startLayers, self.animation.curFrame)
+	self:copyFrames(self.animation.nextLayers, self.animation.nextFrame)
+	self:copyFrames(self.animation.curLayers, self.animation.startLayers)
 end
 
 function Sprite:update(dt)
@@ -177,7 +187,7 @@ end
 function Sprite:updateAnimation(dt)
 	if not self.animation then return end
 	
-	if not self.animation.finished then
+	if not self.animation.finished and not self.animation.paused then
 		self.animation.lerp = (self.animation.lerp + self.reanim.fps * self.animation.speed * dt * self:getAnimationMultiplier())
 		
 		local looped = false
@@ -243,6 +253,10 @@ function Sprite:updateAnimationFrames(start, next, lerp)
 			lerp
 		)
 	end
+end
+
+function Sprite:setPosition(x, y)
+	self.x, self.y = x, y
 end
 
 function Sprite:draw(x, y, transforms)

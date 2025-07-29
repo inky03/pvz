@@ -9,6 +9,11 @@ function Plant:init(x, y)
 	self.shadow = Cache.image('images/plantshadow')
 end
 
+function Plant:update(dt)
+	Entity.update(self, dt)
+	-- todo blinking logic
+end
+
 function Plant:draw(x, y, transforms)
 	if not self.reanim or not self.visible then return end
 	

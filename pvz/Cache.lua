@@ -3,10 +3,28 @@ local Cache = {
 		images = {};
 		sounds = {};
 		reanim = {};
+		
+		entities = {};
 	}
 }
 
 local cached = Cache.cached
+
+function Cache.module(path)
+	if cached.entities[path] then
+		return cached.entities[path]
+	end
+	
+	local success, mod = pcall(require, path)
+	
+	if success then
+		cached.entities[path] = mod
+		return mod
+	else
+		print('Module ' .. path .. ' doesn\'t exist')
+		return nil
+	end
+end
 
 function Cache.image(path)
 	if path == nil then return nil end
@@ -17,7 +35,7 @@ function Cache.image(path)
 		local fpathJpg = Cache.main(path .. '.jpg')
 		local fpathMask = Cache.main(path .. '_.png')
 		if love.filesystem.getInfo(fpath) then
-			cached.images[key] = love.graphics.newImage(fpath)
+			cached.images[key] = love.graphics.newImage(fpath, {mipmaps = true})
 		elseif love.filesystem.getInfo(fpathJpg) then
 			if love.filesystem.getInfo(fpathMask) then
 				local image = love.image.newImageData(fpathJpg)
@@ -29,14 +47,16 @@ function Cache.image(path)
 					return r, g, b, a
 				end)
 				
-				cached.images[key] = love.graphics.newImage(image)
+				cached.images[key] = love.graphics.newImage(image, {mipmaps = true})
 			else
-				cached.images[key] = love.graphics.newImage(fpathJpg)
+				cached.images[key] = love.graphics.newImage(fpathJpg, {mipmaps = true})
 			end
 		else
 			print('Resource for ' .. fpath .. ' doesn\'t exist')
 			return Cache.unknownTexture
 		end
+		
+		cached.images[key]:setMipmapFilter('linear', .75)
 	end
 	
 	return cached.images[key]
@@ -51,16 +71,19 @@ function Cache.reanim(kind, folder)
 	if not cached.reanim[key] then
 		local fpathCompiled = Cache.main(path .. '.reanim.compiled')
 		local fpath = Cache.main(path .. '.reanim')
+		local format = ''
 		
 		if love.filesystem.getInfo(fpath) then
+			format = 'XML'
 			cached.reanim[key] = Reanim.loadXML(fpath, kind)
 		elseif love.filesystem.getInfo(fpathCompiled) then
+			format = 'Binary'
 			cached.reanim[key] = Reanim.loadBinary(fpathCompiled, kind)
 		else
 			print('Resource for ' .. fpath .. ' doesn\'t exist')
 			return Reanim:new()
 		end
-		print(('%s Reanimation (%.2fms)'):format(kind, (os.clock() - t) * 1000))
+		print(('%s Reanimation (%s) (%.2fms)'):format(kind, format, (os.clock() - t) * 1000))
 	end
 	
 	return cached.reanim[key]
@@ -69,9 +92,14 @@ end
 function Cache.resources(path)
 	return ('resources/' .. path)
 end
-
 function Cache.main(path)
 	return Cache.resources('main/' .. path)
+end
+function Cache.plants(path)
+	return ('pvz.lawn.plants.' .. path)
+end
+function Cache.zombies(path)
+	return ('pvz.lawn.zombies.' .. path)
 end
 
 function Cache.decompressFile(path)

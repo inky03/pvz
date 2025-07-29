@@ -1,5 +1,6 @@
 -- math
 
+function math.clamp(n, min, max) return (n > max and max or (n < min and min or n)) end
 function math.round(n) return (n > 0 and math.floor(n + .5) or math.ceil(n - .5)) end
 
 function math.dcos(o) return math.cos(math.rad(o)) end
@@ -12,12 +13,12 @@ function math.lerp(a, b, t) return (a + (b - a) * t) end
 
 random = {}
 function random.shuffle() math.randomseed(os.clock()) end
-function random.number(min, max)
+function random.number(min, max, precision) return math.lerp(min, max, math.random()) end
+function random.int(min, max)
 	max = max or (min and 1 or 0)
 	min = min or 0
-	return math.random(math.min(min, max), math.max(min, max))
+	return math.random(min, max)
 end
-function random.int(min, max) return math.round(random.number(min, max)) end
 function random.bool(chance) return (random.number(100) <= chance) end
 
 

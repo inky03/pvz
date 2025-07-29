@@ -2,7 +2,6 @@ local PeaShooter = Plant:extend('PeaShooter')
 
 function PeaShooter:init(x, y)
 	Plant.init(self, x, y)
-	
 	self.hp = 300
 	
 	self.stem = self:getLayer('stem')
@@ -10,11 +9,15 @@ function PeaShooter:init(x, y)
 	self.headTransform = ReanimFrame:new()
 	self.headTransform.scaleCoords = true
 	
-	self.head = Sprite:new('PeaShooterSingle')
+	self.head = Sprite:new(self:getReanim())
 	self.head:playAnimation('head_idle', true)
+	self:playAnimation('idle', true)
 	
-	self.blink = Sprite:new('PeaShooterSingle')
+	self.blink = Sprite:new(self:getReanim())
 	self.blink.visible = false
+	
+	self.blink.animation.speed = self.animation.speed
+	self.head.animation.speed = self.animation.speed
 end
 
 function PeaShooter:doBlink()
@@ -57,6 +60,9 @@ end
 
 function PeaShooter:getReanim()
 	return 'PeaShooterSingle'
+end
+function PeaShooter:getPreviewAnimation()
+	return 'full_idle'
 end
 
 return PeaShooter
