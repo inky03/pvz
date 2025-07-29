@@ -13,9 +13,9 @@ function Cache.image(path)
 	
 	local key = path:lower()
 	if not cached.images[key] then
-		local fpath = Cache.resources(path .. '.png')
-		local fpathJpg = Cache.resources(path .. '.jpg')
-		local fpathMask = Cache.resources(path .. '_.png')
+		local fpath = Cache.main(path .. '.png')
+		local fpathJpg = Cache.main(path .. '.jpg')
+		local fpathMask = Cache.main(path .. '_.png')
 		if love.filesystem.getInfo(fpath) then
 			cached.images[key] = love.graphics.newImage(fpath)
 		elseif love.filesystem.getInfo(fpathJpg) then
@@ -46,11 +46,11 @@ function Cache.reanim(kind, folder)
 	if kind == nil then return nil end
 	
 	local t = os.clock()
-	local path = (folder and (folder .. '/' .. kind) or ('animation/' .. kind))
+	local path = (folder and (folder .. '/' .. kind) or ('compiled/reanim/' .. kind))
 	local key = kind:lower()
 	if not cached.reanim[key] then
-		local fpathCompiled = Cache.resources(path .. '.reanim.compiled')
-		local fpath = Cache.resources(path .. '.reanim')
+		local fpathCompiled = Cache.main(path .. '.reanim.compiled')
+		local fpath = Cache.main(path .. '.reanim')
 		
 		if love.filesystem.getInfo(fpath) then
 			cached.reanim[key] = Reanim.loadXML(fpath, kind)
@@ -68,6 +68,10 @@ end
 
 function Cache.resources(path)
 	return ('resources/' .. path)
+end
+
+function Cache.main(path)
+	return Cache.resources('main/' .. path)
 end
 
 function Cache.decompressFile(path)

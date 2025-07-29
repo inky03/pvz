@@ -15,10 +15,13 @@ function Lawn:init()
 		x = 9;
 		y = 5;
 	}
+	
+	self.width, self.height = self.image:getPixelDimensions()
 end
 
 function Lawn:draw(x, y)
-	love.graphics.draw(self.image, x, y)
+	local x, y = (x or 0), (y or 0)
+	love.graphics.draw(self.image, x + (1880 - self.width) * .5, y + (720 - self.height) * .5)
 	
 	self:debugDraw(x, y)
 end
