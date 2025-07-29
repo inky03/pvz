@@ -1,6 +1,6 @@
-local Entity = Sprite:extend('Entity')
+local Unit = Sprite:extend('Unit')
 
-Entity.pvzShader = love.graphics.newShader([[
+Unit.pvzShader = love.graphics.newShader([[
 	uniform float frost;
 	uniform float glow;
 	
@@ -16,11 +16,11 @@ Entity.pvzShader = love.graphics.newShader([[
 	}
 ]])
 
-function Entity:init(x, y)
+function Unit:init(x, y)
 	Sprite.init(self, self:getReanim(), x, y)
 	
 	self.board, self.boardX, self.boardY = nil, 0, 0
-	self.shader = Entity.pvzShader
+	self.shader = Unit.pvzShader
 	self.hitbox = {
 		x = 0;
 		y = 0;
@@ -29,28 +29,28 @@ function Entity:init(x, y)
 	}
 	
 	self.hp = 300
-	self.animation.speed = random.number(.75, 1.25)
+	self.animation.speed = random.number(1, 1.33)
 end
 
-function Entity:getReanim()
-	return 'Zombie'
+function Unit:getReanim()
+	return 'SunFlower'
 end
-function Entity:getPreviewAnimation()
+function Unit:getPreviewAnimation()
 	return 'idle'
 end
-function Entity:getPreviewFrame()
+function Unit:getPreviewFrame()
 	return 0
 end
 
-function Entity:draw(x, y, transforms)
-	self.super.draw(self, x, y, transforms)
+function Unit:draw(x, y, transforms)
+	Sprite.draw(self, x, y, transforms)
 	self:debugDraw(x, y)
 end
 
-function Entity:debugDraw(x, y)
+function Unit:debugDraw(x, y)
 	x, y = (x or 0), (y or 0)
 	
 	love.graphics.rectangle('line', x + self.hitbox.x, y + self.hitbox.y, self.hitbox.w, self.hitbox.h)
 end
 
-return Entity
+return Unit

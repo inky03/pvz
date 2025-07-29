@@ -1,7 +1,7 @@
-local Plant = Entity:extend('Plant')
+local Plant = Unit:extend('Plant')
 
 function Plant:init(x, y)
-	Entity.init(self, x, y)
+	Unit.init(self, x, y)
 	
 	self.hitbox.x = 10
 	self.hitbox.w = 60
@@ -10,7 +10,7 @@ function Plant:init(x, y)
 end
 
 function Plant:update(dt)
-	Entity.update(self, dt)
+	Unit.update(self, dt)
 	-- todo blinking logic
 end
 

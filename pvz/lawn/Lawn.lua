@@ -15,22 +15,18 @@ function Lawn:init()
 		x = 9;
 		y = 5;
 	}
-	self.units = {} -- ALL
-	self.plants = {} -- individual
-	self.zombies = {} -- individual
+	self.units = {}
 	
 	self.width, self.height = self.image:getPixelDimensions()
 end
 
-function Lawn:plantAt(x, y)
+function Lawn:unitAt(x, y)
 	return lambda.find(self.plants, function(plant) return (plant.boardX == x and plant.boardY == y) end)
 end
-function Lawn:plant(unit, x, y)
+function Lawn:spawnUnit(unit, x, y)
 	unit:setPosition(self:getTilePosition(x, y))
-	table.insert(self.plants, unit)
-	unit.board = self
+	self:insertUnitSort(unit)
 	
-	self:refreshUnits()
 	return unit
 end
 
@@ -50,14 +46,9 @@ function Lawn:drawUnits(x, y)
 	lambda.foreach(self.units, function(unit) unit:draw(unit.x, unit.y) end)
 end
 
-function Lawn:refreshUnits()
-	table.clear(self.units)
-	lambda.foreach(self.plants, function(unit) self:insertUnitSort(unit) end)
-	lambda.foreach(self.zombies, function(unit) self:insertUnitSort(unit) end)
-end
 function Lawn:insertUnitSort(unit)
-	for i, v in ipairs(self.units) do
-		if v.y < unit.y then
+	for i = 1, #self.units do
+		if unit.y < self.units[i].y then
 			table.insert(self.units, i, unit)
 			return unit
 		end

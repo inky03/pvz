@@ -13,7 +13,11 @@ function math.lerp(a, b, t) return (a + (b - a) * t) end
 
 random = {}
 function random.shuffle() math.randomseed(os.clock()) end
-function random.number(min, max, precision) return math.lerp(min, max, math.random()) end
+function random.number(min, max, precision)
+	max = max or (min and 1 or 0)
+	min = min or 0
+	return math.lerp(min, max, math.random())
+end
 function random.int(min, max)
 	max = max or (min and 1 or 0)
 	min = min or 0

@@ -15,13 +15,17 @@ function Cache.module(path)
 		return cached.entities[path]
 	end
 	
-	local success, mod = pcall(require, path)
+	local success, result = pcall(require, path)
 	
 	if success then
-		cached.entities[path] = mod
-		return mod
+		cached.entities[path] = result
+		return result
 	else
-		print('Module ' .. path .. ' doesn\'t exist')
+		if result:find('module \'') then
+			print('Module ' .. path .. ' not found')
+		else
+			print('Module ' .. path .. ' had errors:\n' .. result)
+		end
 		return nil
 	end
 end

@@ -18,6 +18,11 @@ function PeaShooter:init(x, y)
 	
 	self.blink.animation.speed = self.animation.speed
 	self.head.animation.speed = self.animation.speed
+	
+	self.head.animation.onFrame:add(function(frame)
+		if frame == 67 then
+		end
+	end)
 end
 
 function PeaShooter:doBlink()
@@ -28,7 +33,7 @@ function PeaShooter:doBlink()
 end
 
 function PeaShooter:update(dt)
-	self.super.update(self, dt)
+	Plant.update(self, dt)
 	
 	self.head:update(dt)
 	self.blink:update(dt)
@@ -37,7 +42,7 @@ end
 function PeaShooter:render(x, y, transforms)
 	local trans = (transforms or {self.transform})
 	
-	self.super.render(self, x, y, trans)
+	Plant.render(self, x, y, trans)
 	
 	self.stemTransform:copy(self.stem.frame)
 	self.stemTransform:setPosition(self.stemTransform.x - 37.6, self.stemTransform.y - 48.7)
