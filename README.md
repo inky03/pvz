@@ -1,5 +1,7 @@
 heavily unfinished... basically my first actual [löve](http://love2d.org) project so im just testing the waters... by recreating the entirety of pvz i guess!
 
+i hope this is a Nice Learning Expereince
+
 
 ## how to work
 
@@ -26,4 +28,4 @@ if everything is done correctly, it should work (somewhat!)
 
 - finish the entire freaking game
 - implement Particles (needs research)
-- improve Reanimations (attaching particles and more reanimations)
+- improve Reanimations (attaching particles ~~and more reanimations~~ (that sorta works now))
