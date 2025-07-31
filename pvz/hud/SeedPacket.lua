@@ -6,14 +6,12 @@ function SeedPacket:init(plant)
 	self.quad = love.graphics.newQuad(50 * 2, 0, 50, self.texture:getPixelHeight(), self.texture)
 	
 	self.entity = Cache.module(Cache.plants(plant))
-	self.display = Reanimation:new()
 	if self.entity then
-		self.display:setReanim(Cache.reanim(self.entity:getReanim()))
+		self.display = Reanimation:new(self.entity:getReanim())
 		self.display.animation:add('preview', self.entity:getPreviewAnimation())
 		self.display.animation:play('preview', true)
 		self.display.animation:setFrame(self.entity:getPreviewFrame())
 		self.display.transform:setScale(.5, .5)
-	else
 	end
 end
 

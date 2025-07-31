@@ -92,7 +92,7 @@ function AnimationController:attachReanim(layer, reanim, basePose, offset)
 			transform = ReanimFrame:new()
 			transform:setPosition(-baseFrame.x, -baseFrame.y)
 			transform:setShear(-baseFrame.xShear, -baseFrame.yShear)
-			-- transform:setScale(1 / baseFrame.xScale, 1 / baseFrame.yScale)
+			transform:setScale(1 / baseFrame.xScale, 1 / baseFrame.yScale)
 		else
 			print(('%s: Track %s doesn\'t exist'):format(self.reanim.name, basePose))
 			return
@@ -163,6 +163,9 @@ end
 function AnimationController:setFrame(index, next)
 	self._cur:setFrame(index, next)
 	self:update(0)
+end
+function AnimationController:getFrame()
+	return self._cur.frame
 end
 
 function AnimationController:getLayer(find)
