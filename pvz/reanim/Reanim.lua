@@ -15,10 +15,37 @@ end
 
 function Reanim:getLayers()
 	local list = {}
-	for _, layer in ipairs(self.layers) do
-		table.insert(list, layer)
-	end
+	lambda.foreach(self.layers, function(layer) table.insert(list, layer) end)
 	return list
+end
+function Reanim:getImageNames()
+	local list = {}
+	lambda.foreach(self.images, function(image) table.insert(list, image) end)
+	return list
+end
+function Reanim:getLayerNames()
+	local list = {}
+	lambda.foreach(self.layers, function(layer) table.insert(list, layer.name) end)
+	return list
+end
+function Reanim:getImage(image)
+	if type(image) == 'string' then
+		image = image:lower():gsub('image_reanim_', '')
+	end
+	
+	return lambda.find(self.images, function(res, name) return (res == image or name:lower():gsub('image_reanim_', '') == image) end)
+end
+function Reanim:getLayer(find)
+	if type(find) ~= 'string' then return nil end
+	
+	find = find:gsub('anim_', '')
+	
+	return lambda.find(self.layers, function(layer) return (layer.name:gsub('anim_', '') == find) end)
+end
+function Reanim:getTrack(track)
+	track = track:gsub('anim_', '')
+	
+	return (track and lambda.find(self.guides, function(anim) return (anim.name:gsub('anim_', '') == track) end) or nil)
 end
 
 function Reanim.loadXML(path, kind)
@@ -33,7 +60,7 @@ function Reanim.loadXML(path, kind)
 		local anim = {
 			name = track.name;
 			first = 1;
-			last = 1;
+			last = -1;
 		}
 		local previousFrame = ReanimFrame:new()
 		
@@ -122,7 +149,7 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 		local anim = {
 			name = trackName;
 			first = 1;
-			last = 1;
+			last = -1;
 		}
 		local previousFrame = ReanimFrame:new()
 		
@@ -178,6 +205,10 @@ end
 
 function Reanim.getResource(key)
 	return (key and Cache.image('reanim/' .. key:gsub('IMAGE_REANIM_', '')) or nil)
+end
+
+function Reanim:__tostring()
+	return ('Reanim(name:%s, fps:%s, length:%s)'):format(self.name, self.fps, self.length)
 end
 
 return Reanim

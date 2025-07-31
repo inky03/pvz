@@ -4,11 +4,12 @@ function SunFlower:init(x, y)
 	Plant.init(self, x, y)
 	self.hp = 300
 	
-	self:playAnimation('idle', true)
+	self.animation:add('idle', 'idle')
+	self.animation:play('idle', true)
 end
 
 function SunFlower:update(dt)
-	self.super.update(self, dt)
+	Plant.update(self, dt)
 end
 
 function SunFlower:getReanim()

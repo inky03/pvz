@@ -1,4 +1,4 @@
-local Unit = Sprite:extend('Unit')
+local Unit = Reanimation:extend('Unit')
 
 Unit.pvzShader = love.graphics.newShader([[
 	uniform float frost;
@@ -12,12 +12,12 @@ Unit.pvzShader = love.graphics.newShader([[
 			texColor.rgb = mix(texColor.rgb, frostColor, frost);
 		}
 		
-		return vec4(texColor.rgb + texColor.rgb * glow, texColor.a);
+		return (vec4(texColor.rgb + texColor.rgb * glow, texColor.a) * color);
 	}
 ]])
 
 function Unit:init(x, y)
-	Sprite.init(self, self:getReanim(), x, y)
+	Reanimation.init(self, self:getReanim(), x, y)
 	
 	self.board, self.boardX, self.boardY = nil, 0, 0
 	self.shader = Unit.pvzShader
@@ -43,7 +43,7 @@ function Unit:getPreviewFrame()
 end
 
 function Unit:draw(x, y, transforms)
-	Sprite.draw(self, x, y, transforms)
+	Reanimation.draw(self, x, y, transforms)
 	self:debugDraw(x, y)
 end
 

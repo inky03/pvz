@@ -5,11 +5,11 @@ Gamera = require 'lib.gamera'
 class = require 'lib.30log'
 xml = require 'lib.xml'
 
+Reanimation = require 'pvz.reanim.Reanimation'
 SeedBank = require 'pvz.hud.SeedBank'
 Lawn = require 'pvz.lawn.Lawn'
 Cache = require 'pvz.Cache'
 Signal = require 'pvz.Signal'
-Sprite = require 'pvz.Sprite'
 Unit = require 'pvz.lawn.Unit'
 Plant = require 'pvz.lawn.Plant'
 Zombie = require 'pvz.lawn.Zombie'
@@ -34,6 +34,7 @@ function love.load()
 	camera:setPosition(240 + 220 + 400, 360)
 	
 	local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
+	local FlagZombie = Cache.module(Cache.zombies('FlagZombie'))
 	local PeaShooter = Cache.module(Cache.plants('PeaShooter'))
 	local SunFlower = Cache.module(Cache.plants('SunFlower'))
 	for i = 1, 5 do

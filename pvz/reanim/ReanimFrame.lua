@@ -36,6 +36,9 @@ function ReanimFrame:copy(frame)
 end
 
 function ReanimFrame:lerp(a, b, t)
+	if t == 0 then return self:copy(a)
+	elseif t == 1 then return self:copy(b) end
+	
 	self.image = a.image
 	self.active = a.active
 	self.alpha = math.lerp(a.alpha, b.alpha, t)

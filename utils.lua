@@ -2,6 +2,7 @@
 
 function math.clamp(n, min, max) return (n > max and max or (n < min and min or n)) end
 function math.round(n) return (n > 0 and math.floor(n + .5) or math.ceil(n - .5)) end
+function math.wrap(n, min, max) return ((n - min) % (max - min) + min) end
 
 function math.dcos(o) return math.cos(math.rad(o)) end
 function math.dsin(o) return math.sin(math.rad(o)) end
@@ -22,6 +23,10 @@ function random.int(min, max)
 	max = max or (min and 1 or 0)
 	min = min or 0
 	return math.random(min, max)
+end
+function random.object(...)
+	local t = {...}
+	return t[random.int(1, #t)]
 end
 function random.bool(chance) return (random.number(100) <= chance) end
 
@@ -103,6 +108,19 @@ function table.print(tbl, str, sep, eq, track)
 	return (fin .. '}')
 end
 
+function table.flatten(v)
+	local t = {}
+	local function flatten(v)
+		if type(v) == 'table' and not class.isInstance(v) and not class.isClass(v) then
+			for _, v in ipairs(v) do flatten(v) end
+			return
+		end
+		table.insert(t, v)
+	end
+	flatten(v)
+	return t
+end
+
 
 -- other
 
@@ -111,6 +129,10 @@ tostr_idx_limit = 2500
 function tostr(v, str, sep, eq, track)
 	local str = str or '"' -- STRing (default '"')
 	if type(v) == 'table' then
+		local mt = getmetatable(v)
+		if mt and mt.__tostring then
+			return tostring(v)
+		end
 		return table.print(v, str, sep, eq, track)
 	elseif type(v) == 'function' then
 		return '(function)'
