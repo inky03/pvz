@@ -18,8 +18,6 @@ end
 
 function PeaShooter:update(dt)
 	Plant.update(self, dt)
-	
-	self.head:update(dt)
 end
 
 function PeaShooter:render(x, y, transforms)
