@@ -1,22 +1,46 @@
-local SeedBank = class('SeedBank')
+local SeedPacket = Cache.module('pvz.hud.SeedPacket')
+local SeedBank = UIContainer:extend('SeedBank')
 
-SeedPacket = require 'pvz.hud.SeedPacket'
-
-function SeedBank:init()
-	self.seeds = {}
+function SeedBank:init(x, y)
+	self.texture = Cache.image('images/SeedBank')
 	
-	table.insert(self.seeds, SeedPacket:new('PeaShooter'))
-	table.insert(self.seeds, SeedPacket:new('SunFlower'))
+	UIContainer.init(self, x, y, self.texture:getPixelWidth(), self.texture:getPixelHeight())
+	
+	self.seedSpacing = 59
+	
+	self:addSeed(Cache.plants('SunFlower'))
+	self:addSeed(Cache.plants('PeaShooter'))
+	self:addSeed(Cache.plants('Repeater'))
+	self:addSeed(Cache.plants('GatlingPea'))
+	self:addSeed(Cache.plants('SnowPea'))
+end
+
+function SeedBank:addSeed(entity)
+	local seed = self:addElement(SeedPacket:new(entity, 85 + #self.children * self.seedSpacing, 8))
+	return seed
+end
+
+function SeedBank:mousePressed(x, y, button, isTouch, presses)
+	if lawn.hoveringEntity ~= nil then
+		lawn.hoveringEntity:destroy()
+		lawn.hoveringEntity = nil
+		
+		self.canClickChildren = true
+	end
+end
+
+function SeedBank:update(dt)
+	UIContainer.update(self, dt)
+	
+	if lawn.hoveringEntity == nil then
+		self.canClickChildren = true
+	end
 end
 
 function SeedBank:draw(x, y)
-	x, y = (x or 0), (y or 0)
+	love.graphics.draw(self.texture, x, y)
 	
-	love.graphics.draw(Cache.image('images/SeedBank'), x, y)
-	
-	for i, seed in ipairs(self.seeds) do
-		seed:draw(x + 85 + (i - 1) * 59, 8)
-	end
+	UIContainer.draw(self, x, y)
 end
 
 return SeedBank

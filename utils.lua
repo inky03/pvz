@@ -4,7 +4,7 @@ function math.clamp(n, min, max) return (n > max and max or (n < min and min or 
 function math.round(n) return (n > 0 and math.floor(n + .5) or math.ceil(n - .5)) end
 function math.wrap(n, min, max) return ((n - min) % (max - min) + min) end
 function math.sign(n) return (n > 0 and 1 or (n < 0 and -1 or 0)) end
-function math.within(n, min, max) return (n >= min and n <= max) end
+function math.within(n, min, max) return (n >= min and n < max) end
 
 function math.dcos(o) return math.cos(math.rad(o)) end
 function math.dsin(o) return math.sin(math.rad(o)) end
@@ -41,10 +41,10 @@ lambda = {}
 function lambda.find(iter, condition)
 	for k, v in pairs(iter) do
 		if condition(v, k) then
-			return v
+			return v, k
 		end
 	end
-	return nil
+	return nil, nil
 end
 
 function lambda.foreach(iter, fun)

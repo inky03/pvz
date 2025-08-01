@@ -23,8 +23,8 @@ function BasicZombie:init(x, y)
 	self.animation:add('eating', 'eat')
 	self.animation:play('walk', true)
 	
-	self:setSpeed(random.number(.5, .75))
-	self.animation:get('eating').speed = 1.5
+	self:setSpeed(random.number(1, 1.25))
+	self.animation:get('eating').speed = 2
 	
 	self.animation.onFrame:add(function(animation)
 		if animation.name == 'eating' and self.state == 'eating' then
@@ -59,10 +59,6 @@ function BasicZombie:setHurtState(state)
 		self:toggleLayer('head2', false)
 		self:toggleLayer('tongue', false)
 	end
-end
-
-function BasicZombie:update(dt)
-	Zombie.update(self, dt)
 end
 
 function BasicZombie.getHP()

@@ -1,14 +1,15 @@
 utils = require 'utils'
 require 'table.clear'
 
-Gamera = require 'lib.gamera'
 class = require 'lib.30log'
 xml = require 'lib.xml'
+
+Cache = require 'pvz.Cache'
+UIContainer = require 'pvz.hud.UIContainer'
 
 Reanimation = require 'pvz.reanim.Reanimation'
 SeedBank = require 'pvz.hud.SeedBank'
 Lawn = require 'pvz.lawn.Lawn'
-Cache = require 'pvz.Cache'
 Signal = require 'pvz.Signal'
 Unit = require 'pvz.lawn.Unit'
 Plant = require 'pvz.lawn.Plant'
@@ -17,67 +18,75 @@ Projectile = require 'pvz.lawn.Projectile'
 
 math.randomseed(os.clock())
 
-local lawn = nil
-local seeds = nil
+game = nil
+lawn = nil
+seeds = nil
 
-local cursor = love.mouse.newCursor(love.image.newImageData('resources/cursor.png'))
-local hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'))
+local pointer = love.mouse.newCursor(love.image.newImageData('resources/cursor.png'))
+local hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'), 4)
 
 windowWidth, windowHeight = love.graphics.getDimensions()
-debugMode = false
+hoveringElement = nil
+debugMode = false -- true
 
 function love.load()
-	love.mouse.setCursor(cursor)
+	love.mouse.setCursor(pointer)
 	
-	lawn = Lawn:new()
-	seeds = SeedBank:new()
+	game = UIContainer:new(0, 0, 1880, 720)
+	lawn = game:addElement(Lawn:new(0, 0))
+	seeds = game:addElement(SeedBank:new(10, 0))
+	
+	lawn:setPosition(-240 - 220, -60)
 	
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('rough')
 	
-	camera = Gamera.new(0, 0, 1880, 720)
-	camera:setPosition(240 + 220 + 400, 360)
-	
-	local PeaShooterZombie = Cache.module(Cache.zombies('PeaShooterZombie'))
-	local BucketHeadZombie = Cache.module(Cache.zombies('BucketHeadZombie'))
-	local ConeHeadZombie = Cache.module(Cache.zombies('ConeHeadZombie'))
 	local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
-	local FlagZombie = Cache.module(Cache.zombies('FlagZombie'))
-	local PeaShooter = Cache.module(Cache.plants('PeaShooter'))
-	local SunFlower = Cache.module(Cache.plants('SunFlower'))
-	local Repeater = Cache.module(Cache.plants('Repeater'))
-	local SnowPea = Cache.module(Cache.plants('SnowPea'))
 	for i = 1, 5 do
-		lawn:spawnUnit(SunFlower:new(), 1, i)
-		lawn:spawnUnit(SunFlower:new(), 2, i)
-		lawn:spawnUnit(SnowPea:new(), 3, i)
-		lawn:spawnUnit(Repeater:new(), 4, i)
-		lawn:spawnUnit(PeaShooter:new(), 5, i)
-		lawn:spawnUnit(PeaShooter:new(), 6, i)
-		lawn:spawnUnit(BucketHeadZombie:new(), 10, i)
-		lawn:spawnUnit(ConeHeadZombie:new(), 11, i)
+		lawn:spawnUnit(BasicZombie:new(), 11, i)
 		lawn:spawnUnit(BasicZombie:new(), 12, i)
 		lawn:spawnUnit(BasicZombie:new(), 13, i)
 	end
 end
 
+function love.mousepressed(mouseX, mouseY, button, isTouch, presses)
+	updateHover(mouseX, mouseY)
+	if hoveringElement then hoveringElement:mousePressed(mouseX, mouseY, button, isTouch, presses) end
+	updateCursor()
+end
+function love.mousereleased(mouseX, mouseY, button, isTouch, presses)
+	updateHover(mouseX, mouseY)
+	if hoveringElement then hoveringElement:mouseReleased(mouseX, mouseY, button, isTouch, presses) end
+	updateCursor()
+end
+function love.mousemoved(mouseX, mouseY, deltaX, deltaY, touch)
+	updateHover(mouseX, mouseY)
+	if hoveringElement then hoveringElement:mouseMoved(mouseX, mouseY, deltaX, deltaY, touch) end
+	updateCursor()
+end
+
+function updateHover(mouseX, mouseY)
+	local prevHovering = hoveringElement
+	hoveringElement = game:getHoveringElement(game.x, game.y, mouseX, mouseY)
+	
+	if prevHovering ~= hoveringElement and prevHovering then prevHovering:setHovering(false) end
+end
+function updateCursor()
+	if hoveringElement then hoveringElement:setHovering(true) end
+	if hoveringElement and hoveringElement.useHand and hoveringElement:canBeClicked() then
+		love.mouse.setCursor(hand)
+	else
+		love.mouse.setCursor(pointer)
+	end
+end
+
 function love.update(dt)
-	lawn:update(dt)
+	game:update(dt)
 end
 
 function love.draw()
 	love.graphics.setColor(1, 1, 1)
-	camera:draw(drawBottom)
-	drawHUD()
-	camera:draw(drawTop)
-end
-
-function drawBottom()
-	lawn:draw()
-end
-function drawHUD()
-	seeds:draw(10, 0)
-end
-function drawTop()
-	lawn:drawUnits()
+	
+	game:draw(game.x, game.y)
+	game:drawTop(game.x, game.y)
 end

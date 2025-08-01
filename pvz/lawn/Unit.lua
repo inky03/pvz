@@ -19,11 +19,14 @@ Unit.pvzShader = love.graphics.newShader([[
 function Unit:init(x, y)
 	Reanimation.init(self, self.getReanim(), x, y)
 	
+	self.active = true
+	
 	self.glow = 0
 	self.frost = 0
 	self.dead = false
 	self.hurtGlow = 0
 	self.hurtState = 0
+	self.canDie = true
 	self.state = 'normal'
 	self.speedMultiplier = 1
 	
@@ -59,6 +62,8 @@ function Unit:setHitbox(x, y, w, h, hurtX, hurtY, hurtW, hurtH)
 end
 
 function Unit:update(dt)
+	if self.inactive or self.hover then return end
+	
 	Reanimation.update(self, dt * self.speedMultiplier)
 	
 	if self.frost > 0 then
@@ -69,13 +74,13 @@ function Unit:update(dt)
 		end
 	end
 	
-	self.hurtGlow = math.max(self.hurtGlow - dt * 3, 0)
+	self.hurtGlow = math.max(self.hurtGlow - dt * 6, 0)
 	
 	if self.board and self.autoBoardPosition then
 		self:updateBoardPosition()
 	end
 	
-	if self.hp <= 0 and not self.dead then
+	if self.canDie and self.hp <= 0 and not self.dead then
 		self.dead = true
 		self:onDeath()
 	end
@@ -100,12 +105,22 @@ function Unit:getHitboxCenter(x, y)
 	local x, y = (x or self.x), (y or self.y)
 	return (x - self.xOffset + self.hitbox.x + self.hitbox.w * .5), (y - self.yOffset + self.hitbox.y + self.hitbox.h * .5)
 end
+function Unit:hurtboxOnScreen()
+	local screenX, screenY = self:elementToScreen(-self.xOffset + self.hurtbox.x, -self.yOffset + self.hurtbox.y)
+	return (math.within(screenX, -self.hurtbox.w, windowWidth) and math.within(screenY, -self.hurtbox.h, windowHeight))
+end
+function Unit:hitboxOnScreen()
+	local screenX, screenY = self:elementToScreen(-self.xOffset + self.hitbox.x, -self.yOffset + self.hitbox.y)
+	return (math.within(screenX, -self.hitbox.w, windowWidth) and math.within(screenY, -self.hitbox.h, windowHeight))
+end
 
 function Unit:queryCollision(kind, filter, baseX, baseY)
+	if self.flags.canCollide == false or not self:hitboxOnScreen() or not kind then return end -- always be kind!
+	
 	local closest, closestDist = nil, nil
 	
 	for _, unit in ipairs(self.board.units) do
-		if (not kind or unit:instanceOf(kind)) and self:collidesWith(unit) and (not filter or filter(unit)) then
+		if (not kind or unit:instanceOf(kind)) and unit:hurtboxOnScreen() and self:collidesWith(unit) and (not filter or filter(unit)) then
 			local xA, yA = self:getHitboxCenter(baseX, baseY)
 			local xB, yB = unit:getHurtboxCenter()
 			local dist = math.eucldistance(xA, yA, xB, yB)
@@ -171,6 +186,8 @@ function Unit:drawSprite(x, y)
 	Reanimation.draw(self, x, y, transforms)
 end
 function Unit:debugDraw(x, y)
+	Reanimation.debugDraw(self, x, y)
+	
 	if self.flags.ignoreCollisions then return end
 	
 	x, y = (x or 0), (y or 0)

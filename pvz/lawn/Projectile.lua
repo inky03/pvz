@@ -3,7 +3,7 @@ local Projectile = Unit:extend('Projectile')
 function Projectile:init(x, y)
 	Unit.init(self, x, y)
 	
-	self:setHitbox(0, 0, 28, 28)
+	self:setHitbox(10, 10, 8, 8)
 	
 	self.damageGroup = Zombie
 	self.direction = 0
@@ -22,8 +22,8 @@ function Projectile:update(dt)
 		return
 	end
 	
-	local camX = camera:toScreen(self.x + self.xOffset, self.y + self.yOffset)
-	if camX > windowWidth then
+	local screenX = self:elementToScreen(-self.xOffset, -self.yOffset)
+	if screenX > windowWidth then
 		self:destroy()
 		return
 	end

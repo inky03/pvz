@@ -1,16 +1,17 @@
 Reanim = require 'pvz.reanim.Reanim'
 AnimationController = require 'pvz.reanim.animation.AnimationController'
 
-local Reanimation = class('Reanimation')
+local Reanimation = UIContainer:extend('Reanimation')
 
 Reanimation.triangle = {vert = {{0, 0; 0, 0}; {50, 0; 1, 0}; {0, 50; 0, 1}; {50, 50; 1, 1}}}
 Reanimation.triangle.mesh = love.graphics.newMesh(Reanimation.triangle.vert, 'strip', 'dynamic')
 
 function Reanimation:init(kind, x, y)
-	self.x = (x or 0)
-	self.y = (y or 0)
+	UIContainer.init(self, x, y, 80, 80)
+	
+	self.canClick = false
+	
 	self.shader = nil
-	self.visible = true
 	self.hiddenLayers = {}
 	self.layerTransforms = {}
 	
@@ -87,6 +88,8 @@ function Reanimation:toggleLayer(layer, on)
 end
 
 function Reanimation:update(dt)
+	UIContainer.update(self, dt)
+	
 	self:updateAnimation(dt)
 end
 
@@ -99,17 +102,11 @@ function Reanimation:updateAnimation(dt)
 		else
 			self.groundVelocity = 0
 		end
-	else
-		self.groundVelocity = 0
 	end
 	
 	self.animation:update(dt)
 	
 	self.x = (self.x + self.groundVelocity)
-end
-
-function Reanimation:setPosition(x, y)
-	self.x, self.y = (x or 0), (y or 0)
 end
 
 function Reanimation:draw(x, y, transforms)
@@ -118,6 +115,8 @@ function Reanimation:draw(x, y, transforms)
 	love.graphics.setShader(self.shader)
 	self:render(x, y, transforms)
 	love.graphics.setShader(nil)
+	
+	UIContainer.update(self, dt)
 end
 
 function Reanimation:render(x, y, transforms)

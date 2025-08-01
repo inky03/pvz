@@ -6,8 +6,6 @@ function Repeater:init(x, y)
 	
 	self.head:toggleLayer('idle_shoot_blink', false)
 	
-	self.firePhase = 0
-	
 	self.head.animation.onFrame:add(function(animation)
 		if animation.name == 'shoot' then
 			if animation.frame == 14 and self.firePhase == 0 then

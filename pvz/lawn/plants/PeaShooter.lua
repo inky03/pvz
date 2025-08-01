@@ -20,6 +20,12 @@ function PeaShooter:init(x, y)
 	self.head.animation:get('shoot').speed = 2.5
 	self.head.animation:play('idle', true)
 	
+	self:animate()
+	
+	self:attachReanim(self.getStem(), self.head)
+end
+
+function PeaShooter:animate()
 	self.head.animation.onFrame:add(function(animation)
 		if animation.name == 'shoot' then
 			if animation.frame == 12 then
@@ -29,11 +35,11 @@ function PeaShooter:init(x, y)
 			end
 		end
 	end)
-	
-	self:attachReanim('stem', self.head)
 end
 
 function PeaShooter:update(dt)
+	if not self.active then return end
+	
 	Plant.update(self, dt * self.speedMultiplier)
 	
 	self.fireTimer = (self.fireTimer - dt * self.reanim.fps * self.speed * self.speedMultiplier)
@@ -72,6 +78,9 @@ end
 
 function PeaShooter.getReanim()
 	return 'PeaShooterSingle'
+end
+function PeaShooter.getStem()
+	return 'stem'
 end
 function PeaShooter.getPreviewAnimation()
 	return 'full_idle'

@@ -4,13 +4,14 @@ function Zombie:init(x, y)
 	Unit.init(self, x, y)
 	
 	self:setHitbox(
-		7, 7, 50, 115,
+		7, 7, 24, 115,
 		23, 7, 42, 115
 	)
 	
 	self.animation.speed = self.speed
 	
 	self.state = 'normal'
+	self.deathTimer = .5
 	
 	self.damageGroup = Plant
 	self.collision = nil
@@ -46,7 +47,7 @@ function Zombie:update(dt)
 	end
 	
 	if self.state ~= 'dead' then
-		self.collision = self:queryCollision(self.damageGroup, self.damageFilter)
+		self.collision = self:queryCollision(self.damageGroup, self.damageFilter, self.x - self.hitbox.w * .5)
 		if self.collision and self.state == 'normal' then
 			self:setState('eating')
 		elseif not self.collision and self.state == 'eating' then
@@ -54,9 +55,12 @@ function Zombie:update(dt)
 		end
 	else
 		self.hp = (self.hp - dt * 12)
+		self.deathTimer = (self.deathTimer - dt * self.animation.speed)
+		
+		if (self.deathTimer < 0) then
+			self.canDie = true
+		end
 	end
-	
-	Unit.update(self, dt)
 end
 
 function Zombie:setState(state)
@@ -66,6 +70,8 @@ function Zombie:setState(state)
 		self.animation:play('walk')
 	elseif state == 'eating' then
 		self.animation:play('eating')
+	elseif state == 'dead' then
+		self.canDie = false
 	end
 end
 
