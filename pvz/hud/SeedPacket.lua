@@ -7,10 +7,10 @@ function SeedPacket:init(plant)
 	
 	self.entity = Cache.module(Cache.plants(plant))
 	if self.entity then
-		self.display = Reanimation:new(self.entity:getReanim())
-		self.display.animation:add('preview', self.entity:getPreviewAnimation())
+		self.display = Reanimation:new(self.entity.getReanim())
+		self.display.animation:add('preview', self.entity.getPreviewAnimation())
 		self.display.animation:play('preview', true)
-		self.display.animation:setFrame(self.entity:getPreviewFrame())
+		self.display.animation:setFrame(self.entity.getPreviewFrame())
 		self.display.transform:setScale(.5, .5)
 	end
 end

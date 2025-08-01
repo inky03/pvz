@@ -16,15 +16,19 @@ ReanimFrame.active = true
 ReanimFrame.scaleCoords = false
 -- TODO: IMPLEMENT TEXT AND FONT ?
 
-function ReanimFrame:init(frame)
-	if frame then
-		self:copy(frame)
+function ReanimFrame:init(frameOrX, y, xShear, yShear, xScale, yScale)
+	if class.isInstance(frameOrX) then
+		self:copy(frameOrX)
+	else
+		self:setPosition(frameOrX, y)
+		self:setShear(xShear, yShear)
+		self:setScale(xScale, yScale)
 	end
 end
 
 function ReanimFrame:copy(frame)
-	self.alpha = frame.alpha
 	self.image = frame.image
+	self.alpha = frame.alpha
 	self.active = frame.active
 	self:setPosition(frame.x, frame.y)
 	self:setScale(frame.xScale, frame.yScale)
@@ -65,23 +69,23 @@ function ReanimFrame:__tostring()
 end
 
 function ReanimFrame:setPosition(x, y)
-	self.x, self.y = x, y
+	self.x, self.y = (x or 0), (y or 0)
 	return self
 end
 function ReanimFrame:setScale(x, y)
-	self.xScale, self.yScale = x, y
+	self.xScale, self.yScale = (x or 1), (y or 1)
 	return self
 end
 function ReanimFrame:setShear(x, y)
-	self.xShear, self.yShear = x, y
+	self.xShear, self.yShear = (x or 0), (y or x or 0)
 	return self
 end
 function ReanimFrame:setOrigin(x, y)
-	self.xOrigin, self.yOrigin = x, y
+	self.xOrigin, self.yOrigin = (x or 0), (y or 0)
 	return self
 end
 function ReanimFrame:setOffset(x, y)
-	self.xOffset, self.yOffset = x, y
+	self.xOffset, self.yOffset = (x or 0), (y or 0)
 	return self
 end
 

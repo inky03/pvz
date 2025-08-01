@@ -3,8 +3,9 @@ local Plant = Unit:extend('Plant')
 function Plant:init(x, y)
 	Unit.init(self, x, y)
 	
-	self.hitbox.x = 10
-	self.hitbox.w = 60
+	self:setHitbox(10, 0, 60, 80)
+	
+	self.damageGroup = Zombie
 	
 	self.shadow = Cache.image('images/plantshadow')
 end
@@ -14,15 +15,8 @@ function Plant:update(dt)
 	-- todo blinking logic
 end
 
-function Plant:draw(x, y, transforms)
-	if not self.reanim or not self.visible then return end
-	
-	love.graphics.setShader(self.shader)
+function Plant:drawShadow(x, y)
 	love.graphics.draw(self.shadow, x + (80 - self.shadow:getPixelWidth()) * .5, y + 50)
-	self:render(x, y, transforms)
-	love.graphics.setShader(nil)
-	
-	self:debugDraw(x, y)
 end
 
 return Plant

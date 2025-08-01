@@ -17,40 +17,169 @@ Unit.pvzShader = love.graphics.newShader([[
 ]])
 
 function Unit:init(x, y)
-	Reanimation.init(self, self:getReanim(), x, y)
+	Reanimation.init(self, self.getReanim(), x, y)
+	
+	self.glow = 0
+	self.frost = 0
+	self.dead = false
+	self.hurtGlow = 0
+	self.hurtState = 0
+	self.state = 'normal'
+	self.speedMultiplier = 1
+	
+	self.xOffset, self.yOffset = 0, 0
 	
 	self.board, self.boardX, self.boardY = nil, 0, 0
+	self.autoBoardPosition = false -- optimization
 	self.shader = Unit.pvzShader
-	self.hitbox = {
-		x = 0;
-		y = 0;
-		w = 80;
-		h = 80;
-	}
+	self.hurtbox = {}
+	self.hitbox = {}
+	self:setHitbox()
 	
-	self.hp = 300
-	self.animation.speed = random.number(1, 1.33)
+	self.maxHp = self.getHP()
+	self.hp = self.maxHp
+	
+	self.flags = {}
+	self:setSpeed(random.number(.75, 1))
+	
+	self.damage = 20
+	self.damageGroup = nil
+	self.damageFilter = function(test) return (not test.dead and not test.flags.ignoreCollisions) end
 end
 
-function Unit:getReanim()
+function Unit:setHitbox(x, y, w, h, hurtX, hurtY, hurtW, hurtH)
+	self.hitbox.x = (x or 0)
+	self.hitbox.y = (y or 0)
+	self.hitbox.w = (w or 80)
+	self.hitbox.h = (h or 80)
+	self.hurtbox.x = (hurtX or self.hitbox.x)
+	self.hurtbox.y = (hurtY or self.hitbox.y)
+	self.hurtbox.w = (hurtW or self.hitbox.w)
+	self.hurtbox.h = (hurtH or self.hitbox.h)
+end
+
+function Unit:update(dt)
+	Reanimation.update(self, dt * self.speedMultiplier)
+	
+	if self.frost > 0 then
+		self.frost = (self.frost - dt * self.speed)
+		if self.frost < 0 then
+			self.frost = 0
+			self.speedMultiplier = 1
+		end
+	end
+	
+	self.hurtGlow = math.max(self.hurtGlow - dt * 3, 0)
+	
+	if self.board and self.autoBoardPosition then
+		self:updateBoardPosition()
+	end
+	
+	if self.hp <= 0 and not self.dead then
+		self.dead = true
+		self:onDeath()
+	end
+end
+function Unit:updateBoardPosition()
+	self.boardX, self.boardY = self.board:getBoardPosition(self.x, self.y)
+end
+function Unit:destroy()
+	if self.board then
+		self.board:removeUnit(self)
+	end
+end
+function Unit:collidesWith(unit)
+	return (math.within(self.x - self.xOffset + self.hitbox.x, unit.x - unit.xOffset + unit.hurtbox.x - self.hitbox.w, unit.x - unit.xOffset + unit.hurtbox.x + unit.hitbox.w)
+		and math.within(self.y - self.yOffset + self.hitbox.y, unit.y - unit.yOffset + unit.hurtbox.y - self.hitbox.h, unit.y - unit.yOffset + unit.hurtbox.y + unit.hitbox.h))
+end
+function Unit:getHurtboxCenter(x, y)
+	local x, y = (x or self.x), (y or self.y)
+	return (x - self.xOffset + self.hurtbox.x + self.hurtbox.w * .5), (y - self.yOffset + self.hurtbox.y + self.hurtbox.h * .5)
+end
+function Unit:getHitboxCenter(x, y)
+	local x, y = (x or self.x), (y or self.y)
+	return (x - self.xOffset + self.hitbox.x + self.hitbox.w * .5), (y - self.yOffset + self.hitbox.y + self.hitbox.h * .5)
+end
+
+function Unit:queryCollision(kind, filter, baseX, baseY)
+	local closest, closestDist = nil, nil
+	
+	for _, unit in ipairs(self.board.units) do
+		if (not kind or unit:instanceOf(kind)) and self:collidesWith(unit) and (not filter or filter(unit)) then
+			local xA, yA = self:getHitboxCenter(baseX, baseY)
+			local xB, yB = unit:getHurtboxCenter()
+			local dist = math.eucldistance(xA, yA, xB, yB)
+			
+			if not closest or (closest and dist < closestDist) then
+				closest, closestDist = unit, dist
+			end
+		end
+	end
+	
+	return closest
+end
+function Unit:hit(collision, multiplier)
+	collision:hitBy(self, multiplier)
+end
+function Unit:hitBy(unit, multiplier)
+	local multiplier = (multiplier or 1)
+	self:hurt(unit.damage * multiplier)
+	self.hurtGlow = multiplier
+end
+function Unit:hurt(hp, multiplier)
+	self.hp = (self.hp - hp)
+end
+function Unit:onDeath()
+	self:destroy()
+end
+
+function Unit:setHurtState(state)
+	self.hurtState = state
+end
+function Unit:setState(state)
+	self.state = state
+end
+function Unit:setSpeed(speed)
+	self.speed = speed
+	self.animation.speed = speed
+end
+
+function Unit.getReanim()
 	return 'SunFlower'
 end
-function Unit:getPreviewAnimation()
+function Unit.getPreviewAnimation()
 	return 'idle'
 end
-function Unit:getPreviewFrame()
-	return 0
+function Unit.getPreviewFrame()
+	return 1
+end
+function Unit.getHP()
+	return 300
 end
 
+function Unit:drawShadow(x, y)
+	-- 
+end
 function Unit:draw(x, y, transforms)
-	Reanimation.draw(self, x, y, transforms)
-	self:debugDraw(x, y)
+	Unit.pvzShader:send('frost', (self.frost > 0 and 1 or 0))
+	Unit.pvzShader:send('glow', self.glow + self.hurtGlow)
+	
+	self:drawSprite(x - self.xOffset, y - self.yOffset)
+	if debugMode then self:debugDraw(x - self.xOffset, y - self.yOffset) end
 end
-
+function Unit:drawSprite(x, y)
+	Reanimation.draw(self, x, y, transforms)
+end
 function Unit:debugDraw(x, y)
+	if self.flags.ignoreCollisions then return end
+	
 	x, y = (x or 0), (y or 0)
 	
+	love.graphics.setColor(1, 0, 0)
 	love.graphics.rectangle('line', x + self.hitbox.x, y + self.hitbox.y, self.hitbox.w, self.hitbox.h)
+	love.graphics.setColor(0, 1, 0)
+	love.graphics.rectangle('line', x + self.hurtbox.x, y + self.hurtbox.y, self.hurtbox.w, self.hurtbox.h)
+	love.graphics.setColor(1, 1, 1)
 end
 
 return Unit

@@ -11,9 +11,9 @@ function FlagZombie:init(x, y)
 	self:toggleLayer('Zombie_flaghand', true)
 	self:toggleLayer('Zombie_innerarm_screendoor', true)
 	
-	local flagFrame = ReanimFrame:new():setPosition(35, 4)
+	local flagFrame = ReanimFrame:new():setPosition(35, 3)
 	self.flag = Reanimation:new('Zombie_flagpole')
-	self:attachReanim('Zombie_flaghand', self.flag, nil, flagFrame)
+	self:attachReanim('Zombie_flaghand', self.flag, 'idle', flagFrame)
 end
 
 return FlagZombie

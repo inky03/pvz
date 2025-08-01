@@ -17,6 +17,7 @@ function Animation:init(controller, reanim, name)
 	self.frame = 1
 	self.speed = 1
 	self.loop = true
+	self.paused = false
 	self.finished = false
 	self.justFinished = false
 	
@@ -29,7 +30,7 @@ function Animation:init(controller, reanim, name)
 end
 
 function Animation:update(dt, materialized)
-	if self.finished then return end
+	if self.paused or self.finished then return end
 	
 	self.lerp = (self.lerp + dt * self.speed * self.reanim.fps)
 	self.justFinished = false
@@ -41,36 +42,40 @@ function Animation:update(dt, materialized)
 		
 		if materialized then self.controller.onFrame:dispatch(self) end
 		
-			-- print(self.reanim.name .. ' ' .. self.length)
 		if self.next >= self.length then
 			self.justFinished = true
 			
 			if self.loop then
-				if materialized then self.controller.onLoop:dispatch(self) end
-				self.frame = 1
 				self.next = 2
+				self.frame = 1
+				if materialized then self.controller.onLoop:dispatch(self) end
 			else
-				if materialized then self.controller.onFinish:dispatch(self) end
+				self.lerp = 0
 				self.finished = true
+				if materialized then self.controller.onFinish:dispatch(self) end
 			end
 			
-			if materialized then self:updateFrame() end
+			self:updateFrame()
 		end
 	end
 end
-function Animation:updateFrame()
-	self:updateLayers(self:getFrameIndex(self.frame), self:getFrameIndex(self.next), self.lerp)
+function Animation:updateFrame(noDiff)
+	self:updateLayers(self:getFrameIndex(self.frame), self:getFrameIndex(self.next), self.lerp, noDiff)
 end
 
-function Animation:updateLayers(cur, next, lerp)
+function Animation:updateLayers(cur, next, lerp, noDiff)
 	lambda.foreach(self.layers, function(layer, i)
 		local reanimLayer = self.reanim.layers[i]
 		
 		layer.frame:lerp(
-			reanimLayer.frames[math.clamp(cur, self.first, self.last)],
-			reanimLayer.frames[math.clamp(next, self.first, self.last)],
+			reanimLayer.frames[math.clamp(cur, 1, self.reanim.length)],
+			reanimLayer.frames[math.clamp(next, 1, self.reanim.length)],
 			lerp
 		)
+		
+		if noDiff then
+			layer.frame.diffX, layer.frame.diffY = 0, 0
+		end
 	end)
 end
 function Animation:getLayer(find)
@@ -85,7 +90,8 @@ function Animation:reset()
 	self.lerp = 0
 	self.next = 2
 	self.frame = 1
-	self:updateLayers(self.frame, self.next, 0)
+	self.finished = false
+	self:updateFrame(true)
 end
 
 function Animation:getFrameIndex(index) -- return index in reanim from index in animation
@@ -100,8 +106,8 @@ function Animation:setFrameFromIndex(index) -- set frame to index in reanim
 	self:setFrame(self:getFrameFromIndex(index))
 end
 function Animation:setFrame(index, next) -- set frame to index in animation
-	self.frame = index
-	self.next = (next or index)
+	self.frame = math.clamp(index, 1, self.length)
+	self.next = math.clamp(next or index, 1, self.length)
 	self.lerp = 0
 end
 

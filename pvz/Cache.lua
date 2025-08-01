@@ -105,6 +105,9 @@ end
 function Cache.zombies(path)
 	return ('pvz.lawn.zombies.' .. path)
 end
+function Cache.projectiles(path)
+	return ('pvz.lawn.projectiles.' .. path)
+end
 
 function Cache.decompressFile(path)
 	local file = love.filesystem.newFile(path, 'r')
