@@ -47,7 +47,7 @@ function SeedPacket:renderToCanvas(entity)
 end
 
 function SeedPacket:mousePressed(mouseX, mouseY)
-	if self.recharged >= self.maxRecharge and self.lawn.hoveringEntity == nil and self.entity then
+	if self:isReady() and self.lawn.hoveringEntity == nil and self.entity then
 		self.lawn:pickPlant(self.entity:new(0, 0, self.lawn.challenge), self, mouseX, mouseY)
 		
 		self.parent.canClickChildren = false
@@ -57,19 +57,18 @@ end
 
 function SeedPacket:update(dt)
 	if self.recharged < self.maxRecharge then
-		self.recharged = (self.recharged + dt * Constants.tickPerSecond)
-		if self.recharged >= self.maxRecharge then
-			self.recharged = self.maxRecharge
-			
-			self.useHand = true
-			updateCursor()
-		end
+		self.recharged = math.min(self.recharged + dt * Constants.tickPerSecond, self.maxRecharge)
 	end
 	
-	self.ready = (self.recharged >= self.maxRecharge and (not self.bank or self.cost <= self.bank.money) and not self.picking)
+	local oldReady = self.ready
+	self.ready = self:isReady()
 	self.useHand = self.ready
+	if oldReady ~= self.ready then updateCursor() end
 	
 	UIContainer.update(self, dt)
+end
+function SeedPacket:isReady()
+	return (self.recharged >= self.maxRecharge and (not self.bank or self.cost <= self.bank.money) and not self.picking)
 end
 
 function SeedPacket:onPlanted()

@@ -47,8 +47,6 @@ function Challenge:init(challenge)
 	self.zombieCountdownStart = self.zombieCountdown
 	
 	print('challenge ' .. self.challenge)
-	
-	self.collectibles:addElement(Sun:new(100, 50, nil, self.seeds))
 end
 
 function Challenge:initWaves()

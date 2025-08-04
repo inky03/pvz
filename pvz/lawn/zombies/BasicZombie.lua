@@ -39,7 +39,7 @@ function BasicZombie:init(x, y)
 		end
 	end)
 	
-	self.shadowOffset = {x = 10; y = 56}
+	self.shadowOffset = {x = 10; y = 60}
 end
 
 function BasicZombie:hurt(hp)

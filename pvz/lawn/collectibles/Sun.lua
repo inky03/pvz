@@ -13,7 +13,6 @@ function Sun:init(x, y, mode, bank)
 	self.canClick = true
 	
 	self.transform:setOffset(-40, -40)
-	self:setHitbox(10, 10, 60, 60)
 	
 	self.destX, self.destY = 15, 0
 	
