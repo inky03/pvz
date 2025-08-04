@@ -4,8 +4,8 @@ local Repeater = PeaShooter:extend('Repeater')
 Repeater.reanimName = 'PeaShooter'
 Repeater.packetCost = 200
 
-function Repeater:init(x, y)
-	PeaShooter.init(self, x, y)
+function Repeater:init(x, y, challenge)
+	PeaShooter.init(self, x, y, challenge)
 	
 	self.head:toggleLayer('idle_shoot_blink', false)
 	

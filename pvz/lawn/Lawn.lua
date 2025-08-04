@@ -112,8 +112,8 @@ end
 function Lawn:update(dt)
 	UIContainer.update(self, dt)
 	
-	lambda.foreach(self.units, function(unit) unit:update(dt) end)
-	lambda.foreach(self.particles, function(unit) unit:update(dt) end)
+	for _, unit in ipairs(self.units) do unit:update(dt) end
+	for _, part in ipairs(self.particles) do part:update(dt) end
 end
 function Lawn:updateHover(mouseX, mouseY)
 	if self.hoveringEntity then
@@ -193,8 +193,8 @@ end
 function Lawn:drawTop(x, y) -- draw units
 	if not self.visible then return end
 	
-	lambda.foreach(self.units, function(unit) unit:draw(x + unit.x, y + unit.y) end)
-	lambda.foreach(self.particles, function(part) part:draw(x + part.x, y + part.y) end)
+	for _, unit in ipairs(self.units) do unit:draw(x + unit.x, y + unit.y) end
+	for _, part in ipairs(self.particles) do part:draw(x + part.x, y + part.y) end
 	
 	if self.hoveringEntity then
 		local mouseX, mouseY = love.mouse.getPosition()

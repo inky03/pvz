@@ -2,23 +2,17 @@ local Plant = Unit:extend('Plant')
 
 Plant.upgradeOf = nil
 
-function Plant:init(x, y)
-	Unit.init(self, x, y)
+function Plant:init(x, y, challenge)
+	Unit.init(self, x, y, challenge)
 	
 	self:setHitbox(10, 0, 60, 80)
 	
 	self.damageGroup = Zombie
-	
-	self.shadow = Cache.image('images/plantshadow')
 end
 
 function Plant:update(dt)
 	Unit.update(self, dt)
 	-- todo blinking logic
-end
-
-function Plant:drawShadow(x, y)
-	love.graphics.draw(self.shadow, x + (80 - self.shadow:getPixelWidth()) * .5, y + 50)
 end
 
 return Plant

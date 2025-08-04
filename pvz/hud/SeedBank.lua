@@ -1,9 +1,12 @@
 local SeedPacket = Cache.module('pvz.hud.SeedPacket')
 local SeedBank = UIContainer:extend('SeedBank')
 
-function SeedBank:init(lawn, x, y)
+function SeedBank:init(lawn, x, y, sun)
 	self.texture = Cache.image('images/SeedBank')
 	self.lawn = lawn
+	
+	self.visualMoney = (sun or 50)
+	self.money = self.visualMoney
 	
 	UIContainer.init(self, x, y, self.texture:getPixelWidth(), self.texture:getPixelHeight())
 	
@@ -17,8 +20,13 @@ function SeedBank:init(lawn, x, y)
 	self:addSeed(Cache.plants('WallNut'))
 end
 
+function SeedBank:setMoney(money)
+	self.visualMoney = money
+	self.money = money
+end
+
 function SeedBank:addSeed(entity)
-	local seed = self:addElement(SeedPacket:new(self.lawn, entity, 85 + #self.children * self.seedSpacing, 8))
+	local seed = self:addElement(SeedPacket:new(self.lawn, entity, 85 + #self.children * self.seedSpacing, 8, self))
 	return seed
 end
 
@@ -43,6 +51,9 @@ end
 
 function SeedBank:draw(x, y)
 	love.graphics.draw(self.texture, x, y)
+	
+	love.graphics.setColor(0, 0, 0)
+	love.graphics.printf(self.visualMoney, x + 15, y + 65, 48, 'center')
 	
 	UIContainer.draw(self, x, y)
 end

@@ -24,9 +24,11 @@ Unit.maxHp = 300
 
 Unit.allowedSurfaces = {'ground'}
 
-function Unit:init(x, y)
+function Unit:init(x, y, challenge)
 	Reanimation.init(self, self.reanimName, x, y)
 	
+	self.lawn = (challenge and challenge.lawn or nil)
+	self.challenge = challenge
 	self.active = true
 	
 	self.glow = 0
@@ -44,9 +46,6 @@ function Unit:init(x, y)
 	self.board, self.boardX, self.boardY = nil, 0, 0
 	self.autoBoardPosition = false -- optimization
 	self.shader = Unit.pvzShader
-	self.hurtbox = {}
-	self.hitbox = {}
-	self:setHitbox()
 	
 	self.flags = {}
 	self:setSpeed(random.number(.75, 1))
@@ -54,13 +53,14 @@ function Unit:init(x, y)
 	self.damage = 20
 	self.damageGroup = nil
 	self.damageFilter = function(test) return (not test.dead and not test.flags.ignoreCollisions) end
+	
+	self.shadow = Cache.image('images/plantshadow')
+	self.shadowOffset = {x = -3; y = 50}
 end
 
 function Unit:setHitbox(x, y, w, h, hurtX, hurtY, hurtW, hurtH)
-	self.hitbox.x = (x or 0)
-	self.hitbox.y = (y or 0)
-	self.hitbox.w = (w or 80)
-	self.hitbox.h = (h or 80)
+	Reanimation.setHitbox(self, x, y, w, h)
+	self.hurtbox = (self.hurtbox or {})
 	self.hurtbox.x = (hurtX or self.hitbox.x)
 	self.hurtbox.y = (hurtY or self.hitbox.y)
 	self.hurtbox.w = (hurtW or self.hitbox.w)
@@ -93,6 +93,8 @@ function Unit:destroy()
 	if self.board then
 		self.board:removeUnit(self)
 	end
+	
+	Reanimation.destroy(self)
 end
 function Unit:collidesWith(unit)
 	return (math.within(self.x - self.xOffset + self.hitbox.x, unit.x - unit.xOffset + unit.hurtbox.x - self.hitbox.w, unit.x - unit.xOffset + unit.hurtbox.x + unit.hitbox.w)
@@ -175,7 +177,9 @@ function Unit:setSpeed(speed)
 end
 
 function Unit:drawShadow(x, y)
-	-- 
+	if self.flags.ignoreCollisions then return end
+	
+	love.graphics.draw(self.shadow, x + self.shadowOffset.x, y + self.shadowOffset.y)
 end
 function Unit:draw(x, y, transforms)
 	Unit.pvzShader:send('frost', (self.frost > 0 and 1 or 0))
@@ -188,16 +192,14 @@ function Unit:drawSprite(x, y)
 	Reanimation.draw(self, x, y, transforms)
 end
 function Unit:debugDraw(x, y)
-	Reanimation.debugDraw(self, x, y)
-	
 	if self.flags.ignoreCollisions then return end
+	
+	Reanimation.debugDraw(self, x, y)
 	
 	x, y = (x or 0), (y or 0)
 	
-	love.graphics.setColor(1, 0, 0)
-	love.graphics.rectangle('line', x - self.xOffset + self.hitbox.x, y - self.yOffset + self.hitbox.y, self.hitbox.w, self.hitbox.h)
 	love.graphics.setColor(0, 1, 0)
-	love.graphics.rectangle('line', x - self.xOffset + self.hurtbox.x, y - self.yOffset + self.hurtbox.y, self.hurtbox.w, self.hurtbox.h)
+	love.graphics.rectangle('line', x - self.xOffset + self.hurtbox.x + 1, y - self.yOffset + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
 	love.graphics.setColor(1, 1, 1)
 	outlineText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)), math.floor(x), math.floor(y))
 end

@@ -107,7 +107,7 @@ function Reanimation:draw(x, y, transforms)
 	self:render(x, y, transforms)
 	love.graphics.setShader(nil)
 	
-	UIContainer.update(self, dt)
+	UIContainer.draw(self, x, y)
 end
 
 Reanimation.transformStack = {}
@@ -191,7 +191,7 @@ function Reanimation.transformVertex(vert, frame, scaleCoords)
 	
 	local xScale, yScale = (scaleCoords and frame.xScale or 1), (scaleCoords and frame.yScale or 1)
 	
-	vert[1], vert[2] = (vert[1] - frame.xOrigin - frame.xOffset) * xScale, (vert[2] - frame.yOrigin - frame.yOffset) * yScale
+	vert[1], vert[2] = ((vert[1] - frame.xOrigin) * xScale - frame.xOffset), ((vert[2] - frame.yOrigin) * yScale - frame.yOffset)
 	
 	local rX = (vert[1] * math.dcos(frame.yShear) - vert[2] * math.dsin(frame.xShear))
 	local rY = (vert[1] * math.dsin(frame.yShear) + vert[2] * math.dcos(frame.xShear))

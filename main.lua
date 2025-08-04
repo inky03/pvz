@@ -15,6 +15,7 @@ Unit = require 'pvz.lawn.Unit'
 Plant = require 'pvz.lawn.Plant'
 Zombie = require 'pvz.lawn.Zombie'
 Projectile = require 'pvz.lawn.Projectile'
+Collectible = require 'pvz.lawn.Collectible'
 Challenge = require 'pvz.lawn.Challenge'
 
 math.randomseed(os.clock())
@@ -63,7 +64,7 @@ end
 
 function updateHover(mouseX, mouseY)
 	local prevHovering = hoveringElement
-	hoveringElement = game:getHoveringElement(game.x, game.y, mouseX, mouseY)
+	hoveringElement = game:getHoveringElement(mouseX, mouseY)
 	
 	if prevHovering ~= hoveringElement and prevHovering then prevHovering:setHovering(false) end
 end

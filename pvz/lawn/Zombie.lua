@@ -8,8 +8,8 @@ Zombie.pickWeight = 0
 Zombie.startingLevel = 1
 Zombie.firstAllowedWave = 1
 
-function Zombie:init(x, y)
-	Unit.init(self, x, y)
+function Zombie:init(x, y, challenge)
+	Unit.init(self, x, y, challenge)
 	
 	self:setHitbox(
 		7, 7, 20, 115,

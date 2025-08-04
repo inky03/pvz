@@ -38,6 +38,8 @@ function BasicZombie:init(x, y)
 			end
 		end
 	end)
+	
+	self.shadowOffset = {x = 10; y = 56}
 end
 
 function BasicZombie:hurt(hp)

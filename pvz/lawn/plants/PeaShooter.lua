@@ -8,12 +8,12 @@ PeaShooter.maxHp = 300
 
 PeaShooter.projectile = Pea
 
-function PeaShooter:init(x, y)
-	Plant.init(self, x, y)
+function PeaShooter:init(x, y, challenge)
+	Plant.init(self, x, y, challenge)
 	
-	self.fireRate = 23
+	self.fireRate = 150
 	self.fireTimer = self.fireRate
-	self:setSpeed(random.number(1.15, 1.3))
+	self:setSpeed(random.number(1, 1.25))
 	
 	self.animation:add('idle', 'idle')
 	self.animation:play('idle', true)
@@ -48,7 +48,7 @@ function PeaShooter:update(dt)
 	
 	Plant.update(self, dt * self.speedMultiplier)
 	
-	self.fireTimer = (self.fireTimer - dt * self.reanim.fps * self.speed * self.speedMultiplier)
+	self.fireTimer = (self.fireTimer - dt * Constants.tickPerSecond * self.speed * self.speedMultiplier)
 	
 	if self.fireTimer < 0 then
 		self.fireTimer = (self.fireTimer + self.fireRate)

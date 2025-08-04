@@ -3,6 +3,7 @@ local SeedBank = Cache.module('pvz.hud.SeedBank')
 local Challenge = UIContainer:extend('Challenge')
 local FlagZombie = Cache.module(Cache.zombies('FlagZombie'))
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
+local Sun = Cache.module('pvz.lawn.collectibles.Sun')
 
 Challenge.wavesPerFlag = 10
 Challenge.maxZombiesInWave = 50
@@ -23,6 +24,9 @@ function Challenge:init(challenge)
 	self.hugeWaveCountdown = 0
 	self.challengeCompleted = false
 	
+	self.sunCountdown = (Constants.sunCountdown + random.int(Constants.sunCountdownRange))
+	self.sunsFallen = 0
+	
 	self.debug = true
 	self.challenge = (challenge or 1)
 	self.challengeZombies = self:getZombies(challenge)
@@ -31,7 +35,10 @@ function Challenge:init(challenge)
 	self:initWaves()
 	
 	self.lawn = self:addElement(self.lawn:new(self, 0, 0))
-	self.seeds = self:addElement(SeedBank:new(self.lawn, 10, 0))
+	self.seeds = self:addElement(SeedBank:new(self.lawn, 10, 0, self.flags.startingSun))
+	self.collectibles = self:addElement(UIContainer:new(0, 0, windowWidth, windowHeight))
+	self.collectibles.drawToTop = true
+	self.collectibles.canClick = false
 	
 	self.lawn:setPosition(-220, 0)
 	
@@ -40,6 +47,8 @@ function Challenge:init(challenge)
 	self.zombieCountdownStart = self.zombieCountdown
 	
 	print('challenge ' .. self.challenge)
+	
+	self.collectibles:addElement(Sun:new(100, 50, nil, self.seeds))
 end
 
 function Challenge:initWaves()
@@ -118,7 +127,22 @@ end
 function Challenge:update(dt)
 	UIContainer.update(self, dt)
 	
+	self:updateSun(dt)
 	self:updateChallenge(dt)
+end
+function Challenge:updateSun(dt)
+	if not self.flags.fallingSun then return end
+	
+	self.sunCountdown = (self.sunCountdown - dt * Constants.tickPerSecond)
+	
+	if self.sunCountdown < 0 then
+		self.sunsFallen = (self.sunsFallen + 1)
+		self.sunCountdown = math.min(Constants.sunCountdownMax, Constants.sunCountdown + self.sunsFallen * 10) + random.int(Constants.sunCountdownRange)
+		self:spawnSun()
+	end
+end
+function Challenge:spawnSun()
+	return self.collectibles:addElement(Sun:new(random.int(100, 649), 60, 'rain', self.seeds))
 end
 function Challenge:updateChallenge(dt)
 	if self.challengeCompleted then return end
@@ -171,7 +195,9 @@ function Challenge:getCurrentWaveHealth()
 	local waveHealth = 0
 	if self.currentWaveZombies then
 		for _, zombie in ipairs(self.currentWaveZombies) do
-			waveHealth = (waveHealth + math.max(zombie.hp, 0))
+			if zombie.state ~= 'dead' then
+				waveHealth = (waveHealth + math.max(zombie.hp, 0))
+			end
 		end
 	end
 	return waveHealth
@@ -211,7 +237,7 @@ end
 function Challenge:attemptSpawnZombie(zombie)
 	local spawnRow = self:pickRowForZombie(zombie)
 	if spawnRow then
-		return self:spawnZombie(zombie:new(), spawnRow)
+		return self:spawnZombie(zombie:new(0, 0, self), spawnRow)
 	else
 		print('couldn\'t spawn zombie ' .. tostr(zombie) .. '!')
 		return nil
@@ -272,17 +298,30 @@ function Challenge:drawTop(x, y)
 		))
 	end
 	
-	if self.currentWave > 0 then
-		local healthFraction = math.remap(self.currentWaveHealth, self.startWaveHealth, self.healthToNextWave, 0, 100)
-		debugString = (debugString ..
-			('\nzombie health: %d -> %d (%.0f%%)'):format(self.currentWaveHealth, self.healthToNextWave, healthFraction * 100)
-		)
-	end
-	
-	if self.hugeWaveCountdown > 0 then
+	if not self.challengeCompleted then
+		if self.currentWave > 0 then
+			local healthFraction = math.remap(self.currentWaveHealth, self.startWaveHealth, self.healthToNextWave, 0, 100)
+			debugString = (debugString ..
+				('\nzombie health: %d -> %d (%.0f%%)'):format(self.currentWaveHealth, self.healthToNextWave, healthFraction)
+			)
+		end
+		
+		if self.hugeWaveCountdown > 0 then
+			debugString = (
+				debugString ..
+				('\nhuge wave countdown: %.0f'):format(self.hugeWaveCountdown)
+			)
+		end
+		
 		debugString = (
-			debugString ..
-			('\nhuge wave countdown: %.0f'):format(self.hugeWaveCountdown)
+			debugString .. (
+				'\n\nSUN DEBUG\n' ..
+				'sun countdown: %.0f\n' ..
+				'sun phase: %d'
+			):format(
+				self.sunCountdown,
+				self.sunsFallen
+			)
 		)
 	end
 	
