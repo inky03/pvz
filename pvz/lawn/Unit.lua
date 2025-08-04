@@ -16,8 +16,16 @@ Unit.pvzShader = love.graphics.newShader([[
 	}
 ]])
 
+Unit.reanimName = 'SunFlower'
+Unit.previewAnimation = 'idle'
+Unit.packetRecharge = 750
+Unit.packetCost = 100
+Unit.maxHp = 300
+
+Unit.allowedSurfaces = {'ground'}
+
 function Unit:init(x, y)
-	Reanimation.init(self, self.getReanim(), x, y)
+	Reanimation.init(self, self.reanimName, x, y)
 	
 	self.active = true
 	
@@ -27,6 +35,7 @@ function Unit:init(x, y)
 	self.hurtGlow = 0
 	self.hurtState = 0
 	self.canDie = true
+	self.hp = self.maxHp
 	self.state = 'normal'
 	self.speedMultiplier = 1
 	
@@ -38,9 +47,6 @@ function Unit:init(x, y)
 	self.hurtbox = {}
 	self.hitbox = {}
 	self:setHitbox()
-	
-	self.maxHp = self.getHP()
-	self.hp = self.maxHp
 	
 	self.flags = {}
 	self:setSpeed(random.number(.75, 1))
@@ -79,11 +85,6 @@ function Unit:update(dt)
 	if self.board and self.autoBoardPosition then
 		self:updateBoardPosition()
 	end
-	
-	if self.canDie and self.hp <= 0 and not self.dead then
-		self.dead = true
-		self:onDeath()
-	end
 end
 function Unit:updateBoardPosition()
 	self.boardX, self.boardY = self.board:getBoardPosition(self.x, self.y)
@@ -112,6 +113,14 @@ end
 function Unit:hitboxOnScreen()
 	local screenX, screenY = self:elementToScreen(-self.xOffset + self.hitbox.x, -self.yOffset + self.hitbox.y)
 	return (math.within(screenX, -self.hitbox.w, windowWidth) and math.within(screenY, -self.hitbox.h, windowHeight))
+end
+function Unit:isInTile(col, row, error)
+	local error = (error or .05)
+	return ((not col or math.abs(self.boardX - col) < error) and (not row or math.abs(self.boardY - row) < error))
+end
+
+function Unit:canBeSpawnedAt(lawn, col, row)
+	return table.find(self.allowedSurfaces, lawn:getSurfaceAt(col, row))
 end
 
 function Unit:queryCollision(kind, filter, baseX, baseY)
@@ -143,7 +152,13 @@ function Unit:hitBy(unit, multiplier)
 end
 function Unit:hurt(hp, multiplier)
 	self.hp = (self.hp - hp)
+	
+	if self.canDie and self.hp <= 0 and not self.dead then
+		self.dead = true
+		self:onDeath()
+	end
 end
+function Unit:onSpawn() end
 function Unit:onDeath()
 	self:destroy()
 end
@@ -159,19 +174,6 @@ function Unit:setSpeed(speed)
 	self.animation.speed = speed
 end
 
-function Unit.getReanim()
-	return 'SunFlower'
-end
-function Unit.getPreviewAnimation()
-	return 'idle'
-end
-function Unit.getPreviewFrame()
-	return 1
-end
-function Unit.getHP()
-	return 300
-end
-
 function Unit:drawShadow(x, y)
 	-- 
 end
@@ -180,7 +182,7 @@ function Unit:draw(x, y, transforms)
 	Unit.pvzShader:send('glow', self.glow + self.hurtGlow)
 	
 	self:drawSprite(x - self.xOffset, y - self.yOffset)
-	if debugMode then self:debugDraw(x - self.xOffset, y - self.yOffset) end
+	if debugMode or self.debug then self:debugDraw(x, y) end
 end
 function Unit:drawSprite(x, y)
 	Reanimation.draw(self, x, y, transforms)
@@ -193,10 +195,11 @@ function Unit:debugDraw(x, y)
 	x, y = (x or 0), (y or 0)
 	
 	love.graphics.setColor(1, 0, 0)
-	love.graphics.rectangle('line', x + self.hitbox.x, y + self.hitbox.y, self.hitbox.w, self.hitbox.h)
+	love.graphics.rectangle('line', x - self.xOffset + self.hitbox.x, y - self.yOffset + self.hitbox.y, self.hitbox.w, self.hitbox.h)
 	love.graphics.setColor(0, 1, 0)
-	love.graphics.rectangle('line', x + self.hurtbox.x, y + self.hurtbox.y, self.hurtbox.w, self.hurtbox.h)
+	love.graphics.rectangle('line', x - self.xOffset + self.hurtbox.x, y - self.yOffset + self.hurtbox.y, self.hurtbox.w, self.hurtbox.h)
 	love.graphics.setColor(1, 1, 1)
+	outlineText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)), math.floor(x), math.floor(y))
 end
 
 return Unit

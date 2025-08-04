@@ -1,6 +1,12 @@
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 local ConeHeadZombie = BasicZombie:extend('ConeHeadZombie')
 
+ConeHeadZombie.maxHp = 640
+
+ConeHeadZombie.value = 2
+ConeHeadZombie.startingLevel = 3
+ConeHeadZombie.firstAllowedWave = 1
+
 function ConeHeadZombie:init(x, y)
 	BasicZombie.init(self, x, y)
 	
@@ -43,10 +49,6 @@ function ConeHeadZombie:setHurtState(state)
 		self:toggleLayer('head2', false)
 		self:toggleLayer('tongue', false)
 	end
-end
-
-function ConeHeadZombie.getHP()
-	return 640
 end
 
 return ConeHeadZombie

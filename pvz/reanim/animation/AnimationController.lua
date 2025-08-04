@@ -9,6 +9,8 @@ function AnimationController:init(reanim)
 	self.onFrame = Signal:new()
 	self.onLoop = Signal:new()
 	
+	self.groundVelocity = 0
+	
 	self:reset()
 end
 
@@ -19,6 +21,7 @@ function AnimationController:setReanim(reanim)
 	self.parallel = {}
 	self.list = {}
 	
+	self._prev = nil
 	self._cur = self:add('')
 	self._ghost = Animation:new(self, self.reanim)
 	self.current = Animation:new(self, self.reanim)
@@ -41,17 +44,31 @@ function AnimationController:update(dt, noDiff)
 	if self.paused or not self.reanim then return end
 	
 	lambda.foreach(self.list, function(anim)
-		local active = (anim == self._cur)
+		local active = (anim == self._cur or anim == self._prev)
 		if active or self.parallel[anim.name] then
 			anim:update(dt * self.speed, active)
 		end
 	end)
 	
+	local ground, groundX = self._cur:getLayer('_ground'), 0
+	if ground then groundX = ground.frame.x end
+	
 	self.current.finished = self._cur.finished
 	self.finished = self._cur.finished
 	self._cur:updateFrame(0)
 	
+	self.groundVelocity = (ground and ground.frame.active and (groundX - ground.frame.x) or 0)
+	
 	if self.crossFade < 1 then
+		if self._prev then
+			local ground, groundX = self._prev:getLayer('_ground'), 0
+			if ground then groundX = ground.frame.x end
+			
+			self._prev:updateFrame(0)
+			
+			self.groundVelocity = (ground and ground.frame.active and (groundX - ground.frame.x) or 0)
+		end
+		
 		if self.crossFadeLength > 0 then
 			self.crossFade = math.min(1, self.crossFade + dt * self.speed / self.crossFadeLength)
 		else
@@ -81,7 +98,7 @@ function AnimationController:framesToSeconds(n)
 	return (n / self.reanim.fps / self.speed)
 end
 
-function AnimationController:attachReanim(layer, reanim, basePose, offset)
+function AnimationController:attachReanim(layer, reanim, basePose)
 	local basePose = (basePose or self.name)
 	local baseLayer = self:getLayer(layer)
 	
@@ -105,7 +122,7 @@ function AnimationController:attachReanim(layer, reanim, basePose, offset)
 			return
 		end
 		
-		baseLayer.frame:attachReanim(reanim, {transform, offset})
+		baseLayer.frame:attachReanim(reanim, transform)
 	else
 		print(('%s: Layer %s doesn\'t exist'):format(self.reanim.name, track))
 	end
@@ -144,6 +161,8 @@ function AnimationController:play(name, force, crossFade, reset)
 		local reset = (reset == nil and true or reset)
 		local anim = self:get(name)
 		if anim then
+			self._prev = self._cur
+			
 			lambda.foreach(self._ghost.layers, function(layer, i) layer.frame:copy(self.current.layers[i].frame) end)
 			
 			self._cur = anim

@@ -1,10 +1,13 @@
 local Projectile = Unit:extend('Projectile')
 
+Projectile.reanimName = nil
+
 function Projectile:init(x, y)
 	Unit.init(self, x, y)
 	
-	self:setHitbox(10, 10, 8, 8)
+	self:setHitbox(2, 2, 24, 24)
 	
+	self.autoBoardPosition = true
 	self.damageGroup = Zombie
 	self.direction = 0
 	self.speed = 300
@@ -33,10 +36,6 @@ end
 
 function Projectile:getVelocity(delta)
 	return (math.cos(self.direction) * delta), (math.sin(self.direction) * delta)
-end
-
-function Projectile.getReanim()
-	return nil
 end
 
 return Projectile

@@ -2,14 +2,9 @@ local PeaShooter = Cache.module(Cache.plants('PeaShooter'))
 local SnowPea = PeaShooter:extend('SnowPea')
 local SnowPeaProjectile = Cache.module(Cache.projectiles('SnowPeaProjectile'))
 
-function SnowPea:fireProjectile()
-	local projectile = self.board:spawnUnit(SnowPeaProjectile:new(), self.boardX, self.boardY)
-	projectile.x = (projectile.x + 60)
-	projectile.yOffset = -10
-end
+SnowPea.reanimName = 'SnowPea'
+SnowPea.packetCost = 175
 
-function SnowPea.getReanim()
-	return 'SnowPea'
-end
+SnowPea.projectile = SnowPeaProjectile
 
 return SnowPea

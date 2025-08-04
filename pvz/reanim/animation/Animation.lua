@@ -9,8 +9,8 @@ function Animation:init(controller, reanim, name)
 	self.layers = {}
 	
 	self.first = 1
-	self.last = reanim.length
-	self.length = reanim.length
+	self.last = reanim.length + 1
+	self.length = reanim.length + 1
 	
 	self.lerp = 0
 	self.next = 2

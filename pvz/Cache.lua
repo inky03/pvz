@@ -4,6 +4,7 @@ local Cache = {
 		sounds = {};
 		reanim = {};
 		
+		levels = {};
 		entities = {};
 	}
 }

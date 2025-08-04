@@ -1,5 +1,9 @@
 local BasicZombie = Zombie:extend('BasicZombie')
 
+BasicZombie.maxHp = 270
+
+BasicZombie.pickWeight = 4000
+
 function BasicZombie:init(x, y)
 	Zombie.init(self, x, y)
 	
@@ -24,7 +28,8 @@ function BasicZombie:init(x, y)
 	self.animation:play('walk', true)
 	
 	self:setSpeed(random.number(1, 1.25))
-	self.animation:get('eating').speed = 2
+	self.animation:get('eating').speed = 2.25
+	self.animation:get('death').speed = 1.75
 	
 	self.animation.onFrame:add(function(animation)
 		if animation.name == 'eating' and self.state == 'eating' then
@@ -59,10 +64,6 @@ function BasicZombie:setHurtState(state)
 		self:toggleLayer('head2', false)
 		self:toggleLayer('tongue', false)
 	end
-end
-
-function BasicZombie.getHP()
-	return 270
 end
 
 return BasicZombie

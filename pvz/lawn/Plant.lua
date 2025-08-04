@@ -1,5 +1,7 @@
 local Plant = Unit:extend('Plant')
 
+Plant.upgradeOf = nil
+
 function Plant:init(x, y)
 	Unit.init(self, x, y)
 	
@@ -17,10 +19,6 @@ end
 
 function Plant:drawShadow(x, y)
 	love.graphics.draw(self.shadow, x + (80 - self.shadow:getPixelWidth()) * .5, y + 50)
-end
-
-function Plant.isUpgradeOf()
-	return nil
 end
 
 return Plant

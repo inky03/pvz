@@ -11,6 +11,8 @@ function math.dsin(o) return math.sin(math.rad(o)) end
 
 function math.lerp(a, b, t) return (a + (b - a) * t) end
 
+function math.remap(n, minA, maxA, minB, maxB) return (minB + (n - minA) * ((maxB - minB) / (maxA - minA))) end
+
 function math.eucldistance(xA, yA, xB, yB) return math.sqrt((xB - xA) ^ 2 + (yB - yA) ^ 2) end
 
 
@@ -31,6 +33,23 @@ end
 function random.object(...)
 	local t = {...}
 	return t[random.int(1, #t)]
+end
+function random.pickWeighted(objects, weights)
+	if #objects ~= #weights then error('Length of objects table doesn\'t match weights table') end
+	if #weights == 0 then return nil end
+	
+	local allWeights = 0
+	for i = 1, #weights do
+		allWeights = (allWeights + weights[i])
+	end
+	
+	local selection = random.number(0, allWeights)
+	for i = 1, #weights do
+		selection = (selection - weights[i])
+		if selection <= 0 then
+			return objects[i]
+		end
+	end
 end
 function random.bool(chance) return (random.number(100) <= chance) end
 
@@ -123,6 +142,14 @@ function table.flatten(v)
 	end
 	flatten(v)
 	return t
+end
+
+function table.shuffle(tbl) -- https://gist.github.com/Uradamus/10323382
+	for i = #tbl, 2, -1 do
+		local j = math.random(i)
+		tbl[i], tbl[j] = tbl[j], tbl[i]
+	end
+	return tbl
 end
 
 

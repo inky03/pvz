@@ -1,0 +1,327 @@
+local Lawn = Cache.module('pvz.lawn.Lawn')
+local SeedBank = Cache.module('pvz.hud.SeedBank')
+local Challenge = UIContainer:extend('Challenge')
+local FlagZombie = Cache.module(Cache.zombies('FlagZombie'))
+local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
+
+Challenge.wavesPerFlag = 10
+Challenge.maxZombiesInWave = 50
+
+Challenge.adventureIds = {}
+
+Challenge.lawn = Lawn
+
+function Challenge:init(challenge)
+	UIContainer.init(self, 0, 0, game.w, game.h)
+	
+	self.waveZombies = {}
+	self.currentWave = 0
+	self.currentWaveZombies = {}
+	self.currentWaveHealth = 0
+	self.healthToNextWave = 0
+	self.startWaveHealth = 0
+	self.hugeWaveCountdown = 0
+	self.challengeCompleted = false
+	
+	self.debug = true
+	self.challenge = (challenge or 1)
+	self.challengeZombies = self:getZombies(challenge)
+	self.waves = self:getWaveCount(challenge)
+	self.flags = self:getFlags(challenge)
+	self:initWaves()
+	
+	self.lawn = self:addElement(self.lawn:new(self, 0, 0))
+	self.seeds = self:addElement(SeedBank:new(self.lawn, 10, 0))
+	
+	self.lawn:setPosition(-220, 0)
+	
+	self.zombieSince = 0
+	self.zombieCountdown = Constants.zombieCountdownFirstWave
+	self.zombieCountdownStart = self.zombieCountdown
+	
+	print('challenge ' .. self.challenge)
+end
+
+function Challenge:initWaves()
+	for wave = 1, self.waves do
+		local zombiePoints = self:pointsOnWave(wave)
+		
+		if not self:zombiePickerRoutine(wave, zombiePoints) then
+			print('couldn\'t place any zombies for wave ' .. wave)
+		end
+	end
+end
+function Challenge:zombiePickerRoutine(wave, maxPoints)
+	if self:isFlagWave(wave) then
+		-- print('add flag zombys ' .. wave)
+		
+		local plainZombies = math.min(maxPoints, 8)
+		maxPoints = (maxPoints * 2.5)
+		
+		for i = 1, plainZombies do
+			maxPoints = (maxPoints - self:queueZombie(wave, BasicZombie).value)
+		end
+		maxPoints = (maxPoints - self:queueZombie(wave, FlagZombie).value)
+	end
+	
+	local introZombie, spawnIntro = self:getIntroZombie(self.challenge), false
+	if wave == math.floor(self.waves / 2) then
+		spawnIntro = true
+	end
+	if spawnIntro and introZombie then
+		maxPoints = (maxPoints - self:queueZombie(wave, introZombie).value)
+	end
+	
+	local points, zombs = maxPoints, self.maxZombiesInWave
+	while points > 0 and zombs > 0 do
+		local zombie = self:pickZombie(wave, points)
+		
+		if zombie then
+			zombs = (zombs - 1)
+			points = (points - math.max(zombie.value, 1))
+			self:queueZombie(wave, zombie)
+		else
+			break
+		end
+	end
+	
+	if self.waveZombies[wave] then
+		return #self.waveZombies[wave]
+	else
+		self.waveZombies[wave] = {}
+		return nil
+	end
+end
+function Challenge:pickZombie(wave, maxPoints)
+	local choices, weights = {}, {}
+	
+	for _, zombie in ipairs(self.challengeZombies) do
+		if zombie.value > 0 and zombie.value <= maxPoints and zombie.firstAllowedWave <= wave then
+			table.insert(choices, zombie)
+			table.insert(weights, zombie.pickWeight)
+		end
+	end
+	
+	return random.pickWeighted(choices, weights)
+end
+function Challenge:queueZombie(wave, zombie)
+	local zombies = (self.waveZombies[wave] or {})
+	
+	-- print('queued ' .. tostr(zombie) .. ' in wave ' .. wave)
+	table.insert(zombies, zombie)
+	
+	self.waveZombies[wave] = zombies
+	
+	return zombie
+end
+
+function Challenge:update(dt)
+	UIContainer.update(self, dt)
+	
+	self:updateChallenge(dt)
+end
+function Challenge:updateChallenge(dt)
+	if self.challengeCompleted then return end
+	
+	self.currentWaveHealth = self:getCurrentWaveHealth()
+	
+	local nextWaveIsFlag = self:isFlagWave(self.currentWave + 1)
+	local isFinalWave = self:isFinalWave(self.currentWave)
+	local canSkipWave = (
+		(self.currentWaveHealth <= self.healthToNextWave and not nextWaveIsFlag and not self:isFlagWave(self.currentWave) and self.currentWave > 0) or
+		(self.currentWaveHealth <= 0 and self.currentWave > 0)
+	)
+	
+	if isFinalWave then
+		if canSkipWave then
+			self.challengeCompleted = true
+		else
+			return
+		end
+	end
+	
+	if self.hugeWaveCountdown > 0 then
+		self.hugeWaveCountdown = (self.hugeWaveCountdown - dt * Constants.tickPerSecond)
+		if self.hugeWaveCountdown <= 0 then
+			self.zombieCountdown = 0
+		else
+			return
+		end
+	end
+	
+	self.zombieSince = (self.zombieSince + dt * Constants.tickPerSecond)
+	self.zombieCountdown = (self.zombieCountdown - dt * Constants.tickPerSecond)
+	
+	if self.zombieCountdown > 200 and canSkipWave and self.zombieSince >= Constants.zombieCountdownMin then
+		self.zombieCountdown = 200
+	elseif self.zombieCountdown <= 5 then
+		if not self.hugeWaveComing and nextWaveIsFlag then
+			self.hugeWaveCountdown = 750
+			self.hugeWaveComing = true
+			return
+		end
+	end
+	
+	if self.zombieCountdown <= 0 then
+		self.hugeWaveComing = false
+		self:startNextWave()
+	end
+end
+function Challenge:getCurrentWaveHealth()
+	local waveHealth = 0
+	if self.currentWaveZombies then
+		for _, zombie in ipairs(self.currentWaveZombies) do
+			waveHealth = (waveHealth + math.max(zombie.hp, 0))
+		end
+	end
+	return waveHealth
+end
+
+function Challenge:startNextWave()
+	self.zombieSince = 0
+	self.currentWave = (self.currentWave + 1)
+	self.zombieCountdown = (Constants.zombieCountdown + random.int(0, Constants.zombieCountdownRange))
+	self.zombieCountdownStart = self.zombieCountdown
+	
+	print('wave ' .. self.currentWave)
+	
+	local waveZombies = self.waveZombies[self.currentWave]
+	if waveZombies then
+		self.currentWaveZombies = self:attemptSpawnZombies(waveZombies)
+	else
+		print('no zombies for wave ' .. self.currentWave)
+		self.currentWaveZombies = nil
+	end
+	
+	self.startWaveHealth = self:getMaxWaveHealth(self.currentWave)
+	if self:isFinalWave(self.currentWave) then
+		self.healthToNextWave = 0
+	else
+		self.healthToNextWave = (self.startWaveHealth * random.number(.5, .65))
+	end
+end
+function Challenge:attemptSpawnZombies(zombies)
+	local spawnZombies = {}
+	for _, zombie in ipairs(zombies) do
+		local newZombie = self:attemptSpawnZombie(zombie)
+		if newZombie then table.insert(spawnZombies, newZombie) end
+	end
+	return spawnZombies
+end
+function Challenge:attemptSpawnZombie(zombie)
+	local spawnRow = self:pickRowForZombie(zombie)
+	if spawnRow then
+		return self:spawnZombie(zombie:new(), spawnRow)
+	else
+		print('couldn\'t spawn zombie ' .. tostr(zombie) .. '!')
+		return nil
+	end
+end
+function Challenge:spawnZombie(zombie, row)
+	self.lawn:spawnUnit(zombie, self.lawn.size.x, row)
+	zombie:setPosition(220 + 800 + 20 + zombie.getSpawnOffset(), zombie.y)
+	zombie:updateBoardPosition()
+	
+	return zombie
+end
+function Challenge:pickRowForZombie(zombie)
+	local rows, weights = {}, {}
+	for row = 1, self.lawn.size.y do
+		if self:zombieCanSpawnInRow(zombie, row) then
+			table.insert(rows, row)
+			table.insert(weights, 1)
+			
+			-- mowed 1 wave ago -> 0.01
+			-- mowed 2 waves ago -> 0.5
+		end
+	end
+	return random.pickWeighted(rows, weights)
+end
+function Challenge:zombieCanSpawnInRow(zombie, row)
+	return Zombie:canBeSpawnedAt(self.lawn, self.lawn.size.x, row)
+end
+
+function Challenge:drawTop(x, y)
+	UIContainer.drawTop(self, x, y)
+	
+	local debugString = ('challenge %d\n'):format(self.challenge)
+	if self.challengeCompleted then
+		debugString = (debugString .. 'CLEAR!')
+	elseif self:isFinalWave(self.currentWave) then
+		debugString = (debugString .. (
+			'wave: %d / %d (final wave)'
+		):format(self.currentWave, self.waves))
+	elseif self.currentWave == 0 then
+		debugString = (debugString .. (
+			'wave: NA / %d\n' ..
+			'zombie health: before first wave\n' ..
+			'wave countdown: %.0f / %.0f (%.0f%%)'
+		):format(
+			self.waves,
+			self.zombieCountdown, self.zombieCountdownStart, (100 - self.zombieCountdown / self.zombieCountdownStart * 100)
+		))
+	else
+		debugString = (debugString .. (
+			'wave: %d / %d\n' ..
+			'time since last wave: %.0f %s\n' ..
+			'wave countdown: %.0f / %.0f (%.0f%%)'
+		):format(
+			self.currentWave, self.waves,
+			self.zombieSince, (self.zombieSince < Constants.zombieCountdownMin and '(too soon)' or ''),
+			self.zombieCountdown, self.zombieCountdownStart, (100 - self.zombieCountdown / self.zombieCountdownStart * 100)
+		))
+	end
+	
+	if self.currentWave > 0 then
+		local healthFraction = math.remap(self.currentWaveHealth, self.startWaveHealth, self.healthToNextWave, 0, 100)
+		debugString = (debugString ..
+			('\nzombie health: %d -> %d (%.0f%%)'):format(self.currentWaveHealth, self.healthToNextWave, healthFraction * 100)
+		)
+	end
+	
+	if self.hugeWaveCountdown > 0 then
+		debugString = (
+			debugString ..
+			('\nhuge wave countdown: %.0f'):format(self.hugeWaveCountdown)
+		)
+	end
+	
+	outlineText('ZOMBIE SPAWNING DEBUG\n' .. debugString, 8, 80)
+end
+
+function Challenge:getWaveCount(challenge)
+	return 10
+end
+function Challenge:getZombies(challenge)
+	return {}
+end
+function Challenge:getFlags(challenge)
+	return {
+		startingSun = 50;
+		fallingSun = true;
+	}
+end
+
+function Challenge:getIntroZombie(challenge)
+	return lambda.find(self.challengeZombies, function(zombie) return zombie.startingLevel == challenge end)
+end
+function Challenge:pointsOnWave(wave)
+	return (wave / 3 + 1)
+end
+function Challenge:isFlagWave(wave)
+	return (wave % self.wavesPerFlag == 0 or self:isFinalWave(wave))
+end
+function Challenge:isFinalWave(wave)
+	return (wave == self.waves)
+end
+function Challenge:getMaxWaveHealth(wave)
+	local waveHealth = 0
+	if self.waveZombies[wave] then
+		for _, zombie in ipairs(self.waveZombies[wave]) do
+			waveHealth = (waveHealth + zombie.maxHp)
+		end
+	end
+	return waveHealth
+end
+
+return Challenge

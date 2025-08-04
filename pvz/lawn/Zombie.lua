@@ -1,27 +1,35 @@
 local Zombie = Unit:extend('Zombie')
 
+Zombie.reanimName = 'Zombie'
+
+-- wave definition
+Zombie.value = 1
+Zombie.pickWeight = 0
+Zombie.startingLevel = 1
+Zombie.firstAllowedWave = 1
+
 function Zombie:init(x, y)
 	Unit.init(self, x, y)
 	
 	self:setHitbox(
-		7, 7, 24, 115,
+		7, 7, 20, 115,
 		23, 7, 42, 115
 	)
 	
 	self.animation.speed = self.speed
 	
-	self.state = 'normal'
 	self.deathTimer = .5
 	
 	self.damageGroup = Plant
 	self.collision = nil
 	self.damage = 100
+	self.wave = 0
 	
 	self.autoBoardPosition = true
 	self.yOffset = 40
 	
 	self.damageFilter = function(test)
-		return (not test.dead and not test.flags.ignoreCollisions and math.round(test.boardY) == math.round(self.boardY))
+		return (not test.dead and not test.flags.cantBeEaten and not test.flags.ignoreCollisions and math.round(test.boardY) == math.round(self.boardY))
 	end
 	
 	self.animation:add('death', 'death', false)
@@ -54,10 +62,10 @@ function Zombie:update(dt)
 			self:setState('normal')
 		end
 	else
-		self.hp = (self.hp - dt * 12)
 		self.deathTimer = (self.deathTimer - dt * self.animation.speed)
+		self:hurt(dt * 12)
 		
-		if (self.deathTimer < 0) then
+		if (self.deathTimer <= 0) then
 			self.canDie = true
 		end
 	end
@@ -78,11 +86,14 @@ end
 function Zombie:onDeath()
 	self.animation:play('death')
 	self.flags.ignoreCollisions = true
-	self.animation.speed = random.number(.75, 1)
 end
 
-function Zombie.getReanim()
-	return 'Zombie'
+function Zombie.getSpawnOffset()
+	return random.number(25, 100)
+end
+
+function Zombie:__tostring()
+	return ('Zombie(name:%s, value:%d, pickWeight:%d)'):format(self.name, self.value, self.pickWeight)
 end
 
 return Zombie

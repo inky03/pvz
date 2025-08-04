@@ -10,11 +10,11 @@ function PeaShooterZombie:init(x, y)
 	self:toggleLayer('head2', false)
 	self:toggleLayer('tongue', false)
 	
-	local headFrame = ReanimFrame:new(68, -6, -10, -10, -1, 1)
 	self.plantHead = Reanimation:new('PeaShooterSingle')
 	self.plantHead.animation:add('idle', 'head_idle')
 	self.plantHead.animation:play('idle', true)
-	self:attachReanim('head1', self.plantHead, 'idle', headFrame)
+	self.plantHead.transform:set(-68, -6, -10, -10, -1, 1)
+	self:attachReanim('head1', self.plantHead, 'idle')
 	
 	self.animation:get('walk'):setTrack(self.reanim:getTrack('walk2'))
 end

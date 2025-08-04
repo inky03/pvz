@@ -20,10 +20,16 @@ function ReanimFrame:init(frameOrX, y, xShear, yShear, xScale, yScale)
 	if class.isInstance(frameOrX) then
 		self:copy(frameOrX)
 	else
-		self:setPosition(frameOrX, y)
-		self:setShear(xShear, yShear)
-		self:setScale(xScale, yScale)
+		self:set(frameOrX, y, xShear, yShear, xScale, yScale)
 	end
+end
+
+function ReanimFrame:set(x, y, xShear, yShear, xScale, yScale)
+	self:setPosition(x, y)
+	self:setShear(xShear, yShear)
+	self:setScale(xScale, yScale)
+	
+	return self
 end
 
 function ReanimFrame:copy(frame)

@@ -1,29 +1,54 @@
 local Lawn = UIContainer:extend('Lawn')
 
-function Lawn:init(x, y)
-	self.texture = Cache.image('images/background1')
+Lawn.textureName = 'images/background1'
+Lawn.topLeft = {
+	x = 260;
+	y = 80;
+}
+Lawn.tileSize = {
+	x = 80;
+	y = 100;
+}
+Lawn.size = {
+	x = 9;
+	y = 5;
+}
+Lawn.defaultSurface = 'ground'
+
+function Lawn:init(challenge, x, y)
+	self.texture = Cache.image(self.textureName)
 	
-	UIContainer.init(self, 0, 0, 1880, 720)
+	UIContainer.init(self, 0, 0, 1400, 600)
 	
-	self.topLeft = {
-		x = 460 + 40;
-		y = 60 + 80;
-	}
-	self.tileSize = {
-		x = 80;
-		y = 100;
-	}
-	self.size = {
-		x = 9;
-		y = 5;
-	}
+	self.challenge = challenge
 	self.particles = {}
 	self.units = {}
 	
+	self.selectedPacket = nil
 	self.hoveringEntity = nil
-	self.hoverCanvas = love.graphics.newCanvas(windowWidth, windowHeight)
+	self.hoverCanvas = love.graphics.newCanvas(160, 160)
+	
+	self.onSpawnUnit = Signal:new()
+	self.onDestroyUnit = Signal:new()
+	self.onDestroyUnit:add(function()
+		if self.hoveringEntity then
+			self.hoveringEntity.visible = self:tryPlant(self.hoveringEntity, true)
+		end
+	end)
 	
 	self.tW, self.tH = self.texture:getPixelDimensions()
+	
+	self.surfaces = {}
+	for row = 1, self.size.y do
+		self.surfaces[row] = {}
+		for col = 1, self.size.x do
+			self.surfaces[row][col] = self.defaultSurface
+		end
+	end
+end
+
+function Lawn:getCount()
+	return (UIContainer.getCount(self) + #self.particles + #self.units)
 end
 
 function Lawn:unitAt(x, y, entityGroup)
@@ -39,12 +64,15 @@ function Lawn:spawnUnit(unit, x, y)
 	unit:updateBoardPosition()
 	self:insertUnitSort(unit)
 	
+	unit:onSpawn()
+	
 	return unit
 end
 function Lawn:removeUnit(needle)
 	for i, unit in ipairs(self.units) do
 		if unit == needle then
 			table.remove(self.units, i)
+			self.onDestroyUnit:dispatch(unit, i)
 			return
 		end
 	end
@@ -64,7 +92,10 @@ function Lawn:mousePressed(mouseX, mouseY)
 		
 		if self:withinBoard(self:getBoardPosition(x, y)) then
 			if self:tryPlant(self.hoveringEntity) then
+				self.selectedPacket:onPlanted()
+				
 				self.hoveringEntity = nil
+				self.selectedPacket = nil
 			end
 		end
 	end
@@ -96,19 +127,39 @@ function Lawn:updateHover(mouseX, mouseY)
 		self.hoveringEntity.visible = self:tryPlant(self.hoveringEntity, true)
 	end
 end
+function Lawn:pickPlant(entity, packet, mouseX, mouseY)
+	if self.hoveringEntity then
+		print('can\'t pick plant')
+	else
+		self.hoveringEntity = entity
+		self.selectedPacket = packet
+		
+		love.graphics.setCanvas(self.hoverCanvas)
+		love.graphics.clear()
+		self.hoveringEntity:draw(40, 40)
+		love.graphics.setCanvas()
+		
+		self:updateHover(mouseX or 0, mouseY or 0)
+	end
+end
 function Lawn:tryPlant(entity, eval)
 	if not self:withinBoard(entity.boardX, entity.boardY) then return false end
+	
+	if not entity:canBeSpawnedAt(self, entity.boardX, entity.boardY) then
+		if not eval then print('tile not allowed for planting.') end
+		return false
+	end
 	
 	local plant = self:unitAt(entity.boardX, entity.boardY, Plant)
 	
 	if plant then
-		local upgrade = entity.isUpgradeOf()
+		local upgrade = entity.upgradeOf
 		if not upgrade or (upgrade and not plant:instanceOf(upgrade)) then
 			if not eval then print('theres a plant here.') end
 			return false
 		end
 	else
-		if entity.isUpgradeOf() then
+		if entity.upgradeOf then
 			if not eval then print('its an upgrade.') end
 			return false
 		end
@@ -119,6 +170,7 @@ function Lawn:tryPlant(entity, eval)
 			plant:destroy()
 		end
 		self:spawnUnit(entity, entity.boardX, entity.boardY)
+		entity.visible = true
 	end
 	
 	return true
@@ -127,13 +179,16 @@ end
 function Lawn:draw(x, y)
 	if not self.visible then return end
 	
-	love.graphics.draw(self.texture, x + (self.w - self.tW) * .5, y + (self.h - self.tH) * .5)
+	self:drawBackground(x, y)
 	
 	lambda.foreach(self.units, function(unit) unit:drawShadow(x + unit.x, y + unit.y) end)
 	
 	if debugMode then self:debugDraw(x, y) end
 	
 	UIContainer.draw(self, x, y)
+end
+function Lawn:drawBackground(x, y)
+	love.graphics.draw(self.texture, x + (self.w - self.tW) * .5, y + (self.h - self.tH) * .5)
 end
 function Lawn:drawTop(x, y) -- draw units
 	if not self.visible then return end
@@ -142,21 +197,19 @@ function Lawn:drawTop(x, y) -- draw units
 	lambda.foreach(self.particles, function(part) part:draw(x + part.x, y + part.y) end)
 	
 	if self.hoveringEntity then
-		love.graphics.setCanvas(self.hoverCanvas)
-		love.graphics.clear()
-		self.hoveringEntity:draw(x + self.hoveringEntity.x, y + self.hoveringEntity.y)
-		love.graphics.setCanvas()
+		local mouseX, mouseY = love.mouse.getPosition()
 		
 		love.graphics.setBlendMode('alpha', 'premultiplied')
-		love.graphics.setColor(.5, .5, .5, .5)
-		love.graphics.draw(self.hoverCanvas)
-		love.graphics.setBlendMode('alpha')
 		
-		local prevVisible = self.hoveringEntity.visible
-		local mouseX, mouseY = love.mouse.getPosition()
-		self.hoveringEntity.visible = true
-		self.hoveringEntity:draw(mouseX - 36, mouseY - 60)
-		self.hoveringEntity.visible = prevVisible
+		if self.hoveringEntity.visible then
+			love.graphics.setColor(.5, .5, .5, .5)
+			love.graphics.draw(self.hoverCanvas, x + self.hoveringEntity.x - 40, y + self.hoveringEntity.y - 40)
+		end
+		
+		love.graphics.setColor(1, 1, 1)
+		love.graphics.draw(self.hoverCanvas, mouseX - 40 - 36, mouseY - 40 - 60)
+		
+		love.graphics.setBlendMode('alpha')
 	end
 	
 	UIContainer.drawTop(self, x, y)
@@ -166,11 +219,16 @@ function Lawn:insertUnitSort(unit)
 	for i = 1, #self.units do
 		local otherUnit = self.units[i]
 		if (unit.y < otherUnit.y) or (unit.y == otherUnit.y and unit:instanceOf(Plant)) then
-			table.insert(self.units, i, unit)
-			return unit
+			return self:insertUnit(unit, i)
 		end
 	end
-	table.insert(self.units, unit)
+	return self:insertUnit(unit)
+end
+function Lawn:insertUnit(unit, i)
+	local i = (i or #self.units + 1)
+	table.insert(self.units, i, unit)
+	
+	self.onSpawnUnit:dispatch(unit, i)
 	return unit
 end
 
@@ -207,6 +265,18 @@ function Lawn:boundToBoard(x, y)
 end
 function Lawn:withinBoard(x, y)
 	return (math.within(x, 1, self.size.x + 1) and math.within(y, 1, self.size.y + 1))
+end
+function Lawn:getSurfaceAt(col, row)
+	local surfaceRow = self.surfaces[row]
+	return (surfaceRow and surfaceRow[col] or nil)
+end
+function Lawn:setSurfaceAt(col, row, surf)
+	local surfaceRow = self.surfaces[row]
+	if surfaceRow then
+		surfaceRow[col] = surf
+		return surf
+	end
+	return nil
 end
 
 return Lawn

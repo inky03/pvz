@@ -7,6 +7,7 @@ function UIContainer:init(x, y, w, h)
 	self.hovering = false
 	self.useHand = false
 	self.visible = true
+	self.debug = false
 	self.children = {}
 	self.parent = nil
 	
@@ -18,6 +19,13 @@ function UIContainer:addElement(element)
 	table.insert(self.children, element)
 	element.parent = self
 	return element
+end
+function UIContainer:getCount()
+	local objects = 1
+	for _, child in ipairs(self.children) do
+		objects = (objects + child:getCount())
+	end
+	return objects
 end
 
 function UIContainer:setPosition(x, y)
@@ -84,7 +92,7 @@ function UIContainer:draw(x, y)
 	
 	for _, child in ipairs(self.children) do child:draw(child.x + x, child.y + y) end
 	
-	if debugMode then self:debugDraw(x, y) end
+	if debugMode or self.debug then self:debugDraw(x, y) end
 end
 function UIContainer:drawTop(x, y)
 	if not self.visible then return end

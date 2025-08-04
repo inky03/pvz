@@ -13,7 +13,6 @@ function Reanimation:init(kind, x, y)
 	
 	self.shader = nil
 	self.hiddenLayers = {}
-	self.layerTransforms = {}
 	
 	self.transform = ReanimFrame:new()
 	self.transform.scaleCoords = true
@@ -34,8 +33,7 @@ function Reanimation:setReanim(reanim)
 	
 	self.animation:setReanim(reanim)
 	
-	self.ground = self:getAnimationLayer('_ground')
-	if self.ground then self:toggleLayer('_ground', false) end
+	self.hiddenLayers['_ground'] = true
 end
 
 function Reanimation:replaceImage(image, newResource)
@@ -96,16 +94,9 @@ end
 function Reanimation:updateAnimation(dt)
 	if not self.animation or not self.animation._cur then return end
 	
-	if self.ground and self.animation.crossFade == 1 then
-		if self.ground.frame.active then
-			self.groundVelocity = (-self.ground.frame.diffX * self.groundVelocityMultiplier)
-		else
-			self.groundVelocity = 0
-		end
-	end
-	
 	self.animation:update(dt)
 	
+	self.groundVelocity = (self.animation.groundVelocity * self.groundVelocityMultiplier)
 	self.x = (self.x + self.groundVelocity)
 end
 
@@ -119,32 +110,38 @@ function Reanimation:draw(x, y, transforms)
 	UIContainer.update(self, dt)
 end
 
-function Reanimation:render(x, y, transforms)
-	Reanimation.drawReanim(self.animation.current.layers, self.images, x, y, transforms or self.transform, self.hiddenLayers, self.layerTransforms)
-end
+Reanimation.transformStack = {}
 
-function Reanimation.drawReanim(layers, textures, x, y, transforms, hiddenLayers, layerTransforms)
-	x, y = (x or 0), (y or 0)
+function Reanimation:render(x, y, transforms)
+	table.clear(Reanimation.transformStack)
 	
-	local function forEachTransform(transforms, fun)
+	if transforms then
 		for _, transform in ipairs(transforms) do
-			if type(transform) == 'table' and not class.isInstance(transform) then
-				forEachTransform(transform, fun)
-			else
-				fun(transform)
-			end
+			table.insert(Reanimation.transformStack, transform)
 		end
+	else
+		table.insert(Reanimation.transformStack, self.transform)
 	end
 	
-	local function renderFrame(frame, transforms)
+	Reanimation.drawReanim(self.animation.current.layers, self.images, x, y, self.hiddenLayers)
+	
+	love.graphics.setColor(1, 1, 1, 1)
+end
+
+function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
+	x, y = (x or 0), (y or 0)
+	
+	local function renderFrame(frame)
+		local stack = Reanimation.transformStack
 		local image = textures[frame.image]
 		local alpha = frame.alpha
 		local active = true
 		
-		forEachTransform(transforms, function(transform)
+		for i = 1, #stack do
+			local transform = stack[i]
 			active = (active and transform.active)
 			alpha = (alpha * transform.alpha)
-		end)
+		end
 		
 		if active and alpha > 0 then
 			if image then
@@ -156,7 +153,7 @@ function Reanimation.drawReanim(layers, textures, x, y, transforms, hiddenLayers
 					corner[2] = ((i <= 2 and 0 or image:getPixelHeight()) * frame.yScale)
 					
 					Reanimation.transformVertex(corner, frame, false)
-					Reanimation.transformVertex(corner, transforms, true)
+					for i = 1, #stack do Reanimation.transformVertex(corner, stack[i], true) end
 					
 					corner[1], corner[2] = (corner[1] + x), (corner[2] + y)
 				end
@@ -169,29 +166,28 @@ function Reanimation.drawReanim(layers, textures, x, y, transforms, hiddenLayers
 		
 			for _, attachment in ipairs(frame.attachments) do
 				local reanim = attachment.reanim
-				table.insert(transforms, 1, frame)
-				table.insert(transforms, 1, attachment.transform)
-				Reanimation.drawReanim(reanim.animation.current.layers, reanim.images, x, y, transforms, reanim.hiddenLayers, reanim.layerTransforms)
+				table.insert(Reanimation.transformStack, 1, frame)
+				table.insert(Reanimation.transformStack, 1, reanim.transform)
+				table.insert(Reanimation.transformStack, 1, attachment.transform)
+				
+				Reanimation.drawReanim(reanim.animation.current.layers, reanim.images, x, y, reanim.hiddenLayers)
+				
+				table.remove(Reanimation.transformStack, 1)
+				table.remove(Reanimation.transformStack, 1)
+				table.remove(Reanimation.transformStack, 1)
 			end
 		end
 	end
 	
 	for i, layer in ipairs(layers) do
 		if layer.frame.active and not (hiddenLayers and hiddenLayers[layer.name]) then
-			renderFrame(layer.frame, {transforms, layerTransforms and layerTransforms[layer.name] or nil})
+			renderFrame(layer.frame)
 		end
 	end
 end
 
 function Reanimation.transformVertex(vert, frame, scaleCoords)
 	if frame == nil then return end
-	
-	if type(frame) == 'table' and not class.isInstance(frame) then
-		for _, frame in ipairs(frame) do
-			Reanimation.transformVertex(vert, frame, scaleCoords)
-		end
-		return
-	end
 	
 	local xScale, yScale = (scaleCoords and frame.xScale or 1), (scaleCoords and frame.yScale or 1)
 	

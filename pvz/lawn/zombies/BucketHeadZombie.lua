@@ -1,6 +1,13 @@
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 local BucketHeadZombie = BasicZombie:extend('BucketHeadZombie')
 
+BucketHeadZombie.maxHp = 1370
+
+BucketHeadZombie.value = 4
+BucketHeadZombie.pickWeight = 3000
+BucketHeadZombie.startingLevel = 8
+BucketHeadZombie.firstAllowedWave = 1
+
 function BucketHeadZombie:init(x, y)
 	BasicZombie.init(self, x, y)
 	
@@ -43,10 +50,6 @@ function BucketHeadZombie:setHurtState(state)
 		self:toggleLayer('head2', false)
 		self:toggleLayer('tongue', false)
 	end
-end
-
-function BucketHeadZombie.getHP()
-	return 1370
 end
 
 return BucketHeadZombie

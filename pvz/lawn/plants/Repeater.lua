@@ -1,6 +1,9 @@
 local PeaShooter = Cache.module(Cache.plants('PeaShooter'))
 local Repeater = PeaShooter:extend('Repeater')
 
+Repeater.reanimName = 'PeaShooter'
+Repeater.packetCost = 200
+
 function Repeater:init(x, y)
 	PeaShooter.init(self, x, y)
 	
@@ -20,10 +23,6 @@ end
 function Repeater:fire()
 	self.firePhase = 0
 	PeaShooter.fire(self)
-end
-
-function Repeater.getReanim()
-	return 'PeaShooter'
 end
 
 return Repeater

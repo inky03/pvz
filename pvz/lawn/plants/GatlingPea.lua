@@ -2,6 +2,12 @@ local PeaShooter = Cache.module(Cache.plants('PeaShooter'))
 local Repeater = Cache.module(Cache.plants('Repeater'))
 local GatlingPea = PeaShooter:extend('GatlingPea')
 
+GatlingPea.reanimName = 'GatlingPea'
+GatlingPea.stemLayer = 'idle'
+GatlingPea.upgradeOf = Repeater
+GatlingPea.packetRecharge = 5000
+GatlingPea.packetCost = 250
+
 function GatlingPea:animate()
 	self.head.animation.onFrame:add(function(animation)
 		if animation.name == 'shoot' then
@@ -16,16 +22,6 @@ end
 
 function GatlingPea:fire()
 	PeaShooter.fire(self)
-end
-
-function GatlingPea.getReanim()
-	return 'GatlingPea'
-end
-function GatlingPea.getStem()
-	return 'idle'
-end
-function GatlingPea.isUpgradeOf()
-	return Repeater
 end
 
 return GatlingPea
