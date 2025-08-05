@@ -28,6 +28,7 @@ function PeaShooter:init(x, y, challenge)
 	
 	self:animate()
 	
+	self:attachBlink(self.head, 'face')
 	self:attachReanim(self.stemLayer, self.head)
 end
 

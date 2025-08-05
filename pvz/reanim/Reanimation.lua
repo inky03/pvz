@@ -179,6 +179,8 @@ function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
 		
 			for _, attachment in ipairs(frame.attachments) do
 				local reanim = attachment.reanim
+				if not reanim.visible then return end
+				
 				table.insert(Reanimation.transformStack, 1, frame)
 				table.insert(Reanimation.transformStack, 1, reanim.transform)
 				table.insert(Reanimation.transformStack, 1, attachment.transform)

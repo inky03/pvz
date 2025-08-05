@@ -174,5 +174,7 @@ function tostr(v, str, sep, eq, track)
 end
 
 function trace(v)
-	return print(tostr(v))
+	local info = debug.getinfo(2, 'Sl')
+	local file = (info.source:match('@(.*)%.lua$') or info.source)
+	return print(('%s:%d: %s'):format(file:gsub('[/\\]', '.'), info.currentline, tostr(v)))
 end

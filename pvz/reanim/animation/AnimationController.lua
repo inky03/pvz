@@ -68,7 +68,7 @@ function AnimationController:update(dt, noDiff)
 	self.frame = self.current.frame
 	self.frameFloat = math.lerp(self.current.frame, self.current.next, self.current.lerp)
 	
-	self.groundVelocity = (ground and ground.active and (groundX - ground.x) or 0)
+	self.groundVelocity = (ground and ground.active and not self._cur.justFinished and (groundX - ground.x) or 0)
 	
 	if self.crossFade < 1 then
 		if self._prev then
@@ -77,7 +77,7 @@ function AnimationController:update(dt, noDiff)
 			
 			self._prev:updateFrame(0)
 			
-			self.groundVelocity = (ground and ground.active and (groundX - ground.x) or 0)
+			self.groundVelocity = (ground and ground.active and not self._prev.justFinished and (groundX - ground.x) or 0)
 		end
 		
 		if self.crossFadeLength > 0 then
@@ -125,9 +125,9 @@ function AnimationController:attachReanim(layer, reanim, basePose)
 			
 			local baseFrame = base:getLayer(layer)
 			transform = ReanimFrame:new()
-			transform:setPosition(-baseFrame.x, -baseFrame.y)
 			transform:setShear(-baseFrame.xShear, -baseFrame.yShear)
 			transform:setScale(1 / baseFrame.xScale, 1 / baseFrame.yScale)
+			transform:setPosition(-baseFrame.x / baseFrame.xScale, -baseFrame.y / baseFrame.yScale)
 		else
 			print(('%s: Track %s doesn\'t exist'):format(self.reanim.name, basePose))
 			return

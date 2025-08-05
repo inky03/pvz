@@ -14,6 +14,8 @@ function SunFlower:init(x, y, challenge)
 	self.animation:add('idle', 'idle')
 	self.animation:play('idle', true)
 	self.animation:setFrame(4)
+	
+	self:attachBlink()
 end
 
 function SunFlower:update(dt)

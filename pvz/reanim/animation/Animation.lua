@@ -35,12 +35,6 @@ function Animation:update(dt, materialized)
 	self.justFinished = false
 	
 	if self.lerp >= 1 then
-		self.frame = self.next
-		self.next = (self.frame + 1)
-		self.lerp = (self.lerp % 1)
-		
-		if materialized then self.controller.onFrame:dispatch(self) end
-		
 		if self.next >= self.length then
 			self.justFinished = true
 			
@@ -55,7 +49,14 @@ function Animation:update(dt, materialized)
 			end
 			
 			self:updateFrame()
+		else
+			self.frame = self.next
+			self.next = (self.frame + 1)
+			
+			if materialized then self.controller.onFrame:dispatch(self) end
 		end
+		
+		self.lerp = (self.lerp % 1)
 	end
 end
 function Animation:updateFrame(noDiff)

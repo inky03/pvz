@@ -79,7 +79,7 @@ function Reanim.loadXML(path, kind)
 				if frame.f == 0 then
 					anim.first = i
 				elseif frame.f == -1 then
-					anim.last = i
+					anim.last = (i - 1)
 				end
 			end
 			
@@ -95,7 +95,7 @@ function Reanim.loadXML(path, kind)
 			
 			table.insert(frames, ReanimFrame:new(previousFrame))
 		end
-		if anim.last < anim.first then anim.last = (#track.t + 1) end
+		if anim.last < anim.first then anim.last = #track.t end
 		
 		table.insert(reanim.guides, anim)
 		table.insert(reanim.layers, {
@@ -170,13 +170,13 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 				if active >= 0 then
 					anim.first = i
 				else
-					anim.last = i
+					anim.last = (i - 1)
 				end
 			end
 			
 			table.insert(frames, ReanimFrame:new(previousFrame))
 		end
-		if anim.last < anim.first then anim.last = (transforms[i] + 1) end
+		if anim.last < anim.first then anim.last = transforms[i] end
 		
 		local lastImg, lastText, lastFont
 		if (anim.name == '_ground') then

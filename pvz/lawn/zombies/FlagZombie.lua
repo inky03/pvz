@@ -12,7 +12,7 @@ function FlagZombie:init(x, y, challenge)
 	self:toggleLayer('Zombie_innerarm_screendoor', true)
 	
 	self.flag = Reanimation:new('Zombie_flagpole')
-	self.flag.transform:setPosition(35, 3)
+	self.flag.transform:setPosition(33, 15)
 	self:attachReanim('Zombie_flaghand', self.flag, 'idle')
 	
 	self.animation:get('walk'):setTrack(self.reanim:getTrack('walk2'))
