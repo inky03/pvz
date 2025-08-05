@@ -4,8 +4,8 @@ BasicZombie.maxHp = 270
 
 BasicZombie.pickWeight = 4000
 
-function BasicZombie:init(x, y)
-	Zombie.init(self, x, y)
+function BasicZombie:init(x, y, challenge)
+	Zombie.init(self, x, y, challenge)
 	
 	self:toggleLayer('Zombie_mustache', false)
 	self:toggleLayer('Zombie_flaghand', false)
@@ -27,9 +27,19 @@ function BasicZombie:init(x, y)
 	self.animation:add('eating', 'eat')
 	self.animation:play('walk', true)
 	
-	self:setSpeed(random.number(1, 1.25))
+	self:setSpeed(random.number(.9, 1.1))
 	self.animation:get('eating').speed = 2.25
+	
+	-- random death animation
 	self.animation:get('death').speed = 1.75
+	if random.int(0, 100) == 99 and self.challenge.challenge >= 5 then
+		self.animation:get('death'):setTrack(self.reanim:getTrack('superlongdeath'))
+		self.animation:get('death').speed = 1
+		self.fallTime = .788
+	elseif random.bool(50) then
+		self.animation:get('death'):setTrack(self.reanim:getTrack('death2'))
+		self.fallTime = .71
+	end
 	
 	self.animation.onFrame:add(function(animation)
 		if animation.name == 'eating' and self.state == 'eating' then
@@ -42,25 +52,25 @@ function BasicZombie:init(x, y)
 	self.shadowOffset = {x = 10; y = 60}
 end
 
-function BasicZombie:hurt(hp)
-	Zombie.hurt(self, hp)
+function BasicZombie:hurt(hp, glow)
+	Zombie.hurt(self, hp, glow)
 	
-	if self.hurtState == 0 and self.hp <= (self.maxHp - 90) then
-		self:setHurtState(1)
-	elseif self.hurtState == 1 and self.hp <= (self.maxHp - 181) then
-		self:setHurtState(2)
-		self:setState('dead')
+	if self.damagePhase == 0 and self.hp <= (self.maxHp - 90) then
+		self:setDamagePhase(1)
+	end if self.damagePhase == 1 and self.hp <= (self.maxHp - 181) then
+		self:setDamagePhase(2)
 	end
 end
 
-function BasicZombie:setHurtState(state)
-	Zombie.setHurtState(self, state)
+function BasicZombie:setDamagePhase(phase)
+	Zombie.setDamagePhase(self, phase)
 	
-	if state == 1 then
+	if phase == 1 then
 		self:toggleLayer('Zombie_outerarm_hand', false)
 		self:toggleLayer('Zombie_outerarm_lower', false)
 		self:replaceImage('Zombie_outerarm_upper', Reanim.getResource('Zombie_outerarm_upper2'))
-	elseif state == 2 then
+	elseif phase == 2 then
+		self:setState('dead')
 		self:toggleLayer('hair', false)
 		self:toggleLayer('head1', false)
 		self:toggleLayer('head2', false)

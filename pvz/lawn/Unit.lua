@@ -20,6 +20,7 @@ Unit.reanimName = 'SunFlower'
 Unit.previewAnimation = 'idle'
 Unit.packetRecharge = 750
 Unit.packetCost = 100
+
 Unit.maxHp = 300
 
 Unit.allowedSurfaces = {'ground'}
@@ -34,10 +35,11 @@ function Unit:init(x, y, challenge)
 	self.glow = 0
 	self.frost = 0
 	self.dead = false
-	self.hurtGlow = 0
-	self.hurtState = 0
 	self.canDie = true
+	self.damageGlow = 0
+	self.damagePhase = 0
 	self.hp = self.maxHp
+	self.selected = false
 	self.state = 'normal'
 	self.speedMultiplier = 1
 	
@@ -80,7 +82,7 @@ function Unit:update(dt)
 		end
 	end
 	
-	self.hurtGlow = math.max(self.hurtGlow - dt * 6, 0)
+	self.damageGlow = math.max(self.damageGlow - dt * 6, 0)
 	
 	if self.board and self.autoBoardPosition then
 		self:updateBoardPosition()
@@ -149,24 +151,29 @@ function Unit:hit(collision, multiplier)
 end
 function Unit:hitBy(unit, multiplier)
 	local multiplier = (multiplier or 1)
-	self:hurt(unit.damage * multiplier)
-	self.hurtGlow = multiplier
+	self:hurt(unit.damage * multiplier, multiplier)
 end
-function Unit:hurt(hp, multiplier)
-	self.hp = (self.hp - hp)
+function Unit:hurt(hp, glow)
+	local multiplier = (multiplier or 1)
+	self.hp = math.max(self.hp - hp * multiplier, 0)
+	self.damageGlow = math.max(self.damageGlow, glow or 1)
 	
-	if self.canDie and self.hp <= 0 and not self.dead then
-		self.dead = true
-		self:onDeath()
+	if self.hp <= 0 then
+		self:die()
 	end
+end
+function Unit:die()
+	if not self.canDie or self.dead then return end
+	self.dead = true
+	self:onDeath()
 end
 function Unit:onSpawn() end
 function Unit:onDeath()
 	self:destroy()
 end
 
-function Unit:setHurtState(state)
-	self.hurtState = state
+function Unit:setDamagePhase(phase)
+	self.damagePhase = phase
 end
 function Unit:setState(state)
 	self.state = state
@@ -183,10 +190,9 @@ function Unit:drawShadow(x, y)
 end
 function Unit:draw(x, y, transforms)
 	Unit.pvzShader:send('frost', (self.frost > 0 and 1 or 0))
-	Unit.pvzShader:send('glow', self.glow + self.hurtGlow)
+	Unit.pvzShader:send('glow', self.selected and 1 or self.glow + self.damageGlow)
 	
 	self:drawSprite(x - self.xOffset, y - self.yOffset)
-	if debugMode or self.debug then self:debugDraw(x, y) end
 end
 function Unit:drawSprite(x, y)
 	Reanimation.draw(self, x, y, transforms)
@@ -199,7 +205,7 @@ function Unit:debugDraw(x, y)
 	x, y = (x or 0), (y or 0)
 	
 	love.graphics.setColor(0, 1, 0)
-	love.graphics.rectangle('line', x - self.xOffset + self.hurtbox.x + 1, y - self.yOffset + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
+	love.graphics.rectangle('line', x + self.hurtbox.x + 1, y + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
 	love.graphics.setColor(1, 1, 1)
 	outlineText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)), math.floor(x), math.floor(y))
 end

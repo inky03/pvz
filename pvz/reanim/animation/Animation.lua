@@ -22,10 +22,9 @@ function Animation:init(controller, reanim, name)
 	self.justFinished = false
 	
 	lambda.foreach(reanim.layers, function(layer)
-		table.insert(self.layers, {
-			name = layer.name;
-			frame = ReanimAnimationFrame:new(layer.frames[1]);
-		})
+		local newFrame = ReanimAnimationFrame:new(layer.frames[1])
+		table.insert(self.layers, newFrame)
+		newFrame.layerName = layer.name
 	end)
 end
 
@@ -67,14 +66,14 @@ function Animation:updateLayers(cur, next, lerp, noDiff)
 	lambda.foreach(self.layers, function(layer, i)
 		local reanimLayer = self.reanim.layers[i]
 		
-		layer.frame:lerp(
+		layer:lerp(
 			reanimLayer.frames[math.clamp(cur, 1, self.reanim.length)],
 			reanimLayer.frames[math.clamp(next, 1, self.reanim.length)],
 			lerp
 		)
 		
 		if noDiff then
-			layer.frame.diffX, layer.frame.diffY = 0, 0
+			layer.diffX, layer.diffY = 0, 0
 		end
 	end)
 end
@@ -83,7 +82,7 @@ function Animation:getLayer(find)
 	
 	local find = find:gsub('anim_', '')
 	
-	return lambda.find(self.layers, function(layer) return (layer.name:gsub('anim_', '') == find) end)
+	return lambda.find(self.layers, function(layer) return (layer.layerName:gsub('anim_', '') == find) end)
 end
 
 function Animation:reset()

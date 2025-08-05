@@ -27,7 +27,7 @@ function SeedPacket:init(lawn, entity, x, y, bank)
 	self.picking = false
 	self.useHand = false
 	
-	if self.cost <= 750 then
+	if self.maxRecharge <= 750 then
 		self.recharged = self.maxRecharge
 	end
 end
@@ -35,6 +35,7 @@ end
 function SeedPacket:renderToCanvas(entity)
 	love.graphics.setCanvas(self.displayCanvas)
 	
+	love.graphics.setColor(1, 1, 1)
 	love.graphics.draw(self.texture, (self.frame - 1) * -50, 0)
 	
 	if entity then
@@ -42,6 +43,9 @@ function SeedPacket:renderToCanvas(entity)
 		displayEntity.transform:setScale(.5, .5)
 		displayEntity:draw(4.75, 8.75)
 	end
+	
+	love.graphics.setColor(0, 0, 0)
+	love.graphics.printf(self.cost, 0, 54, 32, 'right')
 	
 	love.graphics.setCanvas()
 end
@@ -91,9 +95,6 @@ function SeedPacket:draw(x, y)
 		love.graphics.rectangle('fill', x, y, self.w, self.h)
 		love.graphics.rectangle('fill', x, y, self.w, self.h * (self.picking and 1 or 1 - self.recharged / self.maxRecharge))
 	end
-	
-	love.graphics.setColor(0, 0, 0)
-	love.graphics.printf(self.cost, x, y + 54, 32, 'right')
 	
 	UIContainer.draw(self, x, y)
 end

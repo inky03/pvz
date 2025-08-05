@@ -9,8 +9,8 @@ PoleVaulterZombie.pickWeight = 2000
 PoleVaulterZombie.startingLevel = 6
 PoleVaulterZombie.firstAllowedWave = 5
 
-function PoleVaulterZombie:init(x, y)
-	Zombie.init(self, x, y)
+function PoleVaulterZombie:init(x, y, challenge)
+	Zombie.init(self, x, y, challenge)
 	
 	self.poleUsed = false
 	
@@ -26,8 +26,11 @@ function PoleVaulterZombie:init(x, y)
 	self.animation:get('death').speed = 1.6
 	self.animation:get('eating').speed = 1.5
 	
+	self.fallTime = .68
+	
 	self.hitbox.x = -20
 	self.hitbox.w = 50
+	self.hurtbox.x = 50
 	
 	self.animation.onFinish:add(function(animation)
 		if animation.name == 'jump' then
@@ -46,16 +49,40 @@ function PoleVaulterZombie:init(x, y)
 			end
 		end
 	end)
+	
+	self.yOffset = 50
+	self.shadowOffset = {x = 20; y = 60}
 end
 
-function PoleVaulterZombie:hurt(hp)
-	Zombie.hurt(self, hp)
+function PoleVaulterZombie:hurt(hp, glow)
+	Zombie.hurt(self, hp, glow)
 	
-	if self.hurtState == 0 and self.hp <= (self.maxHp - 170) then
-		self:setHurtState(1)
-	elseif self.hurtState == 1 and self.hp <= (self.maxHp - 340) then
-		self:setHurtState(2)
+	if self.damagePhase == 0 and self.hp <= (self.maxHp - 170) then
+		self:setDamagePhase(1)
+	end if self.damagePhase == 1 and self.hp <= (self.maxHp - 340) then
+		self:setDamagePhase(2)
+	end
+end
+
+function PoleVaulterZombie:setDamagePhase(phase)
+	Zombie.setDamagePhase(self, phase)
+	
+	if phase == 1 then
+		self:toggleLayer('Zombie_outerarm_hand', false)
+		self:toggleLayer('Zombie_polevaulter_outerarm_lower', false)
+		self:replaceImage('Zombie_polevaulter_outerarm_upper', Reanim.getResource('Zombie_polevaulter_outerarm_upper2'))
+	elseif phase == 2 then
 		self:setState('dead')
+		self:toggleLayer('hair', false)
+		self:toggleLayer('head1', false)
+		self:toggleLayer('head2', false)
+		if not self.poleUsed then
+			self:toggleLayer('Zombie_polevaulter_pole', false)
+			self:toggleLayer('Zombie_polevaulter_pole2', false)
+			self:toggleLayer('Zombie_polevaulter_innerhand', false)
+			self:toggleLayer('Zombie_polevaulter_innerarm_lower', false)
+			self:toggleLayer('Zombie_polevaulter_innerarm_upper', false)
+		end
 	end
 end
 
@@ -71,28 +98,6 @@ function PoleVaulterZombie:setState(state)
 		self.hitbox.w = 20
 	else
 		Zombie.setState(self, state)
-	end
-end
-
-function PoleVaulterZombie:setHurtState(state)
-	Zombie.setHurtState(self, state)
-	
-	if state == 1 then
-		self:toggleLayer('Zombie_outerarm_hand', false)
-		self:toggleLayer('Zombie_polevaulter_outerarm_lower', false)
-		self:replaceImage('Zombie_polevaulter_outerarm_upper', Reanim.getResource('Zombie_polevaulter_outerarm_upper2'))
-	elseif state == 2 then
-		self:toggleLayer('hair', false)
-		self:toggleLayer('head1', false)
-		self:toggleLayer('head2', false)
-		
-		if not self.poleUsed then
-			self:toggleLayer('Zombie_polevaulter_pole', false)
-			self:toggleLayer('Zombie_polevaulter_pole2', false)
-			self:toggleLayer('Zombie_polevaulter_innerhand', false)
-			self:toggleLayer('Zombie_polevaulter_innerarm_lower', false)
-			self:toggleLayer('Zombie_polevaulter_innerarm_upper', false)
-		end
 	end
 end
 

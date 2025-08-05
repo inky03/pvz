@@ -5,8 +5,7 @@ function SeedBank:init(lawn, x, y, sun)
 	self.texture = Cache.image('images/SeedBank')
 	self.lawn = lawn
 	
-	self.visualMoney = (sun or 50)
-	self.money = self.visualMoney
+	self:setMoney(sun or 50)
 	
 	UIContainer.init(self, x, y, self.texture:getPixelWidth(), self.texture:getPixelHeight())
 	

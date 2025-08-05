@@ -39,8 +39,8 @@ local drawtime = {}
 function love.load()
 	love.mouse.setCursor(pointer)
 	
-	game = UIContainer:new(0, 0, 1400, 600)
-	level = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(3))
+	game = UIContainer:new(0, 0, windowWidth, windowHeight)
+	level = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(5))
 	
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('rough')
@@ -106,6 +106,7 @@ function updateDebug()
 		table.remove(drawtime, 1)
 	end
 	
+	love.graphics.setColor(1, 1, 1)
 	outlineText(('%d fps\n%d mb\n%d objects\n%d drawcalls'):format(#drawtime, ((stats.texturememory / 1024) + gc) / 1024, objs, stats.drawcalls), 8, 8)
 end
 

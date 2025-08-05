@@ -18,9 +18,9 @@ function Reanim:getLayers()
 	lambda.foreach(self.layers, function(layer) table.insert(list, layer) end)
 	return list
 end
-function Reanim:getImageNames()
+function Reanim:getImageIds()
 	local list = {}
-	lambda.foreach(self.images, function(image) table.insert(list, image) end)
+	lambda.foreach(self.images, function(_, id) table.insert(list, id) end)
 	return list
 end
 function Reanim:getLayerNames()
@@ -63,6 +63,7 @@ function Reanim.loadXML(path, kind)
 			last = -1;
 		}
 		local previousFrame = ReanimFrame:new()
+		previousFrame.layerName = anim.name
 		
 		if (anim.name == '_ground') then
 			previousFrame.image = 'IMAGE_REANIM_GROUND'
@@ -152,6 +153,7 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 			last = -1;
 		}
 		local previousFrame = ReanimFrame:new()
+		previousFrame.layerName = anim.name
 		
 		for i = 1, transforms[i] do
 			f = readByte('f32'); previousFrame.x = (f == null and previousFrame.x or f)

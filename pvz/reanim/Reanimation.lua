@@ -22,6 +22,9 @@ function Reanimation:init(kind, x, y)
 	self.groundVelocity = 0
 	self.groundVelocityMultiplier = 1
 	
+	self.prevFrame = 0
+	self.frameFloat = 0
+	
 	if kind then
 		self:setReanim(Cache.reanim(kind))
 	end
@@ -40,6 +43,7 @@ function Reanimation:replaceImage(image, newResource)
 	if image == nil then
 		return
 	end
+	local img = image
 	if type(image) == 'string' then
 		image = image:lower():gsub('image_reanim_', '')
 	end
@@ -53,6 +57,8 @@ function Reanimation:replaceImage(image, newResource)
 			return
 		end
 	end
+	
+	print(('%s: Could not find image ID %s'):format(self.reanim.name, tostr(img)))
 end
 function Reanimation:attachReanim(layer, reanim, basePose, offset)
 	return self.animation:attachReanim(layer, reanim, basePose, offset)
@@ -94,10 +100,17 @@ end
 function Reanimation:updateAnimation(dt)
 	if not self.animation or not self.animation._cur then return end
 	
+	self.prevFrame = self.animation.frameFloat
+	
 	self.animation:update(dt)
 	
+	self.frameFloat = self.animation.frameFloat
 	self.groundVelocity = (self.animation.groundVelocity * self.groundVelocityMultiplier)
 	self.x = (self.x + self.groundVelocity)
+end
+
+function Reanimation:shouldTriggerTimedEvent(t)
+	return ((self.frameFloat / self.animation.length) >= t and (self.prevFrame / self.animation.length) < t)
 end
 
 function Reanimation:draw(x, y, transforms)
@@ -180,8 +193,8 @@ function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
 	end
 	
 	for i, layer in ipairs(layers) do
-		if layer.frame.active and not (hiddenLayers and hiddenLayers[layer.name]) then
-			renderFrame(layer.frame)
+		if layer.active and not (hiddenLayers and hiddenLayers[layer.layerName]) then
+			renderFrame(layer)
 		end
 	end
 end

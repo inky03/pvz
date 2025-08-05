@@ -142,7 +142,7 @@ end
 function UIContainer:debugDraw(x, y)
 	love.graphics.setColor(0, 0, 1)
 	love.graphics.rectangle('line', x + 1, y + 1, self.w - 1, self.h - 1)
-	love.graphics.setColor(0, 1, 0)
+	love.graphics.setColor(1, 0, 0)
 	love.graphics.rectangle('line', x + 1 + self.hitbox.x, y + 1 + self.hitbox.y, self.hitbox.w - 1, self.hitbox.h - 1)
 	love.graphics.setColor(1, 1, 1)
 end

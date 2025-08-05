@@ -27,7 +27,6 @@ function Challenge:init(challenge)
 	self.sunCountdown = (Constants.sunCountdown + random.int(Constants.sunCountdownRange))
 	self.sunsFallen = 0
 	
-	self.debug = true
 	self.challenge = (challenge or 1)
 	self.challengeZombies = self:getZombies(challenge)
 	self.waves = self:getWaveCount(challenge)
@@ -323,6 +322,7 @@ function Challenge:drawTop(x, y)
 		)
 	end
 	
+	love.graphics.setColor(1, 1, 1)
 	outlineText('ZOMBIE SPAWNING DEBUG\n' .. debugString, 8, 80)
 end
 

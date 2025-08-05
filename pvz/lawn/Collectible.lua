@@ -3,8 +3,10 @@ local Collectible = Reanimation:extend('Collectible')
 Collectible.reanimName = 'Sun'
 Collectible.scoringDistance = 12
 Collectible.pullMoveDelta = 21
+Collectible.scaleDelta = .02
 Collectible.fadeTicks = 15
 Collectible.lifetime = 750
+Collectible.scale = 1
 
 function Collectible:init(x, y, mode)
 	Reanimation.init(self, self.reanimName, x, y)
@@ -13,10 +15,11 @@ function Collectible:init(x, y, mode)
 	self.mode = mode
 	self.dead = false
 	self.state = 'normal'
+	self.onGround = false
 	
 	self.life = self.lifetime
 	
-	local scale = self:getScale()
+	local scale = self.scale
 	self.collectionDistance = math.inf
 	self.transform:setScale(scale, scale)
 	
@@ -47,11 +50,15 @@ function Collectible:update(dt)
 			self.velY = (self.velY + self.gravityY * dt * Constants.tickPerSecond)
 		else
 			self.velX, self.velY = 0, 0
-		end
-		
-		self.life = (self.life - dt * Constants.tickPerSecond)
-		if self.life < 0 then
-			self:fadeOut()
+			
+			if not self.onGround then
+				self:hitGround()
+			end
+			
+			self.life = (self.life - dt * Constants.tickPerSecond)
+			if self.life < 0 then
+				self:fadeOut()
+			end
 		end
 	elseif self.state == 'collected' then
 		local dtt = math.min(dt / self.pullMoveDelta * Constants.tickPerSecond, 1)
@@ -79,14 +86,19 @@ function Collectible:updateVisual(dt)
 		self.transform:setScale(scale, scale)
 		
 		self.transform.alpha = math.clamp(self.collectionDistance * .035, .35, 1)
-	elseif self.state == 'fade' then
-		self.transform.alpha = math.remap(self.fade, self.fadeTicks, 0, 1, 0)
+	else
+		if self.state == 'fade' then
+			self.transform.alpha = math.remap(self.fade, self.fadeTicks, 0, 1, 0)
+		end
+		
+		if self.mode == 'plant' then
+			local scale = math.min(self.transform.xScale + dt * Constants.tickPerSecond * self.scaleDelta, self.scale)
+			self.transform:setScale(scale, scale)
+		end
 	end
-	
-	if self.mode == 'plant' then
-		local scale = math.min(self.transform.xScale + dt * Constants.tickPerSecond, self:getScale())
-		self.transform:setScale(scale, scale)
-	end
+end
+function Collectible:hitGround()
+	self.onGround = true
 end
 function Collectible:fadeOut()
 	self.state = 'fade'
@@ -109,10 +121,6 @@ function Collectible:die()
 	self.dead = true
 	self:onDespawn(self.state == 'collected')
 	self:destroy()
-end
-
-function Collectible:getScale()
-	return 1
 end
 
 return Collectible

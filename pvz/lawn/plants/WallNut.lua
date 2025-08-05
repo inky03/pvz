@@ -13,22 +13,22 @@ function WallNut:init(x, y, challenge)
 	self.animation:setFrame(4)
 end
 
-function WallNut:hurt(hp)
-	Plant.hurt(self, hp)
+function WallNut:hurt(hp, glow)
+	Plant.hurt(self, hp, glow)
 	
-	if self.hurtState == 0 and self.hp <= (self.maxHp - 1333) then
-		self:setHurtState(1)
-	elseif self.hurtState == 1 and self.hp <= (self.maxHp - 2667) then
-		self:setHurtState(2)
+	if self.damagePhase == 0 and self.hp <= (self.maxHp - 1333) then
+		self:setDamagePhase(1)
+	end if self.damagePhase == 1 and self.hp <= (self.maxHp - 2667) then
+		self:setDamagePhase(2)
 	end
 end
 
-function WallNut:setHurtState(state)
-	Plant.setHurtState(self, state)
+function WallNut:setDamagePhase(phase)
+	Plant.setDamagePhase(self, phase)
 	
-	if state == 1 then
+	if phase == 1 then
 		self:replaceImage('Wallnut_body', Reanim.getResource('Wallnut_cracked1'))
-	elseif state == 2 then
+	elseif phase == 2 then
 		self:replaceImage('Wallnut_body', Reanim.getResource('Wallnut_cracked2'))
 	end
 end

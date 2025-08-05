@@ -13,6 +13,7 @@ ReanimFrame.yOrigin = 0
 ReanimFrame.xOffset = 0
 ReanimFrame.yOffset = 0
 ReanimFrame.active = true
+ReanimFrame.layerName = ''
 ReanimFrame.scaleCoords = false
 -- TODO: IMPLEMENT TEXT AND FONT ?
 
@@ -36,6 +37,7 @@ function ReanimFrame:copy(frame)
 	self.image = frame.image
 	self.alpha = frame.alpha
 	self.active = frame.active
+	self.layerName = frame.layerName
 	self:setPosition(frame.x, frame.y)
 	self:setScale(frame.xScale, frame.yScale)
 	self:setShear(frame.xShear, frame.yShear)
@@ -54,9 +56,13 @@ function ReanimFrame:lerp(a, b, t)
 	self.alpha = math.lerp(a.alpha, b.alpha, t)
 	self:setPosition(math.lerp(a.x, b.x, t), math.lerp(a.y, b.y, t))
 	self:setScale(math.lerp(a.xScale, b.xScale, t), math.lerp(a.yScale, b.yScale, t))
-	self:setShear(math.lerp(a.xShear, b.xShear, t), math.lerp(a.yShear, b.yShear, t))
 	self:setOrigin(math.lerp(a.xOrigin, b.xOrigin, t), math.lerp(a.yOrigin, b.yOrigin, t))
 	self:setOffset(math.lerp(a.xOffset, b.xOffset, t), math.lerp(a.yOffset, b.yOffset, t))
+	
+	local xsDiff, ysDiff = (b.xShear - a.xShear), (b.yShear - a.yShear) -- TODO: this is probably not right...
+	xsDiff = (xsDiff > 180 and -360 or (xsDiff < -180 and 360 or 0))
+	ysDiff = (ysDiff > 180 and -360 or (ysDiff < -180 and 360 or 0))
+	self:setShear(math.lerp(a.xShear, b.xShear + xsDiff, t), math.lerp(a.yShear, b.yShear + ysDiff, t))
 	
 	return self
 end

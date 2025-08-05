@@ -26,6 +26,10 @@ function AnimationController:setReanim(reanim)
 	self._ghost = Animation:new(self, self.reanim)
 	self.current = Animation:new(self, self.reanim)
 	
+	self.frame = 0
+	self.frameFloat = 0
+	self.length = 0
+	
 	self.crossFadeLength = 0
 	self.crossFade = 0
 	
@@ -51,22 +55,29 @@ function AnimationController:update(dt, noDiff)
 	end)
 	
 	local ground, groundX = self._cur:getLayer('_ground'), 0
-	if ground then groundX = ground.frame.x end
+	if ground then groundX = ground.x end
 	
+	self.current.lerp = self._cur.lerp
+	self.current.next = self._cur.next
+	self.current.frame = self._cur.frame
 	self.current.finished = self._cur.finished
 	self.finished = self._cur.finished
 	self._cur:updateFrame(0)
 	
-	self.groundVelocity = (ground and ground.frame.active and (groundX - ground.frame.x) or 0)
+	self.length = self._cur.length
+	self.frame = self.current.frame
+	self.frameFloat = math.lerp(self.current.frame, self.current.next, self.current.lerp)
+	
+	self.groundVelocity = (ground and ground.active and (groundX - ground.x) or 0)
 	
 	if self.crossFade < 1 then
 		if self._prev then
 			local ground, groundX = self._prev:getLayer('_ground'), 0
-			if ground then groundX = ground.frame.x end
+			if ground then groundX = ground.x end
 			
 			self._prev:updateFrame(0)
 			
-			self.groundVelocity = (ground and ground.frame.active and (groundX - ground.frame.x) or 0)
+			self.groundVelocity = (ground and ground.active and (groundX - ground.x) or 0)
 		end
 		
 		if self.crossFadeLength > 0 then
@@ -80,15 +91,15 @@ function AnimationController:update(dt, noDiff)
 end
 function AnimationController:updateFrame(dt, noDiff)
 	lambda.foreach(self.current.layers, function(layer, i)
-		layer.frame:lerp(
-			self._ghost.layers[i].frame,
-			self._cur.layers[i].frame,
+		layer:lerp(
+			self._ghost.layers[i],
+			self._cur.layers[i],
 			self.crossFade
 		)
 		
-		if noDiff then layer.frame.diffX, layer.frame.diffY = 0, 0 end
+		if noDiff then layer.diffX, layer.diffY = 0, 0 end
 		
-		for _, attachment in ipairs(layer.frame.attachments) do
+		for _, attachment in ipairs(layer.attachments) do
 			attachment.reanim:update(dt, noDiff)
 		end
 	end)
@@ -112,7 +123,7 @@ function AnimationController:attachReanim(layer, reanim, basePose)
 			base:reset()
 			base:updateFrame(0)
 			
-			local baseFrame = base:getLayer(layer).frame
+			local baseFrame = base:getLayer(layer)
 			transform = ReanimFrame:new()
 			transform:setPosition(-baseFrame.x, -baseFrame.y)
 			transform:setShear(-baseFrame.xShear, -baseFrame.yShear)
@@ -122,7 +133,7 @@ function AnimationController:attachReanim(layer, reanim, basePose)
 			return
 		end
 		
-		baseLayer.frame:attachReanim(reanim, transform)
+		baseLayer:attachReanim(reanim, transform)
 	else
 		print(('%s: Layer %s doesn\'t exist'):format(self.reanim.name, track))
 	end
@@ -130,6 +141,14 @@ end
 
 function AnimationController:get(name)
 	return lambda.find(self.list, function(anim) return anim.name == name end)
+end
+function AnimationController:remove(name)
+	for i, anim in ipairs(self.list) do
+		if anim.name == name then
+			table.remove(self.list, i)
+			return
+		end
+	end
 end
 function AnimationController:add(name, track, loop)
 	local anim = self:get(name)
@@ -163,7 +182,7 @@ function AnimationController:play(name, force, crossFade, reset)
 		if anim then
 			self._prev = self._cur
 			
-			lambda.foreach(self._ghost.layers, function(layer, i) layer.frame:copy(self.current.layers[i].frame) end)
+			lambda.foreach(self._ghost.layers, function(layer, i) layer:copy(self.current.layers[i]) end)
 			
 			self._cur = anim
 			self.current.name = anim.name
@@ -191,7 +210,7 @@ function AnimationController:setFrame(index, next)
 	self:update(0)
 end
 function AnimationController:getFrame()
-	return self._cur.frame
+	return self._cur
 end
 
 function AnimationController:getLayer(find)

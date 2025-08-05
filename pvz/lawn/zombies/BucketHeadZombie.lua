@@ -1,54 +1,40 @@
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 local BucketHeadZombie = BasicZombie:extend('BucketHeadZombie')
 
-BucketHeadZombie.maxHp = 1370
+BucketHeadZombie.maxHelmHp = 1100
 
 BucketHeadZombie.value = 4
 BucketHeadZombie.pickWeight = 3000
 BucketHeadZombie.startingLevel = 8
 BucketHeadZombie.firstAllowedWave = 1
 
-function BucketHeadZombie:init(x, y)
-	BasicZombie.init(self, x, y)
+function BucketHeadZombie:init(x, y, challenge)
+	BasicZombie.init(self, x, y, challenge)
 	
 	self:toggleLayer('bucket', true)
 end
 
-function BucketHeadZombie:hurt(hp)
-	Zombie.hurt(self, hp)
+function BucketHeadZombie:hurt(hp, glow)
+	BasicZombie.hurt(self, hp, glow)
 	
-	if self.hurtState == 0 and self.hp <= (self.maxHp - 350) then
-		self:setHurtState(1)
-	elseif self.hurtState == 1 and self.hp <= (self.maxHp - 700) then
-		self:setHurtState(2)
-	elseif self.hurtState == 2 and self.hp <= (self.maxHp - 1100) then
-		self:setHurtState(3)
-	elseif self.hurtState == 3 and self.hp <= (self.maxHp - 1235) then
-		self:setHurtState(4)
-	elseif self.hurtState == 4 and self.hp <= (self.maxHp - 1370) then
-		self:setHurtState(5)
-		self:setState('dead')
+	if self.helmDamagePhase == 0 and self.helmHp <= (self.maxHelmHp - 350) then
+		self:setHelmDamagePhase(1)
+	end if self.helmDamagePhase == 1 and self.helmHp <= (self.maxHelmHp - 700) then
+		self:setHelmDamagePhase(2)
+	end if self.helmDamagePhase == 2 and self.helmHp <= 0 then
+		self:setHelmDamagePhase(3)
 	end
 end
 
-function BucketHeadZombie:setHurtState(state)
-	Zombie.setHurtState(self, state)
+function BucketHeadZombie:setHelmDamagePhase(phase)
+	BasicZombie.setHelmDamagePhase(self, phase)
 	
-	if state == 1 then
+	if phase == 1 then
 		self:replaceImage('Zombie_bucket1', Reanim.getResource('Zombie_bucket2'))
-	elseif state == 2 then
+	elseif phase == 2 then
 		self:replaceImage('Zombie_bucket1', Reanim.getResource('Zombie_bucket3'))
-	elseif state == 3 then
+	elseif phase == 3 then
 		self:toggleLayer('bucket', false)
-	elseif state == 4 then
-		self:toggleLayer('Zombie_outerarm_hand', false)
-		self:toggleLayer('Zombie_outerarm_lower', false)
-		self:replaceImage('Zombie_outerarm_upper', Reanim.getResource('Zombie_outerarm_upper2'))
-	elseif state == 5 then
-		self:toggleLayer('hair', false)
-		self:toggleLayer('head1', false)
-		self:toggleLayer('head2', false)
-		self:toggleLayer('tongue', false)
 	end
 end
 

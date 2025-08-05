@@ -1,8 +1,8 @@
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 local PeaShooterZombie = BasicZombie:extend('PeaShooterZombie')
 
-function PeaShooterZombie:init(x, y)
-	BasicZombie.init(self, x, y)
+function PeaShooterZombie:init(x, y, challenge)
+	BasicZombie.init(self, x, y, challenge)
 	
 	self:replaceImage('Zombie_head', nil)
 	

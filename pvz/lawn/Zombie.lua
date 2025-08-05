@@ -2,6 +2,9 @@ local Zombie = Unit:extend('Zombie')
 
 Zombie.reanimName = 'Zombie'
 
+Zombie.maxHelmHp = 0
+Zombie.maxShieldHp = 0
+
 -- wave definition
 Zombie.value = 1
 Zombie.pickWeight = 0
@@ -16,9 +19,12 @@ function Zombie:init(x, y, challenge)
 		23, 7, 42, 115
 	)
 	
+	self.helmHp, self.shieldHp = self.maxHelmHp, self.maxShieldHp
+	self.helmDamagePhase, self.shieldDamagePhase = 0, 0
+	
 	self.animation.speed = self.speed
 	
-	self.deathTimer = .5
+	self.fallTime = .5
 	
 	self.damageGroup = Plant
 	self.collision = nil
@@ -44,7 +50,7 @@ function Zombie:update(dt)
 	Unit.update(self, dt)
 	
 	if self.fadeOutTimer then
-		self.fadeOutTimer = (self.fadeOutTimer + dt * self.animation.speed)
+		self.fadeOutTimer = (self.fadeOutTimer + dt * self.speed * self.speedMultiplier)
 		if self.fadeOutTimer > 1 then
 			self.transform.alpha = (self.transform.alpha - dt * 8)
 			if self.transform.alpha < 0 then
@@ -61,16 +67,19 @@ function Zombie:update(dt)
 		elseif not self.collision and self.state == 'eating' then
 			self:setState('normal')
 		end
-	else
-		self.deathTimer = (self.deathTimer - dt * self.animation.speed)
-		self:hurt(dt * 12)
-		
-		if (self.deathTimer <= 0) then
-			self.canDie = true
+	elseif not self.dead then
+		if self.fallTime >= 0 and self:shouldTriggerTimedEvent(self.fallTime) then
+			self:die()
 		end
 	end
 end
 
+function Unit:setHelmDamagePhase(phase)
+	self.helmDamagePhase = phase
+end
+function Unit:setShieldDamagePhase(phase)
+	self.shieldDamagePhase = phase
+end
 function Zombie:setState(state)
 	Unit.setState(self, state)
 	
@@ -78,8 +87,6 @@ function Zombie:setState(state)
 		self.animation:play('walk')
 	elseif state == 'eating' then
 		self.animation:play('eating')
-	elseif state == 'dead' then
-		self.canDie = false
 	end
 end
 
@@ -88,8 +95,19 @@ function Zombie:onDeath()
 	self.flags.ignoreCollisions = true
 end
 
+function Zombie:hurt(hp, glow)
+	if self.shieldHp > 0 then
+		self.shieldHp = math.max(self.shieldHp - hp, 0)
+	elseif self.helmHp > 0 then
+		self.helmHp = math.max(self.helmHp - hp, 0)
+		self.damageGlow = math.max(self.damageGlow, glow or 1)
+	else
+		Unit.hurt(self, hp, glow)
+	end
+end
+
 function Zombie.getSpawnOffset()
-	return random.number(25, 100)
+	return random.number(10, 50)
 end
 
 function Zombie:__tostring()
