@@ -1,3 +1,5 @@
+![preview](/preview.png)
+
 heavily unfinished... basically my first actual [löve](http://love2d.org) project so im just testing the waters... by recreating the entirety of pvz i guess!
 
 i hope this is a Nice Learning Expereince
