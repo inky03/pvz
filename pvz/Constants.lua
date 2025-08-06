@@ -11,4 +11,6 @@ return {
 	sunCountdown = 425;
 	sunCountdownMax = 950;
 	sunCountdownRange = 275;
+	
+	flagRaiseTime = 100;
 }

@@ -9,8 +9,8 @@ function Animation:init(controller, reanim, name)
 	self.layers = {}
 	
 	self.first = 1
-	self.last = reanim.length + 1
-	self.length = reanim.length + 1
+	self.last = reanim.length
+	self.length = reanim.length
 	
 	self.lerp = 0
 	self.next = 2
@@ -35,7 +35,7 @@ function Animation:update(dt, materialized)
 	self.justFinished = false
 	
 	if self.lerp >= 1 then
-		if self.next >= self.length then
+		if self.next > (self.loop and self.length - 1 or self.length) then
 			self.justFinished = true
 			
 			if self.loop then
@@ -64,12 +64,13 @@ function Animation:updateFrame(noDiff)
 end
 
 function Animation:updateLayers(cur, next, lerp, noDiff)
+	-- print(self.last .. ' / ' .. self.length .. ' / ' .. self.reanim.length)
 	lambda.foreach(self.layers, function(layer, i)
 		local reanimLayer = self.reanim.layers[i]
 		
 		layer:lerp(
-			reanimLayer.frames[math.clamp(cur, 1, self.reanim.length)],
-			reanimLayer.frames[math.clamp(next, 1, self.reanim.length)],
+			reanimLayer.frames[math.clamp(cur, self.first, self.last)],
+			reanimLayer.frames[math.clamp(next, self.first, self.last)],
 			lerp
 		)
 		

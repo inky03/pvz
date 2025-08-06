@@ -44,10 +44,10 @@ function Collectible:update(dt)
 	Reanimation.update(self, dt)
 	
 	if self.state == 'normal' then
-		if self.y + self.velY < self.groundY then
+		if self.y < self.groundY then
 			self.x = (self.x + self.velX * dt * Constants.tickPerSecond)
 			self.y = (self.y + self.velY * dt * Constants.tickPerSecond)
-			self.velY = (self.velY + self.gravityY * dt * Constants.tickPerSecond)
+			self.velY = math.min(self.velY + self.gravityY * dt * Constants.tickPerSecond, self.groundY)
 		else
 			self.velX, self.velY = 0, 0
 			

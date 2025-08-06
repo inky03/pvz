@@ -3,6 +3,7 @@ local SeedBank = Cache.module('pvz.hud.SeedBank')
 local Challenge = UIContainer:extend('Challenge')
 local FlagZombie = Cache.module(Cache.zombies('FlagZombie'))
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
+local WaveMeter = Cache.module('pvz.hud.WaveMeter')
 local Sun = Cache.module('pvz.lawn.collectibles.Sun')
 
 Challenge.wavesPerFlag = 10
@@ -15,11 +16,12 @@ Challenge.lawn = Lawn
 function Challenge:init(challenge)
 	UIContainer.init(self, 0, 0, game.w, game.h)
 	
+	self.flagWaves = {}
 	self.waveZombies = {}
 	self.currentWave = 0
 	self.currentWaveZombies = {}
-	self.currentWaveHealth = 0
-	self.healthToNextWave = 0
+	self.currentWaveHealth = -1
+	self.healthToNextWave = -1
 	self.startWaveHealth = 0
 	self.hugeWaveCountdown = 0
 	self.challengeCompleted = false
@@ -35,6 +37,13 @@ function Challenge:init(challenge)
 	
 	self.lawn = self:addElement(self.lawn:new(self, 0, 0))
 	self.seeds = self:addElement(SeedBank:new(self.lawn, 10, 0, self.flags.startingSun))
+	
+	self.waveMeter = self:addElement(WaveMeter:new())
+	self.waveMeter:setPosition(windowWidth - 42 - self.waveMeter.w, windowHeight - 25)
+	self.waveMeter:setFlags(self.flagWaves)
+	self.waveMeter.drawToTop = true
+	self.waveMeterWidth = 0
+	
 	self.collectibles = self:addElement(UIContainer:new(0, 0, windowWidth, windowHeight))
 	self.collectibles.drawToTop = true
 	self.collectibles.canClick = false
@@ -49,11 +58,18 @@ function Challenge:init(challenge)
 end
 
 function Challenge:initWaves()
+	table.clear(self.flagWaves)
+	table.clear(self.waveZombies)
+	
 	for wave = 1, self.waves do
 		local zombiePoints = self:pointsOnWave(wave)
 		
 		if not self:zombiePickerRoutine(wave, zombiePoints) then
 			print('couldn\'t place any zombies for wave ' .. wave)
+		end
+		
+		if self:isFlagWave(wave) then
+			table.insert(self.flagWaves, wave)
 		end
 	end
 end
@@ -126,6 +142,7 @@ function Challenge:update(dt)
 	
 	self:updateSun(dt)
 	self:updateChallenge(dt)
+	self:updateWaveMeter(dt)
 end
 function Challenge:updateSun(dt)
 	if not self.flags.fallingSun then return end
@@ -188,6 +205,43 @@ function Challenge:updateChallenge(dt)
 		self:startNextWave()
 	end
 end
+function Challenge:updateWaveMeter(dt)
+	if self.currentWave == 0 then return end
+	
+	local totalWidth = 150
+	local hasFlags = (#self.flagWaves > 0)
+	local wavesPerFlag = (math.min(self.wavesPerFlag, self.waves))
+	
+	if hasFlags then
+		totalWidth = (totalWidth - 12 * self.waves / wavesPerFlag)
+	end
+	
+	local waveLength = math.floor(totalWidth / (self.waves - 1))
+	local curWaveLength = math.floor((self.currentWave - 1) * totalWidth / (self.waves - 1))
+	local nextWaveLength = math.floor(self.currentWave * totalWidth / (self.waves - 1))
+	
+	if hasFlags then
+		local extraLength = math.floor(self.currentWave / wavesPerFlag) * 12
+		nextWaveLength = (nextWaveLength + extraLength)
+		curWaveLength = (curWaveLength + extraLength)
+	end
+	
+	local zombieFraction = math.remap(self.zombieCountdown, self.zombieCountdownStart, 0, 0, 1)
+	if self.healthToNextWave > -1 then
+		local healthFraction = math.clamp(math.remap(self.currentWaveHealth, self.startWaveHealth, self.healthToNextWave, 0, 1), 0, 1)
+		zombieFraction = math.max(healthFraction, zombieFraction)
+	end
+	
+	local length = math.clamp(math.lerp(curWaveLength, nextWaveLength, zombieFraction), 1, 150)
+	local delta = (length - self.waveMeterWidth)
+	if delta > waveLength then
+		self.waveMeterWidth = math.min(self.waveMeterWidth + dt * Constants.tickPerSecond / 5, length)
+	elseif delta > 0 then
+		self.waveMeterWidth = math.min(self.waveMeterWidth + dt * Constants.tickPerSecond / 20, length)
+	end
+	
+	self.waveMeter.progress = (self.waveMeterWidth / 150 * 100)
+end
 function Challenge:getCurrentWaveHealth()
 	local waveHealth = 0
 	if self.currentWaveZombies then
@@ -205,6 +259,7 @@ function Challenge:startNextWave()
 	self.currentWave = (self.currentWave + 1)
 	self.zombieCountdown = (Constants.zombieCountdown + random.int(0, Constants.zombieCountdownRange))
 	self.zombieCountdownStart = self.zombieCountdown
+	self.waveMeter.currentWave = self.currentWave
 	
 	print('wave ' .. self.currentWave)
 	
