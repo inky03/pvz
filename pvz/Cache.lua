@@ -1,3 +1,6 @@
+local deflate = require 'lib.deflate.deflatelua'
+local gif = require 'lib.gifload'
+
 local Cache = {
 	cached = {
 		images = {};
@@ -34,37 +37,55 @@ end
 function Cache.image(path)
 	if path == nil then return nil end
 	
+	local img
 	local key = path:lower()
 	if not cached.images[key] then
 		local fpath = Cache.main(path .. '.png')
+		if love.filesystem.getInfo(fpath) then
+			img = love.graphics.newImage(fpath, {mipmaps = true})
+			goto loaded
+		end
+		
 		local fpathJpg = Cache.main(path .. '.jpg')
 		local fpathMask = Cache.main(path .. '_.png')
-		if love.filesystem.getInfo(fpath) then
-			cached.images[key] = love.graphics.newImage(fpath, {mipmaps = true})
-		elseif love.filesystem.getInfo(fpathJpg) then
+		if love.filesystem.getInfo(fpathJpg) then
 			if love.filesystem.getInfo(fpathMask) then
 				local image = love.image.newImageData(fpathJpg)
 				local mask = love.image.newImageData(fpathMask)
 				
 				image:mapPixel(function(x, y, r, g, b)
 					local a = mask:getPixel(x, y)
-					
 					return r, g, b, a
 				end)
 				
-				cached.images[key] = love.graphics.newImage(image, {mipmaps = true})
+				img = love.graphics.newImage(image, {mipmaps = true})
+				goto loaded
 			else
-				cached.images[key] = love.graphics.newImage(fpathJpg, {mipmaps = true})
+				img = love.graphics.newImage(fpathJpg, {mipmaps = true})
+				goto loaded
 			end
-		else
-			print('Resource for ' .. fpath .. ' doesn\'t exist')
-			return Cache.unknownTexture
 		end
 		
-		cached.images[key]:setMipmapFilter('linear', .75)
+		local fpathGifMask = Cache.main(path .. '.gif')
+		if love.filesystem.getInfo(fpathGifMask) then
+			local gif = Cache.loadGifFile(fpathGifMask, 1).imgs[3]
+			
+			gif:mapPixel(function(x, y, r, g, b) return 1, 1, 1, r end)
+			
+			img = love.graphics.newImage(gif, {mipmaps = true})
+			goto loaded
+		end
+			
+		print('Resource for ' .. fpath .. ' doesn\'t exist')
+		return Cache.unknownTexture
+	else
+		return cached.images[key]
 	end
 	
-	return cached.images[key]
+	::loaded::
+	cached.images[key] = img
+	img:setMipmapFilter('linear', .75)
+	return img
 end
 
 function Cache.reanim(kind, folder)
@@ -116,8 +137,7 @@ function Cache.decompressFile(path)
 	local int = love.data.unpack('<i4', val)
 	if int == -559022380 then -- zlib compressed reanimation
 		local bytes = {}
-		local DEFLATE = require('lib.deflate.deflatelua')
-		local output = DEFLATE.inflate_zlib({
+		local output = deflate.inflate_zlib({
 			input = file:read():sub(5);
 			output = function(b) table.insert(bytes, string.char(b)) end;
 		})
@@ -127,7 +147,22 @@ function Cache.decompressFile(path)
 		return file:read()
 	end
 end
+function Cache.loadGifFile(path, frames)
+	local file = love.filesystem.newFile(path, 'r')
+	local gif = gif()
+	
+	while true do
+		local data = file:read(65536)
+		if not data or data == '' then break end
+		gif:update(data)
+		if frames and gif.ncomplete >= frames then break end
+	end
+	
+	file:close()
+	return gif:done()
+end
 
 Cache.unknownTexture = love.graphics.newImage(Cache.resources('noTexture.png'))
+Cache.unknownTexture:setFilter('nearest', 'nearest')
 
 return Cache

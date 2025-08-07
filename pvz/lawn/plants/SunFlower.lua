@@ -8,6 +8,7 @@ function SunFlower:init(x, y, challenge)
 	Plant.init(self, x, y, challenge)
 	
 	self.glowny = -1
+	self.glowing = false
 	self.fireRate = 2500
 	self.fireTimer = random.int(300, self.fireRate / 2)
 	
@@ -21,29 +22,29 @@ end
 function SunFlower:update(dt)
 	if not self.active then return end
 	
-	Plant.update(self, dt * self.speedMultiplier)
+	Plant.update(self, dt)
 	
-	self.fireTimer = (self.fireTimer - dt * Constants.tickPerSecond * self.speed * self.speedMultiplier)
+	local plantDelta = (dt * Constants.tickPerSecond * self.speed * self.speedMultiplier)
+	
+	self.fireTimer = (self.fireTimer - plantDelta)
 	
 	if self.fireTimer < 0 then
 		self.fireTimer = (self.fireTimer + self.fireRate)
-		self.glowny = 0
+		self.glowing = true
 	end
 	
-	if self.glowny >= 0 then
-		local prevGlowny = self.glowny
-		self.glowny = (self.glowny + dt * Constants.tickPerSecond * self.speed * self.speedMultiplier)
+	if self.glowing and not self.challenge.challengeCompleted then
+		self.glowny = math.min(self.glowny + plantDelta, 100)
 		
-		if self.glowny < 100 then
-			self.glow = math.remap(self.glowny, 0, 100, 0, 1)
-		elseif self.glowny < 200 then
-			if prevGlowny < 100 then self:makeSun() end
-			
-			self.glow = math.remap(self.glowny, 100, 200, 1, 0)
-		else
-			self.glowny = -1
+		if self.glowny >= 100 then
+			self.glowing = false
+			self:makeSun()
 		end
+	else
+		self.glowny = math.max(self.glowny - plantDelta, 0)
 	end
+	
+	self.glow = math.remap(self.glowny, 0, 100, 0, 1)
 end
 
 function SunFlower:makeSun()

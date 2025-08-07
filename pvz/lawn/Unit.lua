@@ -147,9 +147,11 @@ function Unit:queryCollision(kind, filter, baseX, baseY)
 	return closest
 end
 function Unit:hit(collision, multiplier)
+	if not collision then return end
 	collision:hitBy(self, multiplier)
 end
 function Unit:hitBy(unit, multiplier)
+	if not unit then return end
 	local multiplier = (multiplier or 1)
 	self:hurt(unit.damage * multiplier, multiplier)
 end

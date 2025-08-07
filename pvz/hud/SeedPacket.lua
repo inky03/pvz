@@ -64,10 +64,8 @@ function SeedPacket:update(dt)
 		self.recharged = math.min(self.recharged + dt * Constants.tickPerSecond, self.maxRecharge)
 	end
 	
-	local oldReady = self.ready
 	self.ready = self:isReady()
 	self.useHand = self.ready
-	if oldReady ~= self.ready then updateCursor() end
 	
 	UIContainer.update(self, dt)
 end
@@ -79,7 +77,6 @@ function SeedPacket:onPlanted()
 	self.recharged = 0
 	self.picking = false
 	self.bank:setMoney(self.bank.money - self.cost)
-	updateCursor()
 end
 
 function SeedPacket:onReturned()

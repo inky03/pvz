@@ -47,7 +47,7 @@ end
 function PeaShooter:update(dt)
 	if not self.active then return end
 	
-	Plant.update(self, dt * self.speedMultiplier)
+	Plant.update(self, dt)
 	
 	self.fireTimer = (self.fireTimer - dt * Constants.tickPerSecond * self.speed * self.speedMultiplier)
 	

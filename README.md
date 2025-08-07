@@ -18,6 +18,7 @@ if everything is done correctly, it should work (somewhat!)
 
 - PopCap Games cause they, like, made the whole game, yk...
 - [lua-xmlparser](https://github.com/jonathanpoelen/lua-xmlparser) (xml parsing, modded)
+- [gifload](https://love2d.org/forums/viewtopic.php?t=82642) (loading like, 5 gif format images i guess)
 - [gamera](https://github.com/kikito/gamera) (camera library)
 - [30log](https://github.com/Yonaba/30log) (oop library)
 - [lua-compress-deflatelua](https://github.com/davidm/lua-compress-deflatelua) (pure lua zlib decompression)

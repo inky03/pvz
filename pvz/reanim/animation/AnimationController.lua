@@ -22,7 +22,7 @@ function AnimationController:setReanim(reanim)
 	self.list = {}
 	
 	self._prev = nil
-	self._cur = self:add('')
+	self._cur = self:add('', nil, false)
 	self._ghost = Animation:new(self, self.reanim)
 	self.current = Animation:new(self, self.reanim)
 	

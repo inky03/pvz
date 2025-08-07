@@ -11,13 +11,12 @@ function Plant:init(x, y, challenge)
 	self.damageGroup = Zombie
 	
 	if self.defaultBlinkAnim then
-		self.blinkCountdown = 0
 		self.blinkReanim = Reanimation:new(self.reanimName)
 		self.blinkReanim.animation:add('blink', self.defaultBlinkAnim, false)
 		self.blinkReanim.animation.onFinish:add(function(_) self.blinkReanim.visible = false end)
-		
-		self:blink()
 		self.blinkReanim.visible = false
+		
+		self.blinkCountdown = random.int(400, 800)
 	end
 end
 

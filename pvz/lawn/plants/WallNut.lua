@@ -14,6 +14,7 @@ function WallNut:init(x, y, challenge)
 	self.animation:setFrame(4)
 	
 	self:attachBlink(self, 'face')
+	self.blinkCountdown = random.int(1000, 2000)
 	self.blinkReanim.animation:add('twitch', 'blink_twitch', false)
 	self.blinkReanim.animation:add('blinkThrice', 'blink_thrice', false)
 end

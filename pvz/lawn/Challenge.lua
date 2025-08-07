@@ -42,6 +42,7 @@ function Challenge:init(challenge)
 	self.waveMeter:setPosition(windowWidth - 42 - self.waveMeter.w, windowHeight - 25)
 	self.waveMeter:setFlags(self.flagWaves)
 	self.waveMeter.drawToTop = true
+	self.waveMeter.visible = false
 	self.waveMeterWidth = 0
 	
 	self.collectibles = self:addElement(UIContainer:new(0, 0, windowWidth, windowHeight))
@@ -255,6 +256,10 @@ function Challenge:getCurrentWaveHealth()
 end
 
 function Challenge:startNextWave()
+	if self.currentWave == 0 then
+		self.waveMeter.visible = true
+	end
+	
 	self.zombieSince = 0
 	self.currentWave = (self.currentWave + 1)
 	self.zombieCountdown = (Constants.zombieCountdown + random.int(0, Constants.zombieCountdownRange))
@@ -276,6 +281,13 @@ function Challenge:startNextWave()
 		self.healthToNextWave = 0
 	else
 		self.healthToNextWave = (self.startWaveHealth * random.number(.5, .65))
+	end
+	
+	if self:isFinalWave(self.currentWave) then
+		local finalWave = Reanimation:new('FinalWave', 0, 30)
+		finalWave.animation.onFinish:add(function(_) finalWave:destroy() end)
+		finalWave.drawToTop = true
+		self:addElement(finalWave)
 	end
 end
 function Challenge:attemptSpawnZombies(zombies)

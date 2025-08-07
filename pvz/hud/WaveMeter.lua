@@ -38,6 +38,8 @@ function WaveMeter:update(dt)
 end
 
 function WaveMeter:draw(x, y)
+	if not self.visible then return end
+	
 	local progressX = self:XAtProgress(self.progress)
 	
 	love.graphics.setColor(1, 1, 1)
