@@ -10,10 +10,21 @@ function math.dcos(o) return math.cos(math.rad(o)) end
 function math.dsin(o) return math.sin(math.rad(o)) end
 
 function math.lerp(a, b, t) return (a + (b - a) * t) end
-
 function math.remap(n, minA, maxA, minB, maxB) return (minB + (n - minA) * ((maxB - minB) / (maxA - minA))) end
 
 function math.eucldistance(xA, yA, xB, yB) return math.sqrt((xB - xA) ^ 2 + (yB - yA) ^ 2) end
+
+
+-- string
+
+function string.split(str, delimiter)
+	local strings = {}
+	for sub in str:gmatch('[^' .. delimiter .. ']+') do table.insert(strings, sub) end
+	return strings
+end
+function string.trim(str) local trim = str:match('^%s*(.-)%s*$') ; return trim end
+function string.rtrim(str) local trim = str:gsub('%s+$', '') ; return trim end
+function string.ltrim(str) local trim = str:gsub('^%s+', '') ; return trim end
 
 
 -- random

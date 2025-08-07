@@ -39,4 +39,8 @@ function DayChallenge:getWaveCount(challenge)
 	return (counts[challenge] or 10)
 end
 
+function DayChallenge:getTitle(challenge)
+	return ('Level %d-%d'):format(1, challenge)
+end
+
 return DayChallenge

@@ -31,6 +31,7 @@ function Challenge:init(challenge)
 	
 	self.challenge = (challenge or 1)
 	self.challengeZombies = self:getZombies(challenge)
+	self.challengeTitle = self:getTitle(challenge)
 	self.waves = self:getWaveCount(challenge)
 	self.flags = self:getFlags(challenge)
 	self:initWaves()
@@ -44,6 +45,11 @@ function Challenge:init(challenge)
 	self.waveMeter.drawToTop = true
 	self.waveMeter.visible = false
 	self.waveMeterWidth = 0
+	
+	self.challengeText = self:addElement(Font:new('HouseOfTerror', 16, windowWidth - 300 - 14, windowHeight - 29, 300))
+	self.challengeText:setLayerColor('Main', 223 / 255, 186 / 255, 97 / 255)
+	self.challengeText.alignment = 'right'
+	self.challengeText:setText(self.challengeTitle)
 	
 	self.collectibles = self:addElement(UIContainer:new(0, 0, windowWidth, windowHeight))
 	self.collectibles.drawToTop = true
@@ -258,6 +264,7 @@ end
 function Challenge:startNextWave()
 	if self.currentWave == 0 then
 		self.waveMeter.visible = true
+		self.challengeText.x = (windowWidth - 300 - 201)
 	end
 	
 	self.zombieSince = 0
@@ -408,6 +415,9 @@ function Challenge:getFlags(challenge)
 		startingSun = 50;
 		fallingSun = true;
 	}
+end
+function Challenge:getTitle(challenge)
+	return ('Challenge %d'):format(challenge)
 end
 
 function Challenge:getIntroZombie(challenge)

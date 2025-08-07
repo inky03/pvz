@@ -45,13 +45,13 @@ function Cache.image(path, folder)
 	if not cached.images[key] then
 		local fpathMask = Cache.main(folder .. path .. '_.png')
 		local fpathPng, fpathJpg = Cache.main(folder .. path .. '.png'), Cache.main(folder .. path .. '.jpg')
-		local path = (
+		local fpath = (
 			(love.filesystem.getInfo(fpathPng) and fpathPng) or
 			(love.filesystem.getInfo(fpathJpg) and fpathJpg)
 		)
-		if path then
+		if fpath then
 			if love.filesystem.getInfo(fpathMask) then
-				local image = love.image.newImageData(path)
+				local image = love.image.newImageData(fpath)
 				local mask = love.image.newImageData(fpathMask)
 				
 				image:mapPixel(function(x, y, r, g, b)
@@ -62,7 +62,7 @@ function Cache.image(path, folder)
 				img = love.graphics.newImage(image, {mipmaps = true})
 				goto loaded
 			else
-				img = love.graphics.newImage(path, {mipmaps = true})
+				img = love.graphics.newImage(fpath, {mipmaps = true})
 				goto loaded
 			end
 		end

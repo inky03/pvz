@@ -9,7 +9,7 @@ Signal = require 'pvz.Signal'
 Constants = require 'pvz.Constants'
 UIContainer = require 'pvz.hud.UIContainer'
 
-FontData = require 'pvz.font.FontData'
+Font = require 'pvz.font.Font'
 Reanimation = require 'pvz.reanim.Reanimation'
 
 Unit = require 'pvz.lawn.Unit'
@@ -42,7 +42,7 @@ function love.load()
 	love.mouse.setCursor(pointer)
 	
 	game = UIContainer:new(0, 0, windowWidth, windowHeight)
-	level = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(5))
+	level = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(9))
 	
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('rough')

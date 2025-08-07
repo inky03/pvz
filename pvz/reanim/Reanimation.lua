@@ -58,7 +58,7 @@ function Reanimation:replaceImage(image, newResource)
 		end
 	end
 	
-	print(('%s: Could not find image ID %s'):format(self.reanim.name, tostr(img)))
+	trace(('%s: Could not find image ID %s'):format(self.reanim.name, tostr(img)))
 end
 function Reanimation:attachReanim(layer, reanim, basePose, offset)
 	return self.animation:attachReanim(layer, reanim, basePose, offset)
@@ -78,7 +78,7 @@ function Reanimation:layerIsHidden(layer)
 	if foundLayer then
 		return self.hiddenLayers[foundLayer.name]
 	else
-		print(('%s: Could not find layer %s'):format(self.reanim.name, layer))
+		trace(('%s: Could not find layer %s'):format(self.reanim.name, layer))
 	end
 end
 function Reanimation:toggleLayer(layer, on)
@@ -87,7 +87,7 @@ function Reanimation:toggleLayer(layer, on)
 	if foundLayer then
 		self.hiddenLayers[foundLayer.name] = (not on)
 	else
-		print(('%s: Could not find layer %s'):format(self.reanim.name, layer))
+		trace(('%s: Could not find layer %s'):format(self.reanim.name, layer))
 	end
 end
 

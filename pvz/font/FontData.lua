@@ -55,7 +55,7 @@ function FontData:_setInstructions(instructions)
 end
 function FontData:getLayer(name)
 	if type(name) ~= 'string' then return end
-	return lambda.find(self.layers, function(layer) return (layer.name == name:gsub('@', '')) end)
+	return lambda.find(self.layers, function(layer) return (layer.name:lower() == name:gsub('@', ''):lower()) end)
 end
 
 function FontData.load(path, folder)

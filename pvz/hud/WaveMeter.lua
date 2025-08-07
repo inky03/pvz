@@ -53,12 +53,12 @@ function WaveMeter:draw(x, y)
 		local yy = self.flags[i].y
 		
 		self.quad:setViewport(25, 0, 25, 25, self.textureParts:getPixelDimensions())
-		love.graphics.draw(self.textureParts, self.quad, x + self.w - flagProgressX - 2, y - 3)
+		love.graphics.draw(self.textureParts, self.quad, x + self.w - flagProgressX - 2, y - 4)
 		self.quad:setViewport(50, 0, 25, 25, self.textureParts:getPixelDimensions())
 		love.graphics.draw(self.textureParts, self.quad, x + self.w - flagProgressX - 2, y + yy - 3)
 	end
 	
-	love.graphics.draw(self.textureProgress, x + (self.w - self.textureProgress:getPixelWidth()) * .5, y + 14)
+	love.graphics.draw(self.textureProgress, x + (self.w - self.textureProgress:getPixelWidth()) * .5 + 2, y + 14)
 	
 	local zombyProgressX = self:XAtProgress(self.progress, 6)
 	self.quad:setViewport(0, 0, 25, 25, self.textureParts:getPixelDimensions())

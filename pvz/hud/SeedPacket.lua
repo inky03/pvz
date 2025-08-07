@@ -35,6 +35,7 @@ end
 function SeedPacket:renderToCanvas(entity)
 	love.graphics.setCanvas(self.displayCanvas)
 	
+	love.graphics.clear()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.draw(self.texture, (self.frame - 1) * -50, 0)
 	
@@ -44,8 +45,11 @@ function SeedPacket:renderToCanvas(entity)
 		displayEntity:draw(4.75, 8.75)
 	end
 	
-	love.graphics.setColor(0, 0, 0)
-	love.graphics.printf(self.cost, 0, 54, 32, 'right')
+	local font = Font:new('Pico12', 9, 0, 0, 30)
+	font:setLayerColor('Main', 0, 0, 0)
+	font:setText(self.cost)
+	font.alignment = 'right'
+	font:render(0, 54)
 	
 	love.graphics.setCanvas()
 end
@@ -84,8 +88,11 @@ function SeedPacket:onReturned()
 end
 
 function SeedPacket:draw(x, y)
+	
 	love.graphics.setColor(1, 1, 1)
+	love.graphics.setBlendMode('alpha', 'premultiplied')
 	love.graphics.draw(self.displayCanvas, x, y)
+	love.graphics.setBlendMode('alpha')
 	
 	if not self.ready then
 		love.graphics.setColor(0, 0, 0, .5)

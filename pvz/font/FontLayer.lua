@@ -11,7 +11,7 @@ FontLayer.kerningPairs = {}
 
 FontLayer.ascent = 0
 FontLayer.ascentPadding = 0
-FontLayer.spacing = 0
+FontLayer.lineSpacing = 0
 FontLayer.pointSize = 10
 
 FontLayer.defaultWidth = 0
@@ -33,17 +33,20 @@ function FontLayer:addCharacter(character)
 	return self.charIndexes[character]
 end
 
+function FontLayer:hasCharacter(char)
+	return self.charIndexes[char]
+end
 function FontLayer:getWidth(char)
 	local index = self.charIndexes[char]
 	return (index and self.charWidths[index] or FontLayer.defaultWidth)
 end
 function FontLayer:getOffset(char)
 	local index = self.charIndexes[char]
-	return (index and self.charOffsets[index] or FontLayer.defaultOffset)
+	return unpack(index and self.charOffsets[index] or FontLayer.defaultOffset)
 end
 function FontLayer:getRect(char)
 	local index = self.charIndexes[char]
-	return (index and self.charRects[index] or FontLayer.defaultRect)
+	return unpack(index and self.charRects[index] or FontLayer.defaultRect)
 end
 function FontLayer:getKerning(char, nextChar)
 	if not nextChar or nextChar == '' then return 0 end
