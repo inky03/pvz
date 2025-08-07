@@ -1,9 +1,9 @@
 local WaveMeter = UIContainer:extend('WaveMeter')
 
 function WaveMeter:init(x, y)
-	self.texture = Cache.image('images/FlagMeter')
-	self.textureParts = Cache.image('images/FlagMeterParts')
-	self.textureProgress = Cache.image('images/FlagMeterLevelProgress')
+	self.texture = Cache.image('FlagMeter', 'images')
+	self.textureParts = Cache.image('FlagMeterParts', 'images')
+	self.textureProgress = Cache.image('FlagMeterLevelProgress', 'images')
 	
 	UIContainer.init(self, x, y, self.texture:getPixelWidth(), self.texture:getPixelHeight() * .5)
 	

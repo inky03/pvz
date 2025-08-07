@@ -1,7 +1,7 @@
 local SeedPacket = UIContainer:extend('SeedPacket')
 
 function SeedPacket:init(lawn, entity, x, y, bank)
-	self.texture = Cache.image('images/seeds')
+	self.texture = Cache.image('seeds', 'images')
 	self.bank = bank
 	self.lawn = lawn
 	

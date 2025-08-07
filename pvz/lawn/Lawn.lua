@@ -1,6 +1,6 @@
 local Lawn = UIContainer:extend('Lawn')
 
-Lawn.textureName = 'images/background1'
+Lawn.textureName = 'background1'
 Lawn.topLeft = {
 	x = 260;
 	y = 80;
@@ -16,7 +16,7 @@ Lawn.size = {
 Lawn.defaultSurface = 'ground'
 
 function Lawn:init(challenge, x, y)
-	self.texture = Cache.image(self.textureName)
+	self.texture = Cache.image(self.textureName, 'images')
 	
 	UIContainer.init(self, 0, 0, 1400, 600)
 	

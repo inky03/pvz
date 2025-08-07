@@ -3,11 +3,13 @@ local gif = require 'lib.gifload'
 
 local Cache = {
 	cached = {
-		images = {};
+		images = {}; -- file type
 		sounds = {};
+		
+		font = {}; -- data type
 		reanim = {};
 		
-		levels = {};
+		levels = {}; -- module
 		entities = {};
 	}
 }
@@ -26,31 +28,30 @@ function Cache.module(path)
 		return result
 	else
 		if result:find('module \'') then
-			print('Module ' .. path .. ' not found')
+			trace('Module ' .. path .. ' not found')
 		else
-			print('Module ' .. path .. ' had errors:\n' .. result)
+			trace('Module ' .. path .. ' had errors:\n' .. result)
 		end
 		return nil
 	end
 end
 
-function Cache.image(path)
+function Cache.image(path, folder)
 	if path == nil then return nil end
 	
 	local img
 	local key = path:lower()
+	local folder = (folder and folder .. '/' or '')
 	if not cached.images[key] then
-		local fpath = Cache.main(path .. '.png')
-		if love.filesystem.getInfo(fpath) then
-			img = love.graphics.newImage(fpath, {mipmaps = true})
-			goto loaded
-		end
-		
-		local fpathJpg = Cache.main(path .. '.jpg')
-		local fpathMask = Cache.main(path .. '_.png')
-		if love.filesystem.getInfo(fpathJpg) then
+		local fpathMask = Cache.main(folder .. path .. '_.png')
+		local fpathPng, fpathJpg = Cache.main(folder .. path .. '.png'), Cache.main(folder .. path .. '.jpg')
+		local path = (
+			(love.filesystem.getInfo(fpathPng) and fpathPng) or
+			(love.filesystem.getInfo(fpathJpg) and fpathJpg)
+		)
+		if path then
 			if love.filesystem.getInfo(fpathMask) then
-				local image = love.image.newImageData(fpathJpg)
+				local image = love.image.newImageData(path)
 				local mask = love.image.newImageData(fpathMask)
 				
 				image:mapPixel(function(x, y, r, g, b)
@@ -61,14 +62,24 @@ function Cache.image(path)
 				img = love.graphics.newImage(image, {mipmaps = true})
 				goto loaded
 			else
-				img = love.graphics.newImage(fpathJpg, {mipmaps = true})
+				img = love.graphics.newImage(path, {mipmaps = true})
 				goto loaded
 			end
 		end
 		
-		local fpathGifMask = Cache.main(path .. '.gif')
-		if love.filesystem.getInfo(fpathGifMask) then
-			local gif = Cache.loadGifFile(fpathGifMask, 1).imgs[3]
+		local fpathPngAlpha = Cache.main(folder .. '_' .. path .. '.png')
+		if love.filesystem.getInfo(fpathPngAlpha) then
+			local png = love.image.newImageData(fpathPngAlpha)
+			
+			png:mapPixel(function(x, y, r, g, b) return 1, 1, 1, r end)
+			
+			img = love.graphics.newImage(png, {mipmaps = true})
+			goto loaded
+		end
+		
+		local fpathGifAlpha = Cache.main(folder .. '_' .. path .. '.gif')
+		if love.filesystem.getInfo(fpathGifAlpha) then
+			local gif = Cache.loadGifFile(fpathGifAlpha, 1).imgs[3]
 			
 			gif:mapPixel(function(x, y, r, g, b) return 1, 1, 1, r end)
 			
@@ -76,7 +87,7 @@ function Cache.image(path)
 			goto loaded
 		end
 			
-		print('Resource for ' .. fpath .. ' doesn\'t exist')
+		trace('Resource for ' .. folder .. path .. ' doesn\'t exist')
 		return Cache.unknownTexture
 	else
 		return cached.images[key]
@@ -106,13 +117,32 @@ function Cache.reanim(kind, folder)
 			format = 'Binary'
 			cached.reanim[key] = Reanim.loadBinary(fpathCompiled, kind)
 		else
-			print('Resource for ' .. fpath .. ' doesn\'t exist')
+			trace('Resource for ' .. fpath .. ' doesn\'t exist')
 			return Reanim:new()
 		end
-		print(('%s Reanimation (%s) (%.2fms)'):format(kind, format, (os.clock() - t) * 1000))
+		trace(('%s Reanimation (%s) (%.2fms)'):format(kind, format, (os.clock() - t) * 1000))
 	end
 	
 	return cached.reanim[key]
+end
+
+function Cache.font(name, folder)
+	if name == nil then return nil end
+	
+	local key = name:lower()
+	if not cached.font[key] then
+		local folder = Cache.main(folder and folder .. '/' or 'data/')
+		local fpath = (folder .. name .. '.txt')
+		
+		if love.filesystem.getInfo(fpath) then
+			cached.font[key] = FontData.load(name, folder)
+		else
+			trace('Resource for ' .. fpath .. ' doesn\'t exist')
+			return FontData:new()
+		end
+	end
+	
+	return cached.font[key]
 end
 
 function Cache.resources(path)

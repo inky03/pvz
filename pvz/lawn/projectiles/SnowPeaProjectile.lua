@@ -4,7 +4,7 @@ local SnowPeaProjectile = Pea:extend('SnowPeaProjectile')
 function SnowPeaProjectile:init()
 	Pea.init(self, x, y)
 	
-	self.texture = Cache.image('images/ProjectileSnowPea')
+	self.texture = Cache.image('ProjectileSnowPea', 'images')
 end
 
 function SnowPeaProjectile:hit(collision)

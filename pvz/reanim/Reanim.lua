@@ -10,7 +10,7 @@ function Reanim:init(name, fps)
 	self.images = {}
 	self.length = 1
 	
-	self.images['IMAGE_REANIM_GROUND'] = Cache.image('reanim/Ground')
+	self.images['IMAGE_REANIM_GROUND'] = Cache.image('Ground', 'reanim')
 end
 
 function Reanim:getLayers()
@@ -206,7 +206,7 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 end
 
 function Reanim.getResource(key)
-	return (key and Cache.image('reanim/' .. key:gsub('IMAGE_REANIM_', '')) or nil)
+	return (key and Cache.image(key:gsub('IMAGE_REANIM_', ''), 'reanim') or nil)
 end
 
 function Reanim:__tostring()

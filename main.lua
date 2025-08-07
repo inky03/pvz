@@ -9,6 +9,7 @@ Signal = require 'pvz.Signal'
 Constants = require 'pvz.Constants'
 UIContainer = require 'pvz.hud.UIContainer'
 
+FontData = require 'pvz.font.FontData'
 Reanimation = require 'pvz.reanim.Reanimation'
 
 Unit = require 'pvz.lawn.Unit'
@@ -19,6 +20,7 @@ Collectible = require 'pvz.lawn.Collectible'
 Challenge = require 'pvz.lawn.Challenge'
 
 math.randomseed(os.clock())
+print('PVZ')
 
 game = nil
 level = nil
@@ -49,17 +51,14 @@ end
 function love.mousepressed(mouseX, mouseY, button, isTouch, presses)
 	updateHover(mouseX, mouseY)
 	if hoveringElement then hoveringElement:mousePressed(mouseX, mouseY, button, isTouch, presses) end
-	updateCursor()
 end
 function love.mousereleased(mouseX, mouseY, button, isTouch, presses)
 	updateHover(mouseX, mouseY)
 	if hoveringElement then hoveringElement:mouseReleased(mouseX, mouseY, button, isTouch, presses) end
-	updateCursor()
 end
 function love.mousemoved(mouseX, mouseY, deltaX, deltaY, touch)
 	updateHover(mouseX, mouseY)
 	if hoveringElement then hoveringElement:mouseMoved(mouseX, mouseY, deltaX, deltaY, touch) end
-	updateCursor()
 end
 
 function updateHover(mouseX, mouseY)
@@ -79,6 +78,7 @@ end
 
 function love.update(dt)
 	game:update(dt)
+	updateCursor()
 	
 	gcTimer = (gcTimer - dt)
 end

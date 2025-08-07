@@ -3,7 +3,7 @@ local DayLawn = Lawn:extend('DayLawn')
 
 function DayLawn:init(challenge, x, y)
 	if challenge.challenge <= 3 then
-		self.textureName = 'images/background1unsodded'
+		self.textureName = 'background1unsodded'
 	end
 	
 	Lawn.init(self, challenge, x, y)

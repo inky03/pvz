@@ -55,7 +55,7 @@ function Challenge:init(challenge)
 	self.zombieCountdown = Constants.zombieCountdownFirstWave
 	self.zombieCountdownStart = self.zombieCountdown
 	
-	print('challenge ' .. self.challenge)
+	trace('Challenge ' .. self.challenge)
 end
 
 function Challenge:initWaves()
@@ -66,7 +66,7 @@ function Challenge:initWaves()
 		local zombiePoints = self:pointsOnWave(wave)
 		
 		if not self:zombiePickerRoutine(wave, zombiePoints) then
-			print('couldn\'t place any zombies for wave ' .. wave)
+			trace('Couldn\'t place any zombies for wave ' .. wave)
 		end
 		
 		if self:isFlagWave(wave) then
@@ -266,13 +266,13 @@ function Challenge:startNextWave()
 	self.zombieCountdownStart = self.zombieCountdown
 	self.waveMeter.currentWave = self.currentWave
 	
-	print('wave ' .. self.currentWave)
+	-- trace('wave ' .. self.currentWave)
 	
 	local waveZombies = self.waveZombies[self.currentWave]
 	if waveZombies then
 		self.currentWaveZombies = self:attemptSpawnZombies(waveZombies)
 	else
-		print('no zombies for wave ' .. self.currentWave)
+		trace('No zombies for wave ' .. self.currentWave)
 		self.currentWaveZombies = nil
 	end
 	
@@ -284,10 +284,7 @@ function Challenge:startNextWave()
 	end
 	
 	if self:isFinalWave(self.currentWave) then
-		local finalWave = Reanimation:new('FinalWave', 0, 30)
-		finalWave.animation.onFinish:add(function(_) finalWave:destroy() end)
-		finalWave.drawToTop = true
-		self:addElement(finalWave)
+		self:showFinalWaveMessage()
 	end
 end
 function Challenge:attemptSpawnZombies(zombies)
@@ -329,6 +326,13 @@ function Challenge:pickRowForZombie(zombie)
 end
 function Challenge:zombieCanSpawnInRow(zombie, row)
 	return Zombie:canBeSpawnedAt(self.lawn, self.lawn.size.x, row)
+end
+function Challenge:showFinalWaveMessage()
+	local finalWave = Reanimation:new('FinalWave', 0, 30)
+	finalWave.animation.onFinish:add(function(_) finalWave:destroy() end)
+	finalWave.animation:setLoop(false)
+	finalWave.drawToTop = true
+	self:addElement(finalWave)
 end
 
 function Challenge:drawTop(x, y)

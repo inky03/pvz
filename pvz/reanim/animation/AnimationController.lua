@@ -10,6 +10,14 @@ function AnimationController:init(reanim)
 	self.onLoop = Signal:new()
 	
 	self.groundVelocity = 0
+	self.loop = true
+	
+	self.frame = 0
+	self.frameFloat = 0
+	self.length = 0
+	
+	self.crossFadeLength = 0
+	self.crossFade = 0
 	
 	self:reset()
 end
@@ -25,13 +33,6 @@ function AnimationController:setReanim(reanim)
 	self._cur = self:add('', nil, false)
 	self._ghost = Animation:new(self, self.reanim)
 	self.current = Animation:new(self, self.reanim)
-	
-	self.frame = 0
-	self.frameFloat = 0
-	self.length = 0
-	
-	self.crossFadeLength = 0
-	self.crossFade = 0
 	
 	self:reset()
 end
@@ -190,6 +191,7 @@ function AnimationController:play(name, force, crossFade, reset)
 			self.current.track = anim.track
 			self.current.first = anim.first
 			self.current.last = anim.last
+			self.loop = anim.loop
 			self.name = name
 			
 			self.crossFade = 0
@@ -204,6 +206,11 @@ function AnimationController:play(name, force, crossFade, reset)
 	else
 		-- let animation play ..
 	end
+end
+function AnimationController:setLoop(loop)
+	self._cur.loop = loop
+	self.loop = loop
+	return loop
 end
 function AnimationController:setFrame(index, next)
 	self._cur:setFrame(index, next)

@@ -2,7 +2,7 @@ local SeedPacket = Cache.module('pvz.hud.SeedPacket')
 local SeedBank = UIContainer:extend('SeedBank')
 
 function SeedBank:init(lawn, x, y, sun)
-	self.texture = Cache.image('images/SeedBank')
+	self.texture = Cache.image('SeedBank', 'images')
 	self.lawn = lawn
 	
 	self:setMoney(sun or 50)
