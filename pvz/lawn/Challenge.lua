@@ -48,7 +48,7 @@ function Challenge:init(challenge)
 	
 	self.challengeText = self:addElement(Font:new('HouseOfTerror', 16, gameWidth - 300 - 14, gameHeight - 29, 300))
 	self.challengeText:setLayerColor('Main', 223 / 255, 186 / 255, 97 / 255)
-	self.challengeText.alignment = 'right'
+	self.challengeText:setAlignment('right')
 	self.challengeText:setText(self.challengeTitle)
 	
 	self.collectibles = self:addElement(UIContainer:new(0, 0, gameWidth, gameHeight))

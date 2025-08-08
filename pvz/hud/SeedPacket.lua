@@ -13,7 +13,7 @@ function SeedPacket:init(lawn, entity, x, y, bank)
 	
 	self.costText = self:addElement(Font:new('Pico12', 9, 0, 54, 30))
 	self.costText:setLayerColor('Main', 0, 0, 0)
-	self.costText.alignment = 'right'
+	self.costText:setAlignment('right')
 	
 	self.maxRecharge, self.recharged = 750, 0
 	self.ready = false

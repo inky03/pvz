@@ -15,7 +15,7 @@ function SeedBank:init(lawn, x, y, sun)
 	self.moneyText = Font:new('ContinuumBold', 14, 10, 55, 55)
 	self.moneyText:setLayerColor('Main', 0, 0, 0)
 	self.moneyText:setText(self.visualMoney)
-	self.moneyText.alignment = 'center'
+	self.moneyText:setAlignment('center')
 	self:addElement(self.moneyText)
 	
 	self:addSeed(Cache.plants('SunFlower'))
