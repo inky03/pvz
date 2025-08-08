@@ -44,7 +44,7 @@ function BasicZombie:init(x, y, challenge)
 	self.animation.onFrame:add(function(animation)
 		if animation.name == 'eating' and self.state == 'eating' then
 			if self.collision and (animation.frame == 10 or animation.frame == 30) then
-				self:hit(self.collision, .5)
+				self:chomp()
 			end
 		end
 	end)
@@ -66,10 +66,12 @@ function BasicZombie:setDamagePhase(phase)
 	Zombie.setDamagePhase(self, phase)
 	
 	if phase == 1 then
+		Sound.play('limbs_pop', 10)
 		self:toggleLayer('Zombie_outerarm_hand', false)
 		self:toggleLayer('Zombie_outerarm_lower', false)
 		self:replaceImage('Zombie_outerarm_upper', Reanim.getResource('Zombie_outerarm_upper2'))
 	elseif phase == 2 then
+		Sound.play('limbs_pop', 10)
 		self:setState('dead')
 		self:toggleLayer('hair', false)
 		self:toggleLayer('head1', false)

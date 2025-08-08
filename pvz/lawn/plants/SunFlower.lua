@@ -48,6 +48,7 @@ function SunFlower:update(dt)
 end
 
 function SunFlower:makeSun()
+	Sound.play('throw', 10)
 	local xx, yy = self:elementToScreen(0, 0)
 	self.challenge.collectibles:addElement(Sun:new(xx, yy, 'plant', self.challenge.seeds))
 end

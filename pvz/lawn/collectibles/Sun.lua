@@ -22,6 +22,8 @@ end
 function Sun:onCollect()
 	Collectible.onCollect(self)
 	
+	Sound.play('points', 10)
+	
 	if self.bank then
 		self.bank.money = (self.bank.money + self.value)
 		self._nextMoney = self.bank.money

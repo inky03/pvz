@@ -45,6 +45,8 @@ function SeedBank:mousePressed(x, y, button, isTouch, presses)
 		self.lawn.hoveringEntity = nil
 		
 		self.canClickChildren = true
+		
+		Sound.play('tap2')
 	end
 end
 

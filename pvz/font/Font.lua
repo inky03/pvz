@@ -12,7 +12,7 @@ function Font:init(kind, size, x, y, w)
 	self.canClick = false
 	self.kind = kind
 	
-	self.alignment = 'center'
+	self.alignment = 'left'
 	self.autoWidth = (self.w <= 0)
 	self.autoHeight = true -- TODO: fixed height (autoHeight false)
 	self.fieldWidth = 0
@@ -120,27 +120,31 @@ function Font:render(x, y)
 				lastSpace = cursor
 				brokeLine = false
 			end
+			
 			if layer:hasCharacter(char) then
 				local _, _, w, h = layer:getRect(char)
-				local charWidth = (layer:getWidth(char) + self.characterSpacing)
-				
-				if char == '\n' or ((xx + charWidth) >= self.w and not char:match('%s') and not brokeLine) then
-					local lineStr = string.rtrim(str:sub(1, lastSpace - 1))
-					table.insert(_lineWidths, self:getWidth(lineStr))
-					table.insert(_lines, lineStr)
-					
-					str = string.ltrim(str:sub(lastSpace, -1))
-					brokeLine = true
-					cursor = 1
-					
-					xx = (lastCharWidth + charWidth)
-				else
-					xx = (xx + charWidth)
-				end
-				
+				charWidth = (layer:getWidth(char) + self.characterSpacing)
 				lineHeight = math.max(lineHeight, h)
-				lastCharWidth = charWidth
+			else
+				charWidth = 0
 			end
+			
+			if char == '\n' or ((xx + charWidth) >= self.w and not char:match('%s') and not brokeLine) then
+				local lineStr = string.rtrim(str:sub(1, lastSpace - 1))
+				table.insert(_lineWidths, self:getWidth(lineStr))
+				table.insert(_lines, lineStr)
+				
+				str = string.ltrim(str:sub(lastSpace, -1))
+				brokeLine = true
+				cursor = 1
+				
+				xx = (lastCharWidth + charWidth)
+			else
+				xx = (xx + charWidth)
+			end
+			
+			lastCharWidth = charWidth
+			
 			cursor = (cursor + 1)
 		end
 		local lastString = string.rtrim(str)

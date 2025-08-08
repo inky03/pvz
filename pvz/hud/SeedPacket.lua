@@ -11,12 +11,17 @@ function SeedPacket:init(lawn, entity, x, y, bank)
 	self.entity = Cache.module(entity)
 	self.displayCanvas = love.graphics.newCanvas(self.w, self.h)
 	
-	self.maxRecharge, self.recharged, self.cost = 750, 0, 100
+	self.costText = self:addElement(Font:new('Pico12', 9, 0, 54, 30))
+	self.costText:setLayerColor('Main', 0, 0, 0)
+	self.costText.alignment = 'right'
+	
+	self.maxRecharge, self.recharged = 750, 0
 	self.ready = false
+	self:setCost(100)
 	
 	if self.entity then
 		self.maxRecharge = self.entity.packetRecharge
-		self.cost = self.entity.packetCost
+		self:setCost(self.entity.packetCost)
 		
 		if self.entity.upgradeOf then
 			self.frame = 2
@@ -32,6 +37,11 @@ function SeedPacket:init(lawn, entity, x, y, bank)
 	end
 end
 
+function SeedPacket:setCost(cost)
+	self.costText:setText(cost)
+	self.cost = cost
+end
+
 function SeedPacket:renderToCanvas(entity)
 	love.graphics.setCanvas(self.displayCanvas)
 	
@@ -45,21 +55,19 @@ function SeedPacket:renderToCanvas(entity)
 		displayEntity:draw(4.75, 8.75)
 	end
 	
-	local font = Font:new('Pico12', 9, 0, 0, 30)
-	font:setLayerColor('Main', 0, 0, 0)
-	font:setText(self.cost)
-	font.alignment = 'right'
-	font:render(0, 54)
-	
 	love.graphics.setCanvas()
 end
 
 function SeedPacket:mousePressed(mouseX, mouseY)
-	if self:isReady() and self.lawn.hoveringEntity == nil and self.entity then
+	if self:isReady() and not self.lawn.hoveringEntity and self.entity then
 		self.lawn:pickPlant(self.entity:new(0, 0, self.lawn.challenge), self, mouseX, mouseY)
 		
 		self.parent.canClickChildren = false
 		self.picking = true
+		
+		Sound.play('seedlift')
+	else
+		Sound.play('buzzer')
 	end
 end
 

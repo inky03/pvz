@@ -26,7 +26,7 @@ function Projectile:update(dt)
 	end
 	
 	local screenX = self:elementToScreen(-self.xOffset, -self.yOffset)
-	if screenX > windowWidth then
+	if screenX > gameWidth then
 		self:destroy()
 		return
 	end

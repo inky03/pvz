@@ -78,6 +78,7 @@ function PeaShooter:fire()
 	self.head.animation:play('shoot', false, self.head.animation:framesToSeconds(1))
 end
 function PeaShooter:fireProjectile()
+	Sound.playRandom({ 'throw' ; 'throw' ; 'throw' ; 'throw2' }, 10)
 	local projectile = self.board:spawnUnit(self.projectile:new(), self.boardX, self.boardY)
 	projectile.x = (projectile.x + 64)
 	projectile.yOffset = random.int(-12, -16)

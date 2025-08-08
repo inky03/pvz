@@ -17,14 +17,14 @@ function DayChallenge:getZombies(challenge)
 	local zombies = {
 		[1]	 = { BasicZombie };
 		[2]	 = { BasicZombie };
-		[3]	 = { BasicZombie; ConeHeadZombie };
-		[4]	 = { BasicZombie; ConeHeadZombie };
-		[5]	 = { BasicZombie; ConeHeadZombie };
-		[6]	 = { BasicZombie; ConeHeadZombie; PoleVaulterZombie };
-		[7]	 = { BasicZombie; ConeHeadZombie; PoleVaulterZombie };
-		[8]	 = { BasicZombie; ConeHeadZombie; BucketHeadZombie };
-		[9]	 = { BasicZombie; ConeHeadZombie; BucketHeadZombie; PoleVaulterZombie };
-		[10] = { BasicZombie; ConeHeadZombie; BucketHeadZombie; PoleVaulterZombie };
+		[3]	 = { BasicZombie ; ConeHeadZombie };
+		[4]	 = { BasicZombie ; ConeHeadZombie };
+		[5]	 = { BasicZombie ; ConeHeadZombie };
+		[6]	 = { BasicZombie ; ConeHeadZombie ; PoleVaulterZombie };
+		[7]	 = { BasicZombie ; ConeHeadZombie ; PoleVaulterZombie };
+		[8]	 = { BasicZombie ; ConeHeadZombie ; BucketHeadZombie };
+		[9]	 = { BasicZombie ; ConeHeadZombie ; BucketHeadZombie ; PoleVaulterZombie };
+		[10] = { BasicZombie ; ConeHeadZombie ; BucketHeadZombie ; PoleVaulterZombie };
 	}
 	
 	return (zombies[challenge] or { BasicZombie })

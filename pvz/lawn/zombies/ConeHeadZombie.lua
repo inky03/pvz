@@ -14,6 +14,10 @@ function ConeHeadZombie:init(x, y, challenge)
 end
 
 function ConeHeadZombie:hurt(hp, glow)
+	if self.helmHp > 0 then
+		Sound.playRandom({ 'plastichit' ; 'plastichit2' }, 5)
+	end
+	
 	BasicZombie.hurt(self, hp, glow)
 	
 	if self.helmDamagePhase == 0 and self.helmHp <= (self.maxHelmHp - 130) then

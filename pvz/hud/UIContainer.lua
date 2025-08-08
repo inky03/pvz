@@ -139,6 +139,13 @@ function UIContainer:drawTop(x, y)
 		child:drawTop(child.x + x, child.y + y)
 	end
 end
+function UIContainer:drawWindow()
+	if not self.visible then return end
+	
+	for _, child in ipairs(self.children) do
+		child:drawWindow()
+	end
+end
 function UIContainer:debugDraw(x, y)
 	love.graphics.setColor(0, 0, 1)
 	love.graphics.rectangle('line', x + 1, y + 1, self.w - 1, self.h - 1)

@@ -4,6 +4,7 @@ require 'table.clear'
 class = require 'lib.30log'
 xml = require 'lib.xml'
 
+Sound = require 'pvz.Sound'
 Cache = require 'pvz.Cache'
 Signal = require 'pvz.Signal'
 Constants = require 'pvz.Constants'
@@ -28,7 +29,7 @@ level = nil
 local pointer = love.mouse.newCursor(love.image.newImageData('resources/cursor.png'))
 local hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'), 4)
 
-windowWidth, windowHeight = love.graphics.getDimensions()
+gameWidth, gameHeight = love.graphics.getDimensions()
 hoveringElement = nil
 debugMode = false
 
@@ -40,23 +41,35 @@ local drawtime = {}
 
 function love.load()
 	love.mouse.setCursor(pointer)
-	
-	game = UIContainer:new(0, 0, windowWidth, windowHeight)
+	-- love.window.setFullscreen(true, 'desktop')
+	game = UIContainer:new(0, 0, gameWidth, gameHeight)
 	level = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(9))
+	debugInfo = Font:new('Pico12', 9, 0, 0, 400)
 	
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('rough')
+	
+	debugCanvas = love.graphics.newCanvas(220, 200)
+	
+	--[[
+	grasswalk = love.audio.newSource('resources/love/music/grasswalk.mp3', 'stream')
+	grasswalk:setLooping(true)
+	grasswalk:play()
+	]]
 end
 
 function love.mousepressed(mouseX, mouseY, button, isTouch, presses)
+	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	updateHover(mouseX, mouseY)
 	if hoveringElement then hoveringElement:mousePressed(mouseX, mouseY, button, isTouch, presses) end
 end
 function love.mousereleased(mouseX, mouseY, button, isTouch, presses)
+	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	updateHover(mouseX, mouseY)
 	if hoveringElement then hoveringElement:mouseReleased(mouseX, mouseY, button, isTouch, presses) end
 end
 function love.mousemoved(mouseX, mouseY, deltaX, deltaY, touch)
+	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	updateHover(mouseX, mouseY)
 	if hoveringElement then hoveringElement:mouseMoved(mouseX, mouseY, deltaX, deltaY, touch) end
 end
@@ -84,15 +97,53 @@ function love.update(dt)
 end
 
 function love.draw()
+	love.graphics.setCanvas(debugCanvas)
+	love.graphics.clear() -- 0, 0, 0, .05)
+	love.graphics.setCanvas()
+	
+	local ratio = getAspectRatio()
+	local winW, winH = love.graphics.getDimensions()
+	local gameOffsetX, gameOffsetY = windowToGame(0, 0)
+	
+	love.graphics.push()
 	love.graphics.setColor(1, 1, 1)
+	love.graphics.scale(ratio, ratio)
+	love.graphics.translate(-gameOffsetX, -gameOffsetY)
 	
 	game:draw(game.x, game.y)
 	game:drawTop(game.x, game.y)
 	
-	updateDebug()
+	love.graphics.pop()
+	love.graphics.setColor(0, 0, 0)
+	
+	local borderW, borderH = (gameOffsetX * ratio), (gameOffsetY * ratio)
+	local wr, hr = (winW / gameWidth), (winH / gameHeight)
+	if wr > hr then
+		love.graphics.rectangle('fill', 0, -borderH, -borderW, gameHeight * ratio)
+		love.graphics.rectangle('fill', winW + borderW, -borderH, -borderW, gameHeight * ratio)
+	elseif wr < hr then
+		love.graphics.rectangle('fill', -borderW, 0, gameWidth * ratio, -borderH)
+		love.graphics.rectangle('fill', -borderW, winH + borderH, gameWidth * ratio, -borderH)
+	end
+	
+	game:drawWindow()
+	drawDebug()
 end
 
-function updateDebug()
+function getAspectRatio()
+	local winW, winH = love.graphics.getDimensions()
+	return math.min(
+		winW / gameWidth,
+		winH / gameHeight
+	)
+end
+function windowToGame(x, y)
+	local ratio = getAspectRatio()
+	local winW, winH = love.graphics.getDimensions()
+	return (math.round(x - (winW - gameWidth * ratio) * .5) / ratio), (math.round(y - (winH - gameHeight * ratio) * .5) / ratio)
+end
+
+function drawDebug()
 	if gcTimer < 0 then
 		gcTimer = (gcTimer + 1 / 15)
 		gc = collectgarbage('count')
@@ -106,19 +157,20 @@ function updateDebug()
 		table.remove(drawtime, 1)
 	end
 	
+	love.graphics.setCanvas(debugCanvas)
+	
+	local text = ('%d fps\n%d mb\n%d objects\n%d drawcalls'):format(#drawtime, ((stats.texturememory / 1024) + gc) / 1024, objs, stats.drawcalls)
 	love.graphics.setColor(1, 1, 1)
-	outlineText(('%d fps\n%d mb\n%d objects\n%d drawcalls'):format(#drawtime, ((stats.texturememory / 1024) + gc) / 1024, objs, stats.drawcalls), 8, 8)
-end
-
-function outlineText(text, x, y, r, g, b, a)
-	local rr, gg, bb, aa = love.graphics.getColor()
+	debugInfo:setText(text)
+	debugInfo:draw(5, 5)
 	
-	love.graphics.setColor(r or 0, g or 0, b or 0, a or 1)
-	for d = 0, 3, 1 do
-		local dx, dy = math.cos(d * math.pi * .5), math.sin(d * math.pi * .5)
-		love.graphics.print(text, x + dx, y + dy)
+	love.graphics.setCanvas()
+	
+	love.graphics.setColor(0, 0, 0)
+	for ang = 0, 7 do
+		local rad = (ang * math.pi * .25)
+		love.graphics.draw(debugCanvas, math.round(math.cos(rad)), math.round(math.sin(rad)))
 	end
-	
-	love.graphics.setColor(rr, gg, bb, aa)
-	love.graphics.print(text, x, y)
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.draw(debugCanvas)
 end

@@ -19,6 +19,9 @@ function Zombie:init(x, y, challenge)
 		23, 7, 42, 115
 	)
 	
+	self.groanCounter = random.int(300, 400)
+	self.variant = random.bool(100 / 5)
+	
 	self.helmHp, self.shieldHp = self.maxHelmHp, self.maxShieldHp
 	self.helmDamagePhase, self.shieldDamagePhase = 0, 0
 	
@@ -49,8 +52,15 @@ end
 function Zombie:update(dt)
 	Unit.update(self, dt)
 	
+	local delta = (dt * self.speed * self.speedMultiplier)
+	
+	self.groanCounter = (self.groanCounter - delta * Constants.tickPerSecond)
+	if self.groanCounter < 0 then
+		self:groan()
+	end
+	
 	if self.fadeOutTimer then
-		self.fadeOutTimer = (self.fadeOutTimer + dt * self.speed * self.speedMultiplier)
+		self.fadeOutTimer = (self.fadeOutTimer + delta)
 		if self.fadeOutTimer > 1 then
 			self.transform.alpha = (self.transform.alpha - dt * 8)
 			if self.transform.alpha < 0 then
@@ -74,10 +84,10 @@ function Zombie:update(dt)
 	end
 end
 
-function Unit:setHelmDamagePhase(phase)
+function Zombie:setHelmDamagePhase(phase)
 	self.helmDamagePhase = phase
 end
-function Unit:setShieldDamagePhase(phase)
+function Zombie:setShieldDamagePhase(phase)
 	self.shieldDamagePhase = phase
 end
 function Zombie:setState(state)
@@ -103,6 +113,28 @@ function Zombie:hurt(hp, glow)
 		self.damageGlow = math.max(self.damageGlow, glow or 1)
 	else
 		Unit.hurt(self, hp, glow)
+	end
+end
+function Zombie:groan()
+	if random.int(0, #self.challenge:getSpawnedZombies()) > 0 or self.state == 'dead' then return end
+	if self.variant then
+		Sound.playRandom({ 'groan' ; 'groan2' ; 'groan3' ; 'groan4' ; 'groan5' ; 'groan6' ; 'sukhbir4' ; 'sukhbir5' ; 'sukhbir6' })
+	else
+		Sound.playRandom({ 'groan' ; 'groan2' ; 'groan3' ; 'groan4' ; 'groan5' ; 'groan6' })
+	end
+	self.groanCounter = (self.groanCounter + random.int(1000, 1500))
+end
+function Zombie:chomp()
+	self:hit(self.collision, .5)
+	
+	if self.collision.dead then
+		Sound.play('gulp')
+	else
+		if self.collision.hard then
+			Sound.playRandom({ 'chomp' ; 'chomp2' })
+		else
+			Sound.play('chompsoft', 4)
+		end
 	end
 end
 

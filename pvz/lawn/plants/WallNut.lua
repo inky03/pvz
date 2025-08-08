@@ -9,6 +9,8 @@ WallNut.maxHp = 4000
 function WallNut:init(x, y, challenge)
 	Plant.init(self, x, y, challenge)
 	
+	self.hard = true
+	
 	self.animation:add('idle', 'idle')
 	self.animation:play('idle', true)
 	self.animation:setFrame(4)

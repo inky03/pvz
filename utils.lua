@@ -22,9 +22,9 @@ function string.split(str, delimiter)
 	for sub in str:gmatch('[^' .. delimiter .. ']+') do table.insert(strings, sub) end
 	return strings
 end
-function string.trim(str) local trim = str:match('^%s*(.-)%s*$') ; return trim end
-function string.rtrim(str) local trim = str:gsub('%s+$', '') ; return trim end
-function string.ltrim(str) local trim = str:gsub('^%s+', '') ; return trim end
+function string.rtrim(str) local trim = str:gsub('[ \t\r]+$', '') ; return trim end
+function string.ltrim(str) local trim = str:gsub('^[ \t\r]+', '') ; return trim end
+function string.trim(str) return string.ltrim(string.rtrim(str)) end
 
 
 -- random
@@ -43,6 +43,7 @@ function random.int(min, max)
 end
 function random.object(...)
 	local t = {...}
+	if #t == 1 and type(t[1]) == 'table' then t = t[1] end -- dont gaf
 	return t[random.int(1, #t)]
 end
 function random.pickWeighted(objects, weights)

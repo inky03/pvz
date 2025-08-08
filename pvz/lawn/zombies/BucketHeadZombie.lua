@@ -15,6 +15,10 @@ function BucketHeadZombie:init(x, y, challenge)
 end
 
 function BucketHeadZombie:hurt(hp, glow)
+	if self.helmHp > 0 then
+		Sound.playRandom({ 'shieldhit' ; 'shieldhit2' }, 10)
+	end
+	
 	BasicZombie.hurt(self, hp, glow)
 	
 	if self.helmDamagePhase == 0 and self.helmHp <= (self.maxHelmHp - 350) then

@@ -34,6 +34,7 @@ function Unit:init(x, y, challenge)
 	
 	self.glow = 0
 	self.frost = 0
+	self.hard = false
 	self.dead = false
 	self.canDie = true
 	self.damageGlow = 0
@@ -112,11 +113,11 @@ function Unit:getHitboxCenter(x, y)
 end
 function Unit:hurtboxOnScreen()
 	local screenX, screenY = self:elementToScreen(-self.xOffset + self.hurtbox.x, -self.yOffset + self.hurtbox.y)
-	return (math.within(screenX, -self.hurtbox.w, windowWidth) and math.within(screenY, -self.hurtbox.h, windowHeight))
+	return (math.within(screenX, -self.hurtbox.w, gameWidth) and math.within(screenY, -self.hurtbox.h, gameHeight))
 end
 function Unit:hitboxOnScreen()
 	local screenX, screenY = self:elementToScreen(-self.xOffset + self.hitbox.x, -self.yOffset + self.hitbox.y)
-	return (math.within(screenX, -self.hitbox.w, windowWidth) and math.within(screenY, -self.hitbox.h, windowHeight))
+	return (math.within(screenX, -self.hitbox.w, gameWidth) and math.within(screenY, -self.hitbox.h, gameHeight))
 end
 function Unit:isInTile(col, row, error)
 	local error = (error or .05)

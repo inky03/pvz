@@ -11,6 +11,7 @@ function SnowPeaProjectile:hit(collision)
 	Pea.hit(self, collision)
 	
 	if not collision.flags.blockFrostFront then
+		if collision.frost <= 0 then Sound.play('frozen') end
 		collision.speedMultiplier = math.min(collision.speedMultiplier, .5)
 		collision.frost = 15
 	end

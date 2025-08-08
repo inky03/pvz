@@ -10,6 +10,11 @@ function Pea:init()
 	self.shadowQuad = love.graphics.newQuad(0, 0, self.shadow:getPixelWidth() * .5, self.shadow:getPixelHeight(), self.shadow:getPixelWidth(), self.shadow:getPixelHeight())
 end
 
+function Pea:hit(collision, multiplier)
+	Projectile.hit(self, collision, multiplier)
+	Sound.playRandom({ 'splat' ; 'splat2' ; 'splat3' }, 10)
+end
+
 function Pea:drawShadow(x, y)
 	if self.flags.ignoreCollisions then return end
 	

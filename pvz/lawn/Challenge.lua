@@ -40,18 +40,18 @@ function Challenge:init(challenge)
 	self.seeds = self:addElement(SeedBank:new(self.lawn, 10, 0, self.flags.startingSun))
 	
 	self.waveMeter = self:addElement(WaveMeter:new())
-	self.waveMeter:setPosition(windowWidth - 42 - self.waveMeter.w, windowHeight - 25)
+	self.waveMeter:setPosition(gameWidth - 42 - self.waveMeter.w, gameHeight - 25)
 	self.waveMeter:setFlags(self.flagWaves)
 	self.waveMeter.drawToTop = true
 	self.waveMeter.visible = false
 	self.waveMeterWidth = 0
 	
-	self.challengeText = self:addElement(Font:new('HouseOfTerror', 16, windowWidth - 300 - 14, windowHeight - 29, 300))
+	self.challengeText = self:addElement(Font:new('HouseOfTerror', 16, gameWidth - 300 - 14, gameHeight - 29, 300))
 	self.challengeText:setLayerColor('Main', 223 / 255, 186 / 255, 97 / 255)
 	self.challengeText.alignment = 'right'
 	self.challengeText:setText(self.challengeTitle)
 	
-	self.collectibles = self:addElement(UIContainer:new(0, 0, windowWidth, windowHeight))
+	self.collectibles = self:addElement(UIContainer:new(0, 0, gameWidth, gameHeight))
 	self.collectibles.drawToTop = true
 	self.collectibles.canClick = false
 	
@@ -60,6 +60,9 @@ function Challenge:init(challenge)
 	self.zombieSince = 0
 	self.zombieCountdown = Constants.zombieCountdownFirstWave
 	self.zombieCountdownStart = self.zombieCountdown
+	
+	self.debugInfo = Font:new('Pico12', 9, 0, 0, 400)
+	self.challengeDebug = true
 	
 	trace('Challenge ' .. self.challenge)
 end
@@ -186,7 +189,11 @@ function Challenge:updateChallenge(dt)
 	end
 	
 	if self.hugeWaveCountdown > 0 then
+		local prevCountdown = self.hugeWaveCountdown
 		self.hugeWaveCountdown = (self.hugeWaveCountdown - dt * Constants.tickPerSecond)
+		if self.hugeWaveCountdown <= 725 and prevCountdown > 725 then
+			Sound.play('hugewave')
+		end
 		if self.hugeWaveCountdown <= 0 then
 			self.zombieCountdown = 0
 		else
@@ -260,11 +267,22 @@ function Challenge:getCurrentWaveHealth()
 	end
 	return waveHealth
 end
+function Challenge:getSpawnedZombies()
+	local zombies = {}
+	lambda.foreach(self.lawn.units, function(unit)
+		if unit:instanceOf(Zombie) then
+			table.insert(zombies, unit)
+		end
+	end)
+	return zombies
+end
 
 function Challenge:startNextWave()
 	if self.currentWave == 0 then
 		self.waveMeter.visible = true
-		self.challengeText.x = (windowWidth - 300 - 201)
+		self.challengeText.x = (gameWidth - 300 - 201)
+		
+		Sound.play('awooga')
 	end
 	
 	self.zombieSince = 0
@@ -284,14 +302,14 @@ function Challenge:startNextWave()
 	end
 	
 	self.startWaveHealth = self:getMaxWaveHealth(self.currentWave)
+	if self:isFlagWave(self.currentWave) then
+		Sound.play('siren')
+	end
 	if self:isFinalWave(self.currentWave) then
 		self.healthToNextWave = 0
+		self:showFinalWaveMessage()
 	else
 		self.healthToNextWave = (self.startWaveHealth * random.number(.5, .65))
-	end
-	
-	if self:isFinalWave(self.currentWave) then
-		self:showFinalWaveMessage()
 	end
 end
 function Challenge:attemptSpawnZombies(zombies)
@@ -336,72 +354,83 @@ function Challenge:zombieCanSpawnInRow(zombie, row)
 end
 function Challenge:showFinalWaveMessage()
 	local finalWave = Reanimation:new('FinalWave', 0, 30)
+	finalWave.animation.onFrame:add(function(animation) if animation.frame == 7 then Sound.play('finalwave') end end)
 	finalWave.animation.onFinish:add(function(_) finalWave:destroy() end)
 	finalWave.animation:setLoop(false)
 	finalWave.drawToTop = true
 	self:addElement(finalWave)
 end
 
-function Challenge:drawTop(x, y)
-	UIContainer.drawTop(self, x, y)
+function Challenge:drawWindow()
+	if not self.visible then return end
 	
-	local debugString = ('challenge %d\n'):format(self.challenge)
-	if self.challengeCompleted then
-		debugString = (debugString .. 'CLEAR!')
-	elseif self:isFinalWave(self.currentWave) then
-		debugString = (debugString .. (
-			'wave: %d / %d (final wave)'
-		):format(self.currentWave, self.waves))
-	elseif self.currentWave == 0 then
-		debugString = (debugString .. (
-			'wave: NA / %d\n' ..
-			'zombie health: before first wave\n' ..
-			'wave countdown: %.0f / %.0f (%.0f%%)'
-		):format(
-			self.waves,
-			self.zombieCountdown, self.zombieCountdownStart, (100 - self.zombieCountdown / self.zombieCountdownStart * 100)
-		))
-	else
-		debugString = (debugString .. (
-			'wave: %d / %d\n' ..
-			'time since last wave: %.0f %s\n' ..
-			'wave countdown: %.0f / %.0f (%.0f%%)'
-		):format(
-			self.currentWave, self.waves,
-			self.zombieSince, (self.zombieSince < Constants.zombieCountdownMin and '(too soon)' or ''),
-			self.zombieCountdown, self.zombieCountdownStart, (100 - self.zombieCountdown / self.zombieCountdownStart * 100)
-		))
-	end
-	
-	if not self.challengeCompleted then
-		if self.currentWave > 0 then
-			local healthFraction = math.remap(self.currentWaveHealth, self.startWaveHealth, self.healthToNextWave, 0, 100)
-			debugString = (debugString ..
-				('\nzombie health: %d -> %d (%.0f%%)'):format(self.currentWaveHealth, self.healthToNextWave, healthFraction)
-			)
-		end
+	if debugMode or self.debug or self.challengeDebug then
+		love.graphics.setCanvas(debugCanvas)
 		
-		if self.hugeWaveCountdown > 0 then
-			debugString = (
-				debugString ..
-				('\nhuge wave countdown: %.0f'):format(self.hugeWaveCountdown)
-			)
-		end
-		
-		debugString = (
-			debugString .. (
-				'\n\nSUN DEBUG\n' ..
-				'sun countdown: %.0f\n' ..
-				'sun phase: %d'
+		local debugString = ('challenge %d\n'):format(self.challenge)
+		if self.challengeCompleted then
+			debugString = (debugString .. 'CLEAR!')
+		elseif self:isFinalWave(self.currentWave) then
+			debugString = (debugString .. (
+				'wave: %d / %d (final wave)'
+			):format(self.currentWave, self.waves))
+		elseif self.currentWave == 0 then
+			debugString = (debugString .. (
+				'wave: NA / %d\n' ..
+				'zombie health: before first wave\n' ..
+				'wave countdown: %.0f / %.0f (%.0f%%)'
 			):format(
-				self.sunCountdown,
-				self.sunsFallen
+				self.waves,
+				self.zombieCountdown, self.zombieCountdownStart, (100 - self.zombieCountdown / self.zombieCountdownStart * 100)
+			))
+		else
+			debugString = (debugString .. (
+				'wave: %d / %d\n' ..
+				'time since last wave: %.0f %s\n' ..
+				'wave countdown: %.0f / %.0f (%.0f%%)'
+			):format(
+				self.currentWave, self.waves,
+				self.zombieSince, (self.zombieSince < Constants.zombieCountdownMin and '(too soon)' or ''),
+				self.zombieCountdown, self.zombieCountdownStart, (100 - self.zombieCountdown / self.zombieCountdownStart * 100)
+			))
+		end
+		
+		if not self.challengeCompleted then
+			if self.currentWave > 0 then
+				local healthFraction = math.remap(self.currentWaveHealth, self.startWaveHealth, self.healthToNextWave, 0, 100)
+				debugString = (debugString ..
+					('\nzombie health: %d -> %d (%.0f%%)'):format(self.currentWaveHealth, self.healthToNextWave, healthFraction)
+				)
+			end
+			
+			if self.hugeWaveCountdown > 0 then
+				debugString = (
+					debugString ..
+					('\nhuge wave countdown: %.0f'):format(self.hugeWaveCountdown)
+				)
+			end
+			
+			debugString = (
+				debugString .. (
+					'\n\nSUN DEBUG\n' ..
+					'sun countdown: %.0f\n' ..
+					'sun phase: %d'
+				):format(
+					self.sunCountdown,
+					self.sunsFallen
+				)
 			)
-		)
+		end
+		
+		local text = ('ZOMBIE SPAWNING DEBUG\n' .. debugString)
+		love.graphics.setColor(1, 1, 1)
+		self.debugInfo:setText(text)
+		self.debugInfo:draw(5, 65)
+		
+		love.graphics.setCanvas()
 	end
 	
-	love.graphics.setColor(1, 1, 1)
-	outlineText('ZOMBIE SPAWNING DEBUG\n' .. debugString, 8, 80)
+	UIContainer.drawWindow(self)
 end
 
 function Challenge:getWaveCount(challenge)

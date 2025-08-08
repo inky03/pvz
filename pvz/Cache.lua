@@ -99,13 +99,30 @@ function Cache.image(path, folder)
 	return img
 end
 
+function Cache.sound(snd)
+	local key = snd:lower()
+	if not cached.sounds[key] then
+		local fpathOgg = Cache.main('sounds/' .. snd .. '.ogg')
+		local fpath = (
+			(love.filesystem.getInfo(fpathOgg) and fpathOgg)
+		)
+		if fpath then
+			cached.sounds[key] = love.audio.newSource(fpath, 'static')
+		else
+			trace('Resource for ' .. snd .. ' doesn\'t exist')
+		end
+	end
+	
+	return cached.sounds[key]
+end
+
 function Cache.reanim(kind, folder)
 	if kind == nil then return nil end
 	
 	local t = os.clock()
-	local path = (folder and (folder .. '/' .. kind) or ('compiled/reanim/' .. kind))
 	local key = kind:lower()
 	if not cached.reanim[key] then
+		local path = (folder and (folder .. '/' .. kind) or ('compiled/reanim/' .. kind))
 		local fpathCompiled = Cache.main(path .. '.reanim.compiled')
 		local fpath = Cache.main(path .. '.reanim')
 		local format = ''

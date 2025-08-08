@@ -169,6 +169,7 @@ function Lawn:tryPlant(entity, eval)
 		if plant then
 			plant:destroy()
 		end
+		Sound.playRandom({ 'plant' ; 'plant2' })
 		self:spawnUnit(entity, entity.boardX, entity.boardY)
 		entity.visible = true
 	end
@@ -197,7 +198,7 @@ function Lawn:drawTop(x, y) -- draw units
 	for _, part in ipairs(self.particles) do part:draw(x + part.x, y + part.y) end
 	
 	if self.hoveringEntity then
-		local mouseX, mouseY = love.mouse.getPosition()
+		local mouseX, mouseY = windowToGame(love.mouse.getPosition())
 		
 		love.graphics.setBlendMode('alpha', 'premultiplied')
 		
