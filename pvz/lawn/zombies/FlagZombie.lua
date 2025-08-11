@@ -16,8 +16,7 @@ function FlagZombie:init(x, y, challenge)
 	self:attachReanim('Zombie_flaghand', self.flag, 'idle')
 	
 	self.animation:get('walk'):setTrack(self.reanim:getTrack('walk2'))
-	
-	self:setSpeed(random.number(1.3, 1.5))
+	self.animation:get('walk').speed = random.number(1.1, 1.25)
 end
 
 function FlagZombie:setDamagePhase(phase)

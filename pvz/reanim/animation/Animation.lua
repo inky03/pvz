@@ -20,6 +20,7 @@ function Animation:init(controller, reanim, name)
 	self.paused = false
 	self.finished = false
 	self.justFinished = false
+	self.fps = reanim.fps
 	
 	lambda.foreach(reanim.layers, function(layer)
 		local newFrame = ReanimAnimationFrame:new(layer.frames[1])
@@ -31,7 +32,7 @@ end
 function Animation:update(dt, materialized)
 	if self.paused or self.finished then return end
 	
-	self.lerp = (self.lerp + dt * self.speed * self.reanim.fps)
+	self.lerp = (self.lerp + dt * self.speed * self.fps)
 	self.justFinished = false
 	
 	if self.lerp >= 1 then
@@ -59,25 +60,20 @@ function Animation:update(dt, materialized)
 		self.lerp = (self.lerp % 1)
 	end
 end
-function Animation:updateFrame(noDiff)
-	self:updateLayers(self:getFrameIndex(self.frame), self:getFrameIndex(self.next), self.lerp, noDiff)
+function Animation:updateFrame()
+	self:updateLayers(self:getFrameIndex(self.frame), self:getFrameIndex(self.next), self.lerp)
 end
 
-function Animation:updateLayers(cur, next, lerp, noDiff)
-	-- print(self.last .. ' / ' .. self.length .. ' / ' .. self.reanim.length)
-	lambda.foreach(self.layers, function(layer, i)
+function Animation:updateLayers(cur, next, lerp)
+	for i = 1, #self.layers do
 		local reanimLayer = self.reanim.layers[i]
 		
-		layer:lerp(
+		self.layers[i]:lerp(
 			reanimLayer.frames[math.clamp(cur, self.first, self.last)],
 			reanimLayer.frames[math.clamp(next, self.first, self.last)],
 			lerp
 		)
-		
-		if noDiff then
-			layer.diffX, layer.diffY = 0, 0
-		end
-	end)
+	end
 end
 function Animation:getLayer(find)
 	if type(find) ~= 'string' then return nil end
@@ -92,7 +88,7 @@ function Animation:reset()
 	self.next = 2
 	self.frame = 1
 	self.finished = false
-	self:updateFrame(true)
+	self:updateFrame()
 end
 
 function Animation:getFrameIndex(index) -- return index in reanim from index in animation

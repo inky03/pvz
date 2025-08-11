@@ -52,7 +52,7 @@ function SeedPacket:renderToCanvas(entity)
 	if entity then
 		local displayEntity = entity:new()
 		displayEntity.transform:setScale(.5, .5)
-		displayEntity:draw(4.75, 8.75)
+		displayEntity:render(4.75, 8.75)
 	end
 	
 	love.graphics.setCanvas()
@@ -96,7 +96,6 @@ function SeedPacket:onReturned()
 end
 
 function SeedPacket:draw(x, y)
-	
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.setBlendMode('alpha', 'premultiplied')
 	love.graphics.draw(self.displayCanvas, x, y)

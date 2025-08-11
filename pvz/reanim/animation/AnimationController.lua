@@ -88,22 +88,22 @@ function AnimationController:update(dt, noDiff)
 		end
 	end
 	
-	self:updateFrame(dt, self._cur.justFinished)
+	self:updateFrame(dt)
 end
-function AnimationController:updateFrame(dt, noDiff)
-	lambda.foreach(self.current.layers, function(layer, i)
+function AnimationController:updateFrame(dt)
+	for i = 1, #self.current.layers do
+		local layer = self.current.layers[i]
+		
 		layer:lerp(
 			self._ghost.layers[i],
 			self._cur.layers[i],
 			self.crossFade
 		)
 		
-		if noDiff then layer.diffX, layer.diffY = 0, 0 end
-		
 		for _, attachment in ipairs(layer.attachments) do
-			attachment.reanim:update(dt, noDiff)
+			attachment.reanim:update(dt)
 		end
-	end)
+	end
 end
 
 function AnimationController:framesToSeconds(n)

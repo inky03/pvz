@@ -116,11 +116,12 @@ function Zombie:hurt(hp, glow)
 	end
 end
 function Zombie:groan()
-	if random.int(0, #self.challenge:getSpawnedZombies()) > 0 or self.state == 'dead' then return end
-	if self.variant then
-		Sound.playRandom({ 'groan' ; 'groan2' ; 'groan3' ; 'groan4' ; 'groan5' ; 'groan6' ; 'sukhbir4' ; 'sukhbir5' ; 'sukhbir6' })
-	else
-		Sound.playRandom({ 'groan' ; 'groan2' ; 'groan3' ; 'groan4' ; 'groan5' ; 'groan6' })
+	if self:canGroan() then
+		if self.variant then
+			Sound.playRandom({ 'groan' ; 'groan2' ; 'groan3' ; 'groan4' ; 'groan5' ; 'groan6' ; 'sukhbir4' ; 'sukhbir5' ; 'sukhbir6' })
+		else
+			Sound.playRandom({ 'groan' ; 'groan2' ; 'groan3' ; 'groan4' ; 'groan5' ; 'groan6' })
+		end
 	end
 	self.groanCounter = (self.groanCounter + random.int(1000, 1500))
 end
@@ -140,6 +141,9 @@ end
 
 function Zombie.getSpawnOffset()
 	return random.number(10, 50)
+end
+function Zombie:canGroan()
+	return (random.int(0, #self.challenge:getSpawnedZombies()) == 0 and self.state ~= 'dead')
 end
 
 function Zombie:__tostring()

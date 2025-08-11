@@ -155,7 +155,7 @@ function Challenge:update(dt)
 	self:updateWaveMeter(dt)
 end
 function Challenge:updateSun(dt)
-	if not self.flags.fallingSun then return end
+	if not self.flags.fallingSun or self.challengeCompleted then return end
 	
 	self.sunCountdown = (self.sunCountdown - dt * Constants.tickPerSecond)
 	

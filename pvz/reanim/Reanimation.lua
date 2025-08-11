@@ -25,12 +25,12 @@ function Reanimation:init(kind, x, y)
 	self.prevFrame = 0
 	self.frameFloat = 0
 	
-	if kind then
-		self:setReanim(Cache.reanim(kind))
-	end
+	self:setReanim(Cache.reanim(kind))
 end
 
 function Reanimation:setReanim(reanim)
+	if not reanim then return end
+	
 	self.reanim = reanim
 	self.images = table.copy(self.reanim.images)
 	
@@ -126,19 +126,21 @@ end
 Reanimation.transformStack = {}
 
 function Reanimation:render(x, y, transforms)
-	table.clear(Reanimation.transformStack)
-	
 	if transforms then
-		for _, transform in ipairs(transforms) do
-			table.insert(Reanimation.transformStack, transform)
+		for i, transform in ipairs(transforms) do
+			table.insert(Reanimation.transformStack, i, transform)
 		end
 	else
-		table.insert(Reanimation.transformStack, self.transform)
+		table.insert(Reanimation.transformStack, 1, self.transform)
 	end
 	
 	Reanimation.drawReanim(self.animation.current.layers, self.images, x, y, self.hiddenLayers)
 	
 	love.graphics.setColor(1, 1, 1, 1)
+	
+	for i = 1, (transforms and #transforms or 1) do
+		table.remove(Reanimation.transformStack, 1)
+	end
 end
 
 function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
@@ -176,20 +178,14 @@ function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
 				love.graphics.setColor(1, 1, 1, alpha)
 				love.graphics.draw(mesh.mesh)
 			end
-		
-			for _, attachment in ipairs(frame.attachments) do
-				local reanim = attachment.reanim
-				if not reanim.visible then return end
-				
-				table.insert(Reanimation.transformStack, 1, frame)
-				table.insert(Reanimation.transformStack, 1, reanim.transform)
-				table.insert(Reanimation.transformStack, 1, attachment.transform)
-				
-				Reanimation.drawReanim(reanim.animation.current.layers, reanim.images, x, y, reanim.hiddenLayers)
-				
-				table.remove(Reanimation.transformStack, 1)
-				table.remove(Reanimation.transformStack, 1)
-				table.remove(Reanimation.transformStack, 1)
+			
+			if #frame.attachments > 0 then
+				for _, attachment in ipairs(frame.attachments) do
+					local reanim = attachment.reanim
+					if reanim.visible then
+						reanim:render(x, y, {attachment.transform, reanim.transform, frame})
+					end
+				end
 			end
 		end
 	end
@@ -206,12 +202,14 @@ function Reanimation.transformVertex(vert, frame, scaleCoords)
 	
 	local xScale, yScale = (scaleCoords and frame.xScale or 1), (scaleCoords and frame.yScale or 1)
 	
-	vert[1], vert[2] = ((vert[1] - frame.xOrigin) * xScale - frame.xOffset), ((vert[2] - frame.yOrigin) * yScale - frame.yOffset)
+	vert[1] = ((vert[1] - frame.xOrigin) * xScale - frame.xOffset - frame._internalXOffset)
+	vert[2] = ((vert[2] - frame.yOrigin) * yScale - frame.yOffset - frame._internalYOffset)
 	
 	local rX = (vert[1] * math.dcos(frame.yShear) - vert[2] * math.dsin(frame.xShear))
 	local rY = (vert[1] * math.dsin(frame.yShear) + vert[2] * math.dcos(frame.xShear))
 	
-	vert[1], vert[2] = (frame.x * (frame.scaleCoords and xScale or 1) + rX + frame.xOrigin), (frame.y * (frame.scaleCoords and yScale or 1) + rY + frame.yOrigin)
+	vert[1] = (frame.x * (frame.scaleCoords and xScale or 1) + rX + frame.xOrigin)
+	vert[2] = (frame.y * (frame.scaleCoords and yScale or 1) + rY + frame.yOrigin)
 end
 
 function Reanimation:getName()

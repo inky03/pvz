@@ -37,6 +37,7 @@ local gc = 0
 local objs = 0
 local stats = nil
 local gcTimer = 0
+local fpsCount = 0
 local drawtime = {}
 
 function love.load()
@@ -156,10 +157,12 @@ function drawDebug()
 	while drawtime[1] < time - 1 do
 		table.remove(drawtime, 1)
 	end
+	local fps = math.round((fpsCount + #drawtime) / 2)
+	fpsCount = #drawtime
 	
 	love.graphics.setCanvas(debugCanvas)
 	
-	local text = ('%d fps\n%d mb\n%d objects\n%d drawcalls'):format(#drawtime, ((stats.texturememory / 1024) + gc) / 1024, objs, stats.drawcalls)
+	local text = ('%d fps\n%d mb\n%d objects\n%d drawcalls'):format(fps, ((stats.texturememory / 1024) + gc) / 1024, objs, stats.drawcalls)
 	love.graphics.setColor(1, 1, 1)
 	debugInfo:setText(text)
 	debugInfo:draw(5, 5)

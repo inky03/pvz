@@ -52,10 +52,12 @@ function Lawn:getCount()
 end
 
 function Lawn:unitAt(x, y, entityGroup)
-	return lambda.find(self.units, function(unit)
-		if entityGroup and not unit:instanceOf(entityGroup) then return false end
-		return (unit.boardX == x and unit.boardY == y)
-	end)
+	for i = 1, #self.units do
+		local unit = self.units[i]
+		if unit.boardX == x and unit.boardY == y and (not entityGroup or unit:instanceOf(entityGroup)) then
+			return unit
+		end
+	end
 end
 function Lawn:spawnUnit(unit, x, y)
 	unit.board = self

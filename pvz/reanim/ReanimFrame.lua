@@ -17,6 +17,9 @@ ReanimFrame.layerName = ''
 ReanimFrame.scaleCoords = false
 -- TODO: IMPLEMENT TEXT AND FONT ?
 
+ReanimFrame._internalXOffset = 0
+ReanimFrame._internalYOffset = 0
+
 function ReanimFrame:init(frameOrX, y, xShear, yShear, xScale, yScale)
 	if class.isInstance(frameOrX) then
 		self:copy(frameOrX)

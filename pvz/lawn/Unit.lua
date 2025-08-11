@@ -59,6 +59,8 @@ function Unit:init(x, y, challenge)
 	
 	self.shadow = Cache.image('images/plantshadow')
 	self.shadowOffset = {x = -3; y = 50}
+	
+	self.debugInfo = Font:new('Pico12', 9, 0, 0, self.w)
 end
 
 function Unit:setHitbox(x, y, w, h, hurtX, hurtY, hurtW, hurtH)
@@ -210,7 +212,8 @@ function Unit:debugDraw(x, y)
 	love.graphics.setColor(0, 1, 0)
 	love.graphics.rectangle('line', x + self.hurtbox.x + 1, y + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
 	love.graphics.setColor(1, 1, 1)
-	outlineText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)), math.floor(x), math.floor(y))
+	self.debugInfo:setText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)))
+	self.debugInfo:draw(math.floor(x), math.floor(y))
 end
 
 return Unit
