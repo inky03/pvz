@@ -263,7 +263,10 @@ function Font:renderToCanvas()
 	local prevCanvas = love.graphics.getCanvas()
 	love.graphics.setCanvas(self.canvas)
 	love.graphics.clear()
+	love.graphics.push()
+	love.graphics.origin()
 	self:renderText(self.canvasPadding, self.canvasPadding)
+	love.graphics.pop()
 	love.graphics.setCanvas(prevCanvas)
 end
 
@@ -275,15 +278,15 @@ function Font:renderText(x, y)
 		
 		local yy = 0
 		for i = 1, #self._lines do
-			love.graphics.push()
+			local xOffsetT, yOffsetT = 0, 0
 			
 			if not self.autoWidth then
 				local mult = (self.hAlignment == 'right' and 1 or ((self.hAlignment == 'center' or self.hAlignment == 'middle') and .5 or 0))
-				love.graphics.translate(math.round(mult * (self.w - self._lineWidths[i])), 0)
+				xOffsetT = math.round(mult * (self.w - self._lineWidths[i]))
 			end
 			if not self.autoHeight then
 				local mult = (self.vAlignment == 'bottom' and 1 or ((self.vAlignment == 'center' or self.vAlignment == 'middle') and .5 or 0))
-				love.graphics.translate(0, math.round(mult * (self.h - self.fieldHeight)))
+				yOffsetT = math.round(mult * (self.h - self.fieldHeight))
 			end
 			
 			local line = self._lines[i]
@@ -294,13 +297,15 @@ function Font:renderText(x, y)
 					local texture = Cache.image(layer.textureName, self.fontData.origin)
 					local xOffset, yOffset = layer:getOffset(char)
 					local rX, rY, rW, rH = layer:getRect(char)
+					local glyphX, glyphY = (x + xx + xOffset + xOffsetT), (y + yy + yOffset + yOffsetT)
+					
 					self.quad:setViewport(rX, rY, rW, rH, texture:getPixelDimensions())
 					love.graphics.setColor(transform.r, transform.g, transform.b, transform.a)
-					love.graphics.draw(texture, self.quad, x + xx + xOffset, y + yy + yOffset)
+					love.graphics.draw(texture, self.quad, glyphX, glyphY)
 					
 					if self.debug then
 						love.graphics.setColor(0, 0, 1)
-						love.graphics.rectangle('line', x + xx + xOffset, y + yy + yOffset, rW, rH)
+						love.graphics.rectangle('line', glyphX, glyphY, rW, rH)
 					end
 					
 					xx = (xx + self.characterSpacing + layer:getWidth(char) + layer:getKerning(char, self.text:sub(j + 1, j + 1)))
@@ -308,7 +313,6 @@ function Font:renderText(x, y)
 			end
 			
 			yy = (yy + self._lineHeights[i])
-			love.graphics.pop()
 		end
 	end
 end

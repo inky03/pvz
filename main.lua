@@ -44,7 +44,7 @@ function love.load()
 	love.mouse.setCursor(pointer)
 	-- love.window.setFullscreen(true, 'desktop')
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
-	level = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(9))
+	level = game:addElement(Cache.module('pvz.lawn.challenges.PoolChallenge'):new(21))
 	debugInfo = Font:new('Pico12', 9, 0, 0, 400)
 	
 	love.graphics.setLineWidth(1)

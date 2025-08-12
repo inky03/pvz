@@ -84,6 +84,7 @@ function Challenge:initWaves()
 	end
 end
 function Challenge:zombiePickerRoutine(wave, maxPoints)
+	local maxPoints = maxPoints
 	if self:isFlagWave(wave) then
 		-- print('add flag zombys ' .. wave)
 		

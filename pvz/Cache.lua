@@ -5,6 +5,7 @@ local Cache = {
 	cached = {
 		images = {}; -- file type
 		sounds = {};
+		shaders = {};
 		
 		font = {}; -- data type
 		reanim = {};
@@ -43,14 +44,18 @@ function Cache.image(path, folder)
 	local key = path:lower()
 	local folder = (folder and folder .. '/' or '')
 	if not cached.images[key] then
-		local fpathMask = Cache.main(folder .. path .. '_.png')
+		local fpathMaskPng, fpathMaskJpg = Cache.main(folder .. path .. '_.png'), Cache.main(folder .. path .. '_.jpg')
 		local fpathPng, fpathJpg = Cache.main(folder .. path .. '.png'), Cache.main(folder .. path .. '.jpg')
 		local fpath = (
 			(love.filesystem.getInfo(fpathPng) and fpathPng) or
 			(love.filesystem.getInfo(fpathJpg) and fpathJpg)
 		)
+		local fpathMask = (
+			(love.filesystem.getInfo(fpathMaskPng) and fpathMaskPng) or
+			(love.filesystem.getInfo(fpathMaskJpg) and fpathMaskJpg)
+		)
 		if fpath then
-			if love.filesystem.getInfo(fpathMask) then
+			if fpathMask then
 				local image = love.image.newImageData(fpath)
 				local mask = love.image.newImageData(fpathMask)
 				
@@ -160,6 +165,24 @@ function Cache.font(name, folder)
 	end
 	
 	return cached.font[key]
+end
+
+function Cache.shader(name)
+	if name == nil then return nil end
+	
+	local key = name:lower()
+	local fpathFrag, fpathVert = ('resources/love/shaders/' .. name .. '.frag'), ('resources/love/shaders/' .. name .. '.vert')
+	local frag, vert =
+		(love.filesystem.getInfo(fpathFrag) and love.filesystem.read(fpathFrag)),
+		(love.filesystem.getInfo(fpathVert) and love.filesystem.read(fpathVert))
+	
+	if frag or vert then
+		cached.shaders[key] = love.graphics.newShader(frag, vert)
+	else
+		trace('No frag or vert code exists for ' .. name)
+	end
+	
+	return cached.shaders[key]
 end
 
 function Cache.resources(path)
