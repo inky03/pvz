@@ -71,7 +71,7 @@ function PoolEffect:draw(x, y)
 	for x = 1, 16 do
 		for y = 1, 6 do
 			local xx, yy = (x - 1), (y - 1)
-			local x3, y3 = (x / 15), 0
+			local x3, y3 = (xx / 15), 0
 			
 			if x > 1 and x < 16 and y > 1 and y < 6 then
 				local poolPhase = (self.poolCounter * 2 * math.pi)
