@@ -169,14 +169,12 @@ function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
 					
 					Reanimation.transformVertex(corner, frame, false)
 					for i = 1, #stack do Reanimation.transformVertex(corner, stack[i], true) end
-					
-					corner[1], corner[2] = (corner[1] + x), (corner[2] + y)
 				end
 				mesh.mesh:setVertices(vert)
 				mesh.mesh:setTexture(image)
 				
 				love.graphics.setColor(1, 1, 1, alpha)
-				love.graphics.draw(mesh.mesh)
+				love.graphics.draw(mesh.mesh, x, y)
 			end
 			
 			if #frame.attachments > 0 then

@@ -11,7 +11,7 @@ function SeedPacket:init(lawn, entity, x, y, bank)
 	self.entity = Cache.module(entity)
 	self.displayCanvas = love.graphics.newCanvas(self.w, self.h)
 	
-	self.costText = self:addElement(Font:new('Pico12', 9, 0, 54, 30))
+	self.costText = self:addElement(Font:new('Pico12', 9, 0, 54, 30, 9))
 	self.costText:setLayerColor('Main', 0, 0, 0)
 	self.costText:setAlignment('right')
 	

@@ -12,7 +12,7 @@ function SeedBank:init(lawn, x, y, sun)
 	
 	self.seedSpacing = 59
 	
-	self.moneyText = Font:new('ContinuumBold', 14, 10, 55, 55)
+	self.moneyText = Font:new('ContinuumBold', 14, 10, 55, 55, 14)
 	self.moneyText:setLayerColor('Main', 0, 0, 0)
 	self.moneyText:setText(self.visualMoney)
 	self.moneyText:setAlignment('center')

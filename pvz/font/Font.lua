@@ -246,16 +246,23 @@ function Font:renderCanvas(x, y, transforms)
 			
 			Reanimation.transformVertex(corner, frame, false)
 			for i = 1, #stack do Reanimation.transformVertex(corner, stack[i], true) end
-			
-			corner[1], corner[2] = (corner[1] + x), (corner[2] + y)
 		end
 		mesh.mesh:setVertices(vert)
 		mesh.mesh:setTexture(self.canvas)
 		
 		love.graphics.setBlendMode('alpha', 'premultiplied')
 		love.graphics.setColor(alpha, alpha, alpha, alpha)
-		love.graphics.draw(mesh.mesh)
+		love.graphics.draw(mesh.mesh, x, y)
 		love.graphics.setBlendMode('alpha')
+		
+		if debugMode or self.debug then
+			mesh.mesh:setTexture()
+			love.graphics.setColor(1, 0, 1)
+			love.graphics.line(x + vert[1][1], y + vert[1][2], x + vert[2][1], y + vert[2][2])
+			love.graphics.line(x + vert[2][1], y + vert[2][2], x + vert[4][1], y + vert[4][2])
+			love.graphics.line(x + vert[4][1], y + vert[4][2], x + vert[3][1], y + vert[3][2])
+			love.graphics.line(x + vert[3][1], y + vert[3][2], x + vert[1][1], y + vert[1][2])
+		end
 	end
 	
 	for i = 1, (transforms and #transforms or 1) do

@@ -17,7 +17,7 @@ float lookup(Image tex, float u, float v, float timeU, float timeV) {
 		Texel(tex, vec2(indexU0, indexV0)).r * (factorU0 / 65536. * factorV0 / 65536.) +
 		Texel(tex, vec2(indexU1, indexV0)).r * (factorU1 / 65536. * factorV0 / 65536.) +
 		Texel(tex, vec2(indexU0, indexV1)).r * (factorU0 / 65536. * factorV1 / 65536.) +
-		Texel(tex, vec2(indexU1, indexV1)).r * (factorU0 / 65536. * factorV1 / 65536.)
+		Texel(tex, vec2(indexU1, indexV1)).r * (factorU1 / 65536. * factorV1 / 65536.)
 	);
 }
 
