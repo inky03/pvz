@@ -7,8 +7,9 @@ i hope this is a Nice Learning Expereince
 
 ## how to work
 
-this project doesnt condone piracy!<br>
-this repository does NOT contain the game assets, but are required for it to function ; as such you will need the files from your copy of the original game.
+this project doesnt condone piracy!
+
+this repository does **not** contain the game assets, but are required for it to function ; as such you will need the files from your copy of the original game.
 
 - extract main.pak from your Plants vs. Zombies copy
 - make a main folder in resources/ and dump the content folders (reanim, compiled, etc) inside
