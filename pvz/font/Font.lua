@@ -156,6 +156,11 @@ function Font:recalculate()
 			fullHeight = math.max(fullHeight, yy + lineHeight)
 		else
 			charWidth = 0
+			
+			if layer:hasCharacter('W') then
+				local _, _, w, h = layer:getRect('W')
+				lineHeight = math.max(lineHeight + layer.lineSpacing + self.lineSpacing, h)
+			end
 		end
 		
 		local overflow = (cursor >= #str)
