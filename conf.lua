@@ -19,4 +19,11 @@ function love.conf(t)
 	t.window.usedpiscale = false
 	t.window.identity = 'pvz-love'
 	t.window.title = 'Plants Vs. Zombies'
+	
+	-- project flags
+	flags = {
+		debugMode = false;
+		useFrameskip = false;
+		maxFrameskip = 15;
+	}
 end

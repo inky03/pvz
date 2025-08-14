@@ -23,7 +23,9 @@ function SeedBank:init(lawn, x, y, sun)
 	self:addSeed(Cache.plants('Repeater'))
 	-- self:addSeed(Cache.plants('GatlingPea'))
 	self:addSeed(Cache.plants('SnowPea'))
-	self:addSeed(Cache.plants('WallNut'))
+	-- self:addSeed(Cache.plants('WallNut'))
+	self:addSeed(Cache.plants('LilyPad'))
+	self:addSeed(Cache.plants('FlowerPot'))
 end
 
 function SeedBank:setMoney(money)
@@ -38,15 +40,8 @@ function SeedBank:addSeed(entity)
 end
 
 function SeedBank:mousePressed(x, y, button, isTouch, presses)
-	if self.lawn.hoveringEntity then
-		self.lawn.selectedPacket:onReturned()
-		self.lawn.hoveringEntity:destroy()
-		self.lawn.selectedPacket = nil
-		self.lawn.hoveringEntity = nil
-		
+	if self.lawn:returnPlant() then
 		self.canClickChildren = true
-		
-		Sound.play('tap2')
 	end
 end
 

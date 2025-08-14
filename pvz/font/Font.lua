@@ -12,6 +12,7 @@ function Font:init(kind, size, x, y, w, h)
 	self.transform._internalXOffset = self.canvasPadding
 	self.transform._internalYOffset = self.canvasPadding
 	self.transform.scaleCoords = true
+	self.transforms = {self.transform}
 	
 	self.quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
 	self.layerTransform = {}
@@ -208,22 +209,21 @@ end
 function Font:draw(x, y, transforms)
 	if not self.fontData then return end
 	
+	self:render(x, y, transforms)
+	
+	UIContainer.draw(self, x, y)
+end
+function Font:render(x, y, transforms)
 	if self.useCanvas then
 		if self._dirty then self:renderToCanvas() self._dirty = false end
 		self:renderCanvas(x, y, transforms)
 	else
 		self:renderText(x, y)
 	end
-	
-	UIContainer.draw(self, x, y)
 end
 function Font:renderCanvas(x, y, transforms)
-	if transforms then
-		for i, transform in ipairs(transforms) do
-			table.insert(Reanimation.transformStack, i, transform)
-		end
-	else
-		table.insert(Reanimation.transformStack, 1, self.transform)
+	for i, transform in ipairs(transforms or self.transforms) do
+		table.insert(Reanimation.transformStack, i, transform)
 	end
 	
 	local stack = Reanimation.transformStack

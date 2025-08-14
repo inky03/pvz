@@ -7,4 +7,9 @@ SnowPea.packetCost = 175
 
 SnowPea.projectile = SnowPeaProjectile
 
+function SnowPea:fireProjectile()
+	PeaShooter.fireProjectile(self)
+	Sound.play('snow_pea_sparkles', 10)
+end
+
 return SnowPea

@@ -50,16 +50,15 @@ function SeedPacket:renderToCanvas(entity)
 	love.graphics.draw(self.texture, (self.frame - 1) * -50, 0)
 	
 	if entity then
-		local displayEntity = entity:new()
-		displayEntity.transform:setScale(.5, .5)
-		displayEntity:render(4.75, 8.75)
+		entity:new():drawSeedPacket()
 	end
 	
 	love.graphics.setCanvas()
 end
 
-function SeedPacket:mousePressed(mouseX, mouseY)
-	if self:isReady() and not self.lawn.hoveringEntity and self.entity then
+function SeedPacket:mousePressed(mouseX, mouseY, button)
+	if button ~= 1 then return end
+	if self:isReady() and not self.lawn.hoveringEntity then
 		self.lawn:pickPlant(self.entity:new(0, 0, self.lawn.challenge), self, mouseX, mouseY)
 		
 		self.parent.canClickChildren = false
@@ -82,7 +81,7 @@ function SeedPacket:update(dt)
 	UIContainer.update(self, dt)
 end
 function SeedPacket:isReady()
-	return (self.recharged >= self.maxRecharge and (not self.bank or self.cost <= self.bank.money) and not self.picking)
+	return (self.entity and self.recharged >= self.maxRecharge and (not self.bank or self.cost <= self.bank.money) and not self.picking)
 end
 
 function SeedPacket:onPlanted()

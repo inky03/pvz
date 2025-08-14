@@ -13,7 +13,10 @@ PoolEffect.causticTextureOffset = {
 	y = 10;
 }
 
-function PoolEffect:init(x, y)
+function PoolEffect:init(pool, x, y)
+	self.pool = pool
+	self.poolCounter = 0
+	
 	self.texture = Cache.image(self.textureName, 'images')
 	self.baseTexture = Cache.image(self.baseTextureName, 'images')
 	self.shadingTexture = Cache.image(self.shadingTextureName, 'images')
@@ -35,7 +38,6 @@ function PoolEffect:init(x, y)
 		return t
 	end
 	
-	self.poolCounter = 0
 	self.offsets = populate(3, populate(16, populate(6, {0, 0}))) -- ummm
 	self.verts = populate(#self.offsets, populate(150, populate(3, {-100, -100, -100, -100, 1, 1, 1, 1}))) -- yea!
 	self.vertMap = populate(#self.verts, {})
@@ -54,8 +56,7 @@ function PoolEffect:init(x, y)
 end
 
 function PoolEffect:update(dt)
-	self.poolCounter = (self.poolCounter + dt * Constants.tickPerSecond)
-	
+	self.poolCounter = (self.pool and self.pool.poolCounter or (self.poolCounter + dt * Constants.tickPerSecond))
 	self.causticShader:send('counter', self.poolCounter)
 end
 

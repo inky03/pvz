@@ -61,7 +61,7 @@ function Challenge:init(challenge)
 	self.zombieCountdown = Constants.zombieCountdownFirstWave
 	self.zombieCountdownStart = self.zombieCountdown
 	
-	self.debugInfo = Font:new('Pico12', 9, 0, 0, 400)
+	self.debugInfo = Font:new('Pico12', 9, 0, 0, 220, 120)
 	self.challengeDebug = true
 	
 	trace('Challenge ' .. self.challenge)
@@ -158,15 +158,18 @@ end
 function Challenge:updateSun(dt)
 	if not self.flags.fallingSun or self.challengeCompleted then return end
 	
-	self.sunCountdown = (self.sunCountdown - dt * Constants.tickPerSecond)
-	
-	if self.sunCountdown < 0 then
-		self.sunsFallen = (self.sunsFallen + 1)
-		self.sunCountdown = math.min(Constants.sunCountdownMax, Constants.sunCountdown + self.sunsFallen * 10) + random.int(Constants.sunCountdownRange)
-		self:spawnSun()
+	if self.sunCountdown > 0 then
+		self.sunCountdown = (self.sunCountdown - dt * Constants.tickPerSecond)
+		
+		if self.sunCountdown < 0 then
+			self:spawnSun()
+		end
 	end
 end
 function Challenge:spawnSun()
+	self.sunsFallen = (self.sunsFallen + 1)
+	self.sunCountdown = math.min(Constants.sunCountdownMax, Constants.sunCountdown + self.sunsFallen * 10) + random.int(Constants.sunCountdownRange)
+	
 	return self.collectibles:addElement(Sun:new(random.int(100, 649), 60, 'rain', self.seeds))
 end
 function Challenge:updateChallenge(dt)
@@ -442,7 +445,7 @@ function Challenge:getZombies(challenge)
 end
 function Challenge:getFlags(challenge)
 	return {
-		startingSun = 50;
+		startingSun = 950;
 		fallingSun = true;
 	}
 end

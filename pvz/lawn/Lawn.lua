@@ -26,15 +26,11 @@ function Lawn:init(challenge, x, y)
 	
 	self.selectedPacket = nil
 	self.hoveringEntity = nil
+	self.hoveringCarrier = nil
 	self.hoverCanvas = love.graphics.newCanvas(160, 160)
 	
 	self.onSpawnUnit = Signal:new()
 	self.onDestroyUnit = Signal:new()
-	self.onDestroyUnit:add(function()
-		if self.hoveringEntity then
-			self.hoveringEntity.visible = self:tryPlant(self.hoveringEntity, true)
-		end
-	end)
 	
 	self.tW, self.tH = self.texture:getPixelDimensions()
 	
@@ -55,7 +51,7 @@ function Lawn:unitAt(x, y, entityGroup)
 	for i = 1, #self.units do
 		local unit = self.units[i]
 		if unit.boardX == x and unit.boardY == y and (not entityGroup or unit:instanceOf(entityGroup)) then
-			return unit
+			return unit:proxy()
 		end
 	end
 end
@@ -88,18 +84,21 @@ function Lawn:removeParticle(needle)
 	end
 end
 
-function Lawn:mousePressed(mouseX, mouseY)
-	if self.hoveringEntity then
+function Lawn:mousePressed(mouseX, mouseY, button)
+	if button == 1 and self.hoveringEntity then
 		local x, y = self:screenToElement(mouseX, mouseY)
 		
 		if self:withinBoard(self:getBoardPosition(x, y)) then
 			if self:tryPlant(self.hoveringEntity) then
 				self.selectedPacket:onPlanted()
 				
+				self.hoveringCarrier = nil
 				self.hoveringEntity = nil
 				self.selectedPacket = nil
 			end
 		end
+	elseif button == 2 then
+		self:returnPlant()
 	end
 end
 function Lawn:mouseMoved(mouseX, mouseY)
@@ -144,21 +143,38 @@ function Lawn:pickPlant(entity, packet, mouseX, mouseY)
 		self:updateHover(mouseX or 0, mouseY or 0)
 	end
 end
+function Lawn:returnPlant()
+	if self.selectedPacket then
+		self.selectedPacket:onReturned()
+		self.hoveringEntity:destroy()
+		self.selectedPacket = nil
+		self.hoveringEntity = nil
+		self.hoveringCarrier = nil
+		
+		Sound.play('tap2')
+		
+		return true
+	end
+	return false
+end
 function Lawn:tryPlant(entity, eval)
 	if not self:withinBoard(entity.boardX, entity.boardY) then return false end
 	
-	if not entity:canBeSpawnedAt(self, entity.boardX, entity.boardY) then
-		if not eval then print('tile not allowed for planting.') end
-		return false
-	end
-	
 	local plant = self:unitAt(entity.boardX, entity.boardY, Plant)
+	local carrier = nil
 	
 	if plant then
+		if plant:canPlantOnTop(entity) then
+			carrier = plant
+			goto rest
+		end
+		
 		local upgrade = entity.upgradeOf
 		if not upgrade or (upgrade and not plant:instanceOf(upgrade)) then
 			if not eval then print('theres a plant here.') end
 			return false
+		else
+			goto rest
 		end
 	else
 		if entity.upgradeOf then
@@ -167,16 +183,36 @@ function Lawn:tryPlant(entity, eval)
 		end
 	end
 	
+	if not entity:canBeSpawnedAt(self, entity.boardX, entity.boardY) then
+		if not eval then print('tile not allowed for planting.') end
+		return false
+	end
+	
+	::rest::
+	
 	if not eval then
-		if plant then
-			plant:destroy()
+		if not carrier then
+			self:spawnUnit(entity, entity.boardX, entity.boardY, carrier)
+			
+			if plant then
+				plant:destroy()
+			else
+				self:onPlant(entity, entity.boardX, entity.boardY)
+			end
+		else
+			carrier:plantOnTop(entity)
 		end
-		Sound.playRandom({ 'plant' ; 'plant2' })
-		self:spawnUnit(entity, entity.boardX, entity.boardY)
 		entity.visible = true
+	else
+		self.hoveringCarrier = carrier
 	end
 	
 	return true
+end
+function Lawn:onPlant(entity, col, row)
+	if self:getSurfaceAt(col, row) == 'ground' then
+		Sound.playRandom({ 'plant' ; 'plant2' })
+	end
 end
 
 function Lawn:draw(x, y)
@@ -184,7 +220,7 @@ function Lawn:draw(x, y)
 	
 	self:drawBackground(x, y)
 	
-	lambda.foreach(self.units, function(unit) unit:drawShadow(x + unit.x, y + unit.y) end)
+	for _, unit in ipairs(self.units) do unit:drawShadow(x + unit.x, y + unit.y) end
 	
 	if debugMode then self:debugDraw(x, y) end
 	
@@ -199,14 +235,25 @@ function Lawn:drawTop(x, y) -- draw units
 	for _, unit in ipairs(self.units) do unit:draw(x + unit.x, y + unit.y) end
 	for _, part in ipairs(self.particles) do part:draw(x + part.x, y + part.y) end
 	
+	self:drawHover(x, y)
+	
+	UIContainer.drawTop(self, x, y)
+end
+function Lawn:drawHover(x, y)
 	if self.hoveringEntity then
 		local mouseX, mouseY = windowToGame(love.mouse.getPosition())
 		
 		love.graphics.setBlendMode('alpha', 'premultiplied')
 		
 		if self.hoveringEntity.visible then
+			local xOffset, yOffset = 0, 0
+			if self.hoveringCarrier then
+				xOffset = self.hoveringCarrier.carryingOffset.x
+				yOffset = self.hoveringCarrier.carryingOffset.y
+			end
+			
 			love.graphics.setColor(.5, .5, .5, .5)
-			love.graphics.draw(self.hoverCanvas, x + self.hoveringEntity.x - 40, y + self.hoveringEntity.y - 40)
+			love.graphics.draw(self.hoverCanvas, x + self.hoveringEntity.x - 40 + xOffset, y + self.hoveringEntity.y - 40 + yOffset)
 		end
 		
 		love.graphics.setColor(1, 1, 1)
@@ -214,8 +261,6 @@ function Lawn:drawTop(x, y) -- draw units
 		
 		love.graphics.setBlendMode('alpha')
 	end
-	
-	UIContainer.drawTop(self, x, y)
 end
 
 function Lawn:insertUnitSort(unit)

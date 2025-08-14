@@ -16,6 +16,8 @@ function Reanimation:init(kind, x, y)
 	
 	self.transform = ReanimFrame:new()
 	self.transform.scaleCoords = true
+	self.transforms = {self.transform}
+	
 	self.animation = AnimationController:new()
 	
 	self.ground = nil
@@ -126,12 +128,8 @@ end
 Reanimation.transformStack = {}
 
 function Reanimation:render(x, y, transforms)
-	if transforms then
-		for i, transform in ipairs(transforms) do
-			table.insert(Reanimation.transformStack, i, transform)
-		end
-	else
-		table.insert(Reanimation.transformStack, 1, self.transform)
+	for i, transform in ipairs(transforms or self.transforms) do
+		table.insert(Reanimation.transformStack, i, transform)
 	end
 	
 	Reanimation.drawReanim(self.animation.current.layers, self.images, x, y, self.hiddenLayers)
@@ -152,11 +150,18 @@ function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
 		local alpha = frame.alpha
 		local active = true
 		
-		for i = 1, #stack do
-			local transform = stack[i]
-			active = (active and transform.active)
-			alpha = (alpha * transform.alpha)
+		local function transform(frame)
+			if type(frame) == 'table' and not class.isInstance(frame) then
+				for _, frame in ipairs(frame) do
+					transform(frame)
+				end
+				return
+			end
+			
+			active = (active and frame.active)
+			alpha = (alpha * frame.alpha)
 		end
+		transform(stack)
 		
 		if active and alpha > 0 then
 			if image then
@@ -181,7 +186,7 @@ function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
 				for _, attachment in ipairs(frame.attachments) do
 					local reanim = attachment.reanim
 					if reanim.visible then
-						reanim:render(x, y, {attachment.transform, reanim.transform, frame})
+						reanim:render(x, y, {attachment.transform, reanim.transforms, frame})
 					end
 				end
 			end
@@ -197,6 +202,13 @@ end
 
 function Reanimation.transformVertex(vert, frame, scaleCoords)
 	if frame == nil then return end
+	
+	if type(frame) == 'table' and not class.isInstance(frame) then
+		for _, frame in ipairs(frame) do
+			Reanimation.transformVertex(vert, frame, scaleCoords)
+		end
+		return
+	end
 	
 	local xScale, yScale = (scaleCoords and frame.xScale or 1), (scaleCoords and frame.yScale or 1)
 	

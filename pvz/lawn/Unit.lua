@@ -87,6 +87,9 @@ function Unit:destroy()
 	
 	Reanimation.destroy(self)
 end
+function Unit:proxy()
+	return self
+end
 function Unit:collidesWith(unit)
 	return (math.within(self.x - self.xOffset + self.hitbox.x, unit.x - unit.xOffset + unit.hurtbox.x - self.hitbox.w, unit.x - unit.xOffset + unit.hurtbox.x + unit.hitbox.w)
 		and math.within(self.y - self.yOffset + self.hitbox.y, unit.y - unit.yOffset + unit.hurtbox.y - self.hitbox.h, unit.y - unit.yOffset + unit.hurtbox.y + unit.hitbox.h))
@@ -200,6 +203,11 @@ function Unit:debugDraw(x, y)
 	love.graphics.setColor(1, 1, 1)
 	self.debugInfo:setText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)))
 	self.debugInfo:draw(math.floor(x), math.floor(y))
+end
+function Unit:drawSeedPacket()
+	self.xOffset, self.yOffset = 0, 0
+	self.transform:setScale(.5, .5)
+	self:render(4.75, 8.75)
 end
 
 return Unit

@@ -106,7 +106,7 @@ function Collectible:fadeOut()
 end
 
 function Collectible:mousePressed(mouseX, mouseY, button, isTouch, presses)
-	if not self.dead then
+	if button == 1 and not self.dead and self.state ~= 'collected' then
 		self:onCollect()
 	end
 end

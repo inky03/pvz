@@ -31,7 +31,6 @@ local hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'),
 
 gameWidth, gameHeight = love.graphics.getDimensions()
 hoveringElement = nil
-debugMode = false
 
 local gc = 0
 local objs = 0
@@ -40,12 +39,16 @@ local gcTimer = 0
 local fpsCount = 0
 local drawtime = {}
 
+local accumulator = 0
+
 function love.load()
+	debugMode = flags.debugMode
+	
 	love.mouse.setCursor(pointer)
 	-- love.window.setFullscreen(true, 'desktop')
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
 	level = game:addElement(Cache.module('pvz.lawn.challenges.PoolChallenge'):new(21))
-	debugInfo = Font:new('Pico12', 9, 0, 0, 400)
+	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
 	
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('rough')
@@ -91,7 +94,19 @@ function updateCursor()
 end
 
 function love.update(dt)
-	game:update(dt)
+	if flags.useFrameskip then
+		accumulator = (accumulator + dt * Constants.tickPerSecond)
+		
+		if accumulator >= 1 then
+			for i = 1, math.floor(math.min(flags.maxFrameskip, accumulator)) do
+				game:update(1 / Constants.tickPerSecond)
+			end
+			accumulator = (accumulator % 1)
+		end
+	else
+		game:update(dt)
+	end
+	
 	updateCursor()
 	
 	gcTimer = (gcTimer - dt)
