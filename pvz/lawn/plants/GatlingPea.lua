@@ -2,9 +2,10 @@ local PeaShooter = Cache.module(Cache.plants('PeaShooter'))
 local Repeater = Cache.module(Cache.plants('Repeater'))
 local GatlingPea = PeaShooter:extend('GatlingPea')
 
+GatlingPea.upgradeOf = Repeater
+
 GatlingPea.reanimName = 'GatlingPea'
 GatlingPea.stemLayer = 'idle'
-GatlingPea.upgradeOf = Repeater
 GatlingPea.packetRecharge = 5000
 GatlingPea.packetCost = 250
 

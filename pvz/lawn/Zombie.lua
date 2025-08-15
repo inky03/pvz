@@ -146,8 +146,4 @@ function Zombie:canGroan()
 	return (random.int(0, #self.challenge:getSpawnedZombies()) == 0 and self.state ~= 'dead')
 end
 
-function Zombie:__tostring()
-	return ('Zombie(name:%s, value:%d, pickWeight:%d)'):format(self.name, self.value, self.pickWeight)
-end
-
 return Zombie

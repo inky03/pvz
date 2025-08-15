@@ -2,6 +2,8 @@ local LilyPad = Plant:extend('LilyPad')
 
 LilyPad.allowedSurfaces = {'water'}
 LilyPad.carryTypes = {'grass'}
+LilyPad.canCarry = true
+
 LilyPad.reanimName = 'LilyPad'
 LilyPad.packetCost = 25
 LilyPad.kind = 'water'

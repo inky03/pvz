@@ -137,6 +137,7 @@ function Lawn:pickPlant(entity, packet, mouseX, mouseY)
 		
 		love.graphics.setCanvas(self.hoverCanvas)
 		love.graphics.clear()
+		self.hoveringEntity:drawBack(40, 40)
 		self.hoveringEntity:draw(40, 40)
 		love.graphics.setCanvas()
 		
@@ -162,8 +163,20 @@ function Lawn:tryPlant(entity, eval)
 	
 	local plant = self:unitAt(entity.boardX, entity.boardY, Plant)
 	local carrier = nil
+	local shield = nil
+	local swap = false
 	
 	if plant then
+		if entity.isShield and entity:canPlantOnTop(plant) then
+			carrier = plant.carrier
+			shield = entity
+			goto rest
+		elseif plant.isShield and plant:canPlantOnTop(entity) then
+			carrier = plant.carrier
+			shield = plant
+			goto rest
+		end
+		
 		if plant:canPlantOnTop(entity) then
 			carrier = plant
 			goto rest
@@ -174,6 +187,7 @@ function Lawn:tryPlant(entity, eval)
 			if not eval then print('theres a plant here.') end
 			return false
 		else
+			swap = true
 			goto rest
 		end
 	else
@@ -194,10 +208,17 @@ function Lawn:tryPlant(entity, eval)
 		if not carrier then
 			self:spawnUnit(entity, entity.boardX, entity.boardY, carrier)
 			
-			if plant then
+			if plant and swap then
 				plant:destroy()
-			else
-				self:onPlant(entity, entity.boardX, entity.boardY)
+			end
+			
+			entity:onPlant()
+			self:onPlant(entity, entity.boardX, entity.boardY)
+			
+			if shield == entity then
+				entity:protect(plant)
+			elseif shield == plant then
+				plant:protect(entity)
 			end
 		else
 			carrier:plantOnTop(entity)
@@ -220,7 +241,10 @@ function Lawn:draw(x, y)
 	
 	self:drawBackground(x, y)
 	
-	for _, unit in ipairs(self.units) do unit:drawShadow(x + unit.x, y + unit.y) end
+	for _, unit in ipairs(self.units) do
+		unit:drawShadow(x + unit.x, y + unit.y)
+		unit:drawBack(x + unit.x, y + unit.y)
+	end
 	
 	if debugMode then self:debugDraw(x, y) end
 	
@@ -266,7 +290,10 @@ end
 function Lawn:insertUnitSort(unit)
 	for i = 1, #self.units do
 		local otherUnit = self.units[i]
-		if (unit.y < otherUnit.y) or (unit.y == otherUnit.y and unit:instanceOf(Plant)) then
+		if (unit:instanceOf(Plant) and otherUnit:instanceOf(Plant) and not unit.isShield and otherUnit.isShield) then
+			return self:insertUnit(unit, i)
+		end
+		if (unit.y < otherUnit.y) or (unit.y == otherUnit.y and unit:instanceOf(Plant) and not otherUnit:instanceOf(Plant)) then
 			return self:insertUnit(unit, i)
 		end
 	end

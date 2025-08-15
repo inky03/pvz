@@ -124,7 +124,9 @@ function Unit:queryCollision(kind, filter, baseX, baseY)
 	
 	local closest, closestDist = nil, nil
 	
-	for _, unit in ipairs(self.board.units) do
+	local units = self.board.units
+	for i = #units, 1, -1 do
+		local unit = units[i]:proxy()
 		if (not kind or unit:instanceOf(kind)) and unit:hurtboxOnScreen() and self:collidesWith(unit) and (not filter or filter(unit)) then
 			local xA, yA = self:getHitboxCenter(baseX, baseY)
 			local xB, yB = unit:getHurtboxCenter()
@@ -182,6 +184,7 @@ function Unit:drawShadow(x, y)
 	
 	love.graphics.draw(self.shadow, x + self.shadowOffset.x, y + self.shadowOffset.y)
 end
+function Unit:drawBack(x, y) end
 function Unit:draw(x, y, transforms)
 	Unit.pvzShader:send('frost', (self.frost > 0 and 1 or 0))
 	Unit.pvzShader:send('glow', self.selected and 1 or self.glow + self.damageGlow)
@@ -208,6 +211,10 @@ function Unit:drawSeedPacket()
 	self.xOffset, self.yOffset = 0, 0
 	self.transform:setScale(.5, .5)
 	self:render(4.75, 8.75)
+end
+
+function Unit:__tostring()
+	return ('%s(hp:%d, maxHp:%d)'):format(self.class.name, math.round(self.hp), math.round(self.maxHp))
 end
 
 return Unit
