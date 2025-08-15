@@ -215,10 +215,12 @@ function Lawn:tryPlant(entity, eval)
 			entity:onPlant()
 			self:onPlant(entity, entity.boardX, entity.boardY)
 			
-			if shield == entity then
-				entity:protect(plant)
-			elseif shield == plant then
-				plant:protect(entity)
+			if shield then
+				if shield == entity then
+					entity:protect(plant)
+				elseif shield == plant then
+					plant:protect(entity)
+				end
 			end
 		else
 			carrier:plantOnTop(entity)
