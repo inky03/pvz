@@ -1,10 +1,16 @@
 local Lawn = Cache.module('pvz.lawn.Lawn')
 local SeedBank = Cache.module('pvz.hud.SeedBank')
-local Challenge = UIContainer:extend('Challenge')
+local WaveMeter = Cache.module('pvz.hud.WaveMeter')
+
+local Sun = Cache.module('pvz.lawn.collectibles.Sun')
 local FlagZombie = Cache.module(Cache.zombies('FlagZombie'))
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
-local WaveMeter = Cache.module('pvz.hud.WaveMeter')
-local Sun = Cache.module('pvz.lawn.collectibles.Sun')
+
+local StreetViewCutscene = Cache.module('pvz.lawn.cutscenes.StreetViewCutscene')
+local LawnPrepareCutscene = Cache.module('pvz.lawn.cutscenes.LawnPrepareCutscene')
+local ReadySetPlantCutscene = Cache.module('pvz.lawn.cutscenes.ReadySetPlantCutscene')
+
+local Challenge = State:extend('Challenge')
 
 Challenge.wavesPerFlag = 10
 Challenge.maxZombiesInWave = 50
@@ -13,8 +19,17 @@ Challenge.adventureIds = {}
 
 Challenge.lawn = Lawn
 
+Challenge.streetZombieGridPosition = {
+	x = 830 + 220;
+	y = 70;
+}
+Challenge.streetZombieGridSize = {
+	x = 56;
+	y = 90;
+}
+
 function Challenge:init(challenge)
-	UIContainer.init(self, 0, 0, game.w, game.h)
+	State.init(self)
 	
 	self.flagWaves = {}
 	self.waveZombies = {}
@@ -24,6 +39,7 @@ function Challenge:init(challenge)
 	self.healthToNextWave = -1
 	self.startWaveHealth = 0
 	self.hugeWaveCountdown = 0
+	self.challengeStarted = false
 	self.challengeCompleted = false
 	
 	self.sunCountdown = (Constants.sunCountdown + random.int(Constants.sunCountdownRange))
@@ -46,10 +62,26 @@ function Challenge:init(challenge)
 	self.waveMeter.visible = false
 	self.waveMeterWidth = 0
 	
+	self.hugeWaveAnimation = self:addElement(Reanimation:new('TextFadeOn'))
+	self.hugeWaveAnimation.animation:add('enter', 'enter', false)
+	self.hugeWaveAnimation.animation:add('leave', 'leave', false)
+	self.hugeWaveAnimation.animation:play('enter', true)
+	self.hugeWaveAnimation.animation.speed = 3
+	self.hugeWaveAnimation.drawToTop = true
+	self.hugeWaveAnimation.visible = false
+	local hugeWaveFont = Font:new('HouseOfTerror', 28, 0, 0, 800, 600)
+	hugeWaveFont:setText(Strings:get('ADVICE_HUGE_WAVE'))
+	hugeWaveFont:setLayerColor('Main', 1, 0, 0)
+	hugeWaveFont:setAlignment('center', 'center')
+	self.hugeWaveAnimation:attach('locator_text', hugeWaveFont, 'leave')
+	
 	self.challengeText = self:addElement(Font:new('HouseOfTerror', 16, gameWidth - 300 - 14, gameHeight - 29, 300, 16))
 	self.challengeText:setLayerColor('Main', 223 / 255, 186 / 255, 97 / 255)
 	self.challengeText:setAlignment('right')
 	self.challengeText:setText(self.challengeTitle)
+	
+	self.streetZombieGrid = table.populate(5, table.populate(5, false))
+	self.streetZombies = {}
 	
 	self.collectibles = self:addElement(UIContainer:new(0, 0, gameWidth, gameHeight))
 	self.collectibles.drawToTop = true
@@ -64,9 +96,28 @@ function Challenge:init(challenge)
 	self.debugInfo = Font:new('Pico12', 9, 0, 0, 220, 120)
 	self.challengeDebug = true
 	
+	self.seeds:kill()
+	self.onStartCutscene:add(function(_) self:stopChallenge() end, 'stopChallenge')
+	self.onCutscenesFinished:add(function() self:startChallenge() end, 'startChallenge')
+	self:queueCutscenes(challenge)
+	
 	trace('Challenge ' .. self.challenge)
 end
 
+function Challenge:queueCutscenes(challenge)
+	self:queueCutscene(StreetViewCutscene)
+	self:queueCutscene(LawnPrepareCutscene)
+	self:queueCutscene(ReadySetPlantCutscene)
+end
+
+function Challenge:startChallenge()
+	self.challengeStarted = true
+	self.challengeText:revive()
+end
+function Challenge:stopChallenge()
+	self.challengeStarted = false
+	self.challengeText:kill()
+end
 function Challenge:initWaves()
 	table.clear(self.flagWaves)
 	table.clear(self.waveZombies)
@@ -148,15 +199,86 @@ function Challenge:queueZombie(wave, zombie)
 	return zombie
 end
 
-function Challenge:update(dt)
-	UIContainer.update(self, dt)
+function Challenge:placeStreetZombies(challenge)
+	local zombieValueTotal = 0
+	local totalZombieCount = 0
+	local zombieTypeCounts = {}
 	
-	self:updateSun(dt)
-	self:updateChallenge(dt)
-	self:updateWaveMeter(dt)
+	for _, waveZombies in ipairs(self.waveZombies) do
+		for _, zombie in ipairs(waveZombies) do
+			if zombie.showOnStreet then
+				totalZombieCount = (totalZombieCount + 1)
+				zombieValueTotal = (zombieValueTotal + zombie.value)
+				zombieTypeCounts[zombie] = ((zombieTypeCounts[zombie] or 0) + 1)
+			end
+		end
+	end
+	
+	local previewCapacity = 10
+	
+	for zombie in pairs(zombieTypeCounts) do
+		-- self:placeStreetZombie(zombie) reserved for special zombies, apparently ...
+	end
+	for zombie, count in pairs(zombieTypeCounts) do
+		for i = 1, math.clamp(math.round(count * previewCapacity / totalZombieCount), 1, count) do
+			self:placeStreetZombie(zombie)
+		end
+	end
+end
+function Challenge:findPlaceForStreetZombie(zombie)
+	local open = {}
+	
+	for y, row in ipairs(self.streetZombieGrid) do
+		for x, col in ipairs(row) do
+			if not col and self.lawn:canStreetZombieBeAt(x, y) then
+				table.insert(open, {x = x; y = y})
+			end
+		end
+	end
+	
+	if #open > 0 then
+		local coord = random.object(open)
+		self.streetZombieGrid[coord.y][coord.x] = true
+		return coord.x, coord.y
+	else
+		trace('No place for street zombie')
+		return 3, 3
+	end
+end
+function Challenge:placeStreetZombie(zombie)
+	local gridX, gridY = self:findPlaceForStreetZombie(zombie)
+	local gridXX, gridYY = (gridX - 1), (gridY - 1)
+	
+	local posX = (self.streetZombieGridPosition.x + gridXX * self.streetZombieGridSize.x + random.int(15))
+	local posY = (self.streetZombieGridPosition.y + gridYY * self.streetZombieGridSize.y + random.int(15))
+	if (gridXX % 2 == 1) then
+		posY = (posY + 30)
+	end
+	
+	local zombie = self.lawn:spawnUnit(zombie:new(0, 0, self), self.lawn:getBoardPosition(posX, posY))
+	zombie:setState('idle')
+	
+	table.insert(self.streetZombies, zombie)
+	return zombie
+end
+function Challenge:clearStreetZombies()
+	for _, zombie in ipairs(self.streetZombies) do
+		zombie:destroy()
+	end
+	table.clear(self.streetZombies)
+end
+
+function Challenge:update(dt)
+	State.update(self, dt)
+	
+	if self.challengeStarted and not self.challengeCompleted then
+		self:updateSun(dt)
+		self:updateChallenge(dt)
+		self:updateWaveMeter(dt)
+	end
 end
 function Challenge:updateSun(dt)
-	if not self.flags.fallingSun or self.challengeCompleted then return end
+	if not self.flags.fallingSun then return end
 	
 	if self.sunCountdown > 0 then
 		self.sunCountdown = (self.sunCountdown - dt * Constants.tickPerSecond)
@@ -173,8 +295,6 @@ function Challenge:spawnSun()
 	return self.collectibles:addElement(Sun:new(random.int(100, 649), 60, 'rain', self.seeds))
 end
 function Challenge:updateChallenge(dt)
-	if self.challengeCompleted then return end
-	
 	self.currentWaveHealth = self:getCurrentWaveHealth()
 	
 	local nextWaveIsFlag = self:isFlagWave(self.currentWave + 1)
@@ -197,8 +317,11 @@ function Challenge:updateChallenge(dt)
 		self.hugeWaveCountdown = (self.hugeWaveCountdown - dt * Constants.tickPerSecond)
 		if self.hugeWaveCountdown <= 725 and prevCountdown > 725 then
 			Sound.play('hugewave')
+		elseif self.hugeWaveCountdown <= 200 and prevCountdown > 200 then
+			self.hugeWaveAnimation.animation:play('leave', true)
 		end
 		if self.hugeWaveCountdown <= 0 then
+			self.hugeWaveAnimation.visible = false
 			self.zombieCountdown = 0
 		else
 			return
@@ -212,6 +335,7 @@ function Challenge:updateChallenge(dt)
 		self.zombieCountdown = 200
 	elseif self.zombieCountdown <= 5 then
 		if not self.hugeWaveComing and nextWaveIsFlag then
+			self:showHugeWaveMessage()
 			self.hugeWaveCountdown = 750
 			self.hugeWaveComing = true
 			return
@@ -356,6 +480,10 @@ end
 function Challenge:zombieCanSpawnInRow(zombie, row)
 	return Zombie:canBeSpawnedAt(self.lawn, self.lawn.size.x, row)
 end
+function Challenge:showHugeWaveMessage()
+	self.hugeWaveAnimation.animation:play('enter', true)
+	self.hugeWaveAnimation.visible = true
+end
 function Challenge:showFinalWaveMessage()
 	local finalWave = Reanimation:new('FinalWave', 0, 30)
 	finalWave.animation.onFrame:add(function(animation) if animation.frame == 7 then Sound.play('finalwave') end end)
@@ -368,7 +496,7 @@ end
 function Challenge:drawWindow()
 	if not self.visible then return end
 	
-	if debugMode or self.debug or self.challengeDebug then
+	if (debugMode or self.debug or self.challengeDebug) and self.challengeStarted then
 		love.graphics.setCanvas(debugCanvas)
 		
 		local debugString = ('challenge %d\n'):format(self.challenge)
@@ -434,9 +562,12 @@ function Challenge:drawWindow()
 		love.graphics.setCanvas()
 	end
 	
-	UIContainer.drawWindow(self)
+	State.drawWindow(self)
 end
 
+function Challenge:getHouseMessage(challenge)
+	return Strings:get('PLAYERS_HOUSE')
+end
 function Challenge:getWaveCount(challenge)
 	return 10
 end
@@ -445,7 +576,7 @@ function Challenge:getZombies(challenge)
 end
 function Challenge:getFlags(challenge)
 	return {
-		startingSun = 950;
+		startingSun = 50;
 		fallingSun = true;
 	}
 end
