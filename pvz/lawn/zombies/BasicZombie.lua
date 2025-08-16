@@ -23,6 +23,7 @@ function BasicZombie:init(x, y, challenge)
 	self:toggleLayer('Zombie_flaghand', false)
 	self:toggleLayer('Zombie_innerarm_screendoor', false)
 	
+	self.animation:add('idle', random.object('idle', 'idle2'))
 	self.animation:add('walk', random.object('walk', 'walk2'))
 	self.animation:add('eating', 'eat')
 	self.animation:play('walk', true)

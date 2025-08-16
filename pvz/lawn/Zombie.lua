@@ -5,6 +5,8 @@ Zombie.reanimName = 'Zombie'
 Zombie.maxHelmHp = 0
 Zombie.maxShieldHp = 0
 
+Zombie.showOnStreet = true
+
 -- wave definition
 Zombie.value = 1
 Zombie.pickWeight = 0
@@ -97,6 +99,8 @@ function Zombie:setState(state)
 		self.animation:play('walk')
 	elseif state == 'eating' then
 		self.animation:play('eating')
+	elseif state == 'idle' then
+		self.animation:play('idle')
 	end
 end
 
@@ -143,7 +147,7 @@ function Zombie.getSpawnOffset()
 	return random.number(10, 50)
 end
 function Zombie:canGroan()
-	return (random.int(0, #self.challenge:getSpawnedZombies()) == 0 and self.state ~= 'dead')
+	return (self.state ~= 'dead' and self.state ~= 'eating' and self.state ~= 'idle' and random.int(0, #self.challenge:getSpawnedZombies()) == 0)
 end
 
 return Zombie

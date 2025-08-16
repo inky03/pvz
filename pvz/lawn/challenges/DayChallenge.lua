@@ -1,6 +1,8 @@
 local DayLawn = Cache.module('pvz.lawn.stages.DayLawn')
 local DayChallenge = Challenge:extend('DayChallenge')
 
+local SodRollCutscene = Cache.module('pvz.lawn.cutscenes.SodRollCutscene')
+
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 local ConeHeadZombie = Cache.module(Cache.zombies('ConeHeadZombie'))
 local BucketHeadZombie = Cache.module(Cache.zombies('BucketHeadZombie'))
@@ -40,7 +42,25 @@ function DayChallenge:getWaveCount(challenge)
 end
 
 function DayChallenge:getTitle(challenge)
-	return ('Level %d-%d'):format(1, challenge)
+	return ('%s %d-%d'):format(Strings:get('LEVEL'), 1, challenge)
+end
+
+function DayChallenge:queueCutscenes(challenge)
+	Challenge.queueCutscenes(self, challenge)
+	
+	local sodRows
+	if challenge == 1 then sodRows = { 3 }
+	elseif challenge == 2 then sodRows = { 2 ; 4 }
+	elseif challenge == 4 then sodRows = { 1 ; 5 } end
+	
+	if sodRows then
+		self.lawn.sodRollX = 0
+		self:queueCutscene(SodRollCutscene, self:findCutsceneIndex('LawnPrepareCutscene'), sodRows)
+	end
+	
+	if challenge <= 2 then
+		self:dequeueCutscene('ReadySetPlantCutscene')
+	end
 end
 
 return DayChallenge

@@ -6,9 +6,9 @@ function ReanimAnimationFrame:init(frame)
 	self.attachments = {}
 end
 
-function ReanimAnimationFrame:attachReanim(reanim, transform)
+function ReanimAnimationFrame:attach(object, transform)
 	table.insert(self.attachments, {
-		reanim = reanim;
+		object = object;
 		transform = transform;
 	})
 end

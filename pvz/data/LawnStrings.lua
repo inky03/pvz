@@ -1,0 +1,3 @@
+local LawnStrings = {}
+
+return LawnStrings

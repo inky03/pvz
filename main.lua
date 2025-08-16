@@ -1,36 +1,10 @@
-utils = require 'utils'
-require 'table.clear'
+require 'import'
 
-class = require 'lib.30log'
-xml = require 'lib.xml'
-
-Sound = require 'pvz.Sound'
-Cache = require 'pvz.Cache'
-Signal = require 'pvz.Signal'
-Constants = require 'pvz.Constants'
-UIContainer = require 'pvz.hud.UIContainer'
-
-Font = require 'pvz.font.Font'
-Reanimation = require 'pvz.reanim.Reanimation'
-
-Unit = require 'pvz.lawn.Unit'
-Plant = require 'pvz.lawn.Plant'
-Zombie = require 'pvz.lawn.Zombie'
-Projectile = require 'pvz.lawn.Projectile'
-Collectible = require 'pvz.lawn.Collectible'
-Challenge = require 'pvz.lawn.Challenge'
-
-math.randomseed(os.clock())
-print('PVZ')
-
-game = nil
-level = nil
-
-local pointer = love.mouse.newCursor(love.image.newImageData('resources/cursor.png'))
-local hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'), 4)
+trace('PVZ')
 
 gameWidth, gameHeight = love.graphics.getDimensions()
 hoveringElement = nil
+accumulator = 0
 
 local gc = 0
 local objs = 0
@@ -39,19 +13,19 @@ local gcTimer = 0
 local fpsCount = 0
 local drawtime = {}
 
-local accumulator = 0
-
 function love.load()
 	debugMode = flags.debugMode
-	
-	love.mouse.setCursor(pointer)
-	-- love.window.setFullscreen(true, 'desktop')
-	game = UIContainer:new(0, 0, gameWidth, gameHeight)
-	level = game:addElement(Cache.module('pvz.lawn.challenges.PoolChallenge'):new(21))
-	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
+	math.randomseed(os.clock())
+	reloadCursors()
 	
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('rough')
+	love.mouse.setCursor(cursors.pointer)
+	-- love.window.setFullscreen(true, 'desktop')
+	
+	game = UIContainer:new(0, 0, gameWidth, gameHeight)
+	level = game:addElement(Cache.module('pvz.lawn.challenges.PoolChallenge'):new(21))
+	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
 	
 	debugCanvas = love.graphics.newCanvas(220, 200)
 	
@@ -87,10 +61,16 @@ end
 function updateCursor()
 	if hoveringElement then hoveringElement:setHovering(true) end
 	if hoveringElement and hoveringElement.useHand and hoveringElement:canBeClicked() then
-		love.mouse.setCursor(hand)
+		love.mouse.setCursor(cursors.hand)
 	else
-		love.mouse.setCursor(pointer)
+		love.mouse.setCursor(cursors.pointer)
 	end
+end
+function reloadCursors()
+	cursors = {
+		pointer = love.mouse.newCursor(love.image.newImageData('resources/cursor.png'));
+		hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'), 4);
+	}
 end
 
 function love.update(dt)
@@ -114,7 +94,7 @@ end
 
 function love.draw()
 	love.graphics.setCanvas(debugCanvas)
-	love.graphics.clear() -- 0, 0, 0, .05)
+	love.graphics.clear()
 	love.graphics.setCanvas()
 	
 	local ratio = getAspectRatio()

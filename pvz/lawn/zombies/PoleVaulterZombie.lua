@@ -15,6 +15,7 @@ function PoleVaulterZombie:init(x, y, challenge)
 	self.poleUsed = false
 	
 	self.animation:add('run', 'run')
+	self.animation:add('idle', 'idle')
 	self.animation:add('walk', 'walk')
 	self.animation:add('eating', 'eat')
 	self.animation:add('jump', 'jump', false)

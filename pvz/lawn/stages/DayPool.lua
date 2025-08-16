@@ -61,4 +61,8 @@ function DayPool:drawTop(x, y) -- draw units
 	UIContainer.drawTop(self, x, y)
 end
 
+function DayPool:canStreetZombieBeAt(col, row)
+	return (col > 1)
+end
+
 return DayPool

@@ -6,6 +6,8 @@ function UIContainer:init(x, y, w, h)
 	self.canClickChildren = true
 	self.drawToTop = false
 	self.canClick = true
+	self.active = true
+	self.alive = true
 	
 	self.hovering = false
 	self.useHand = false
@@ -23,6 +25,12 @@ function UIContainer:addElement(element)
 	table.insert(self.children, element)
 	element.parent = self
 	return element
+end
+function UIContainer:kill()
+	self.alive = false
+end
+function UIContainer:revive()
+	self.alive = true
 end
 function UIContainer:destroy()
 	if self.parent then
@@ -114,7 +122,7 @@ end
 
 function UIContainer:update(dt)
 	for _, child in ipairs(self.children) do
-		child:update(dt)
+		if child.active and child.alive then child:update(dt) end
 	end
 end
 
@@ -122,7 +130,7 @@ function UIContainer:draw(x, y)
 	if not self.visible then return end
 	
 	for _, child in ipairs(self.children) do
-		if not child.drawToTop then
+		if not child.drawToTop and child.alive then
 			child:draw(child.x + x, child.y + y)
 		end
 	end
@@ -133,7 +141,7 @@ function UIContainer:drawTop(x, y)
 	if not self.visible then return end
 	
 	for _, child in ipairs(self.children) do
-		if child.drawToTop then
+		if child.drawToTop and child.alive then
 			child:draw(child.x + x, child.y + y)
 		end
 		child:drawTop(child.x + x, child.y + y)
@@ -143,7 +151,9 @@ function UIContainer:drawWindow()
 	if not self.visible then return end
 	
 	for _, child in ipairs(self.children) do
-		child:drawWindow()
+		if child.alive then
+			child:drawWindow()
+		end
 	end
 end
 function UIContainer:debugDraw(x, y)

@@ -49,7 +49,7 @@ function AnimationController:update(dt, noDiff)
 	if self.paused or not self.reanim then return end
 	
 	lambda.foreach(self.list, function(anim)
-		local active = (anim == self._cur or anim == self._prev)
+		local active = ((anim == self._cur and self.crossFade >= 1) or (anim == self._prev and self.crossFade <= 0))
 		if active or self.parallel[anim.name] then
 			anim:update(dt * self.speed, active)
 		end
@@ -101,7 +101,7 @@ function AnimationController:updateFrame(dt)
 		)
 		
 		for _, attachment in ipairs(layer.attachments) do
-			attachment.reanim:update(dt)
+			attachment.object:update(dt)
 		end
 	end
 end
@@ -110,7 +110,7 @@ function AnimationController:framesToSeconds(n)
 	return (n / self.reanim.fps / self.speed)
 end
 
-function AnimationController:attachReanim(layer, reanim, basePose)
+function AnimationController:attach(layer, object, basePose)
 	local basePose = (basePose or self.name)
 	local baseLayer = self:getLayer(layer)
 	
@@ -134,7 +134,7 @@ function AnimationController:attachReanim(layer, reanim, basePose)
 			return
 		end
 		
-		baseLayer:attachReanim(reanim, transform)
+		baseLayer:attach(object, transform)
 	else
 		print(('%s: Layer %s doesn\'t exist'):format(self.reanim.name, track))
 	end

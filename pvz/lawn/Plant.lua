@@ -75,7 +75,7 @@ function Plant:onUnprotect(shield) end
 
 function Plant:attachBlink(target, layer)
 	local target, layer = (target or self), (layer or 'idle')
-	if self.blinkReanim then target:attachReanim(layer, self.blinkReanim, layer) end
+	if self.blinkReanim then target:attach(layer, self.blinkReanim, layer) end
 end
 
 function Plant:update(dt)

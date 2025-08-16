@@ -320,6 +320,10 @@ function Lawn:debugDraw(x, y)
 	end
 end
 
+function Lawn:canStreetZombieBeAt(col, row)
+	return true
+end
+
 function Lawn:getDimensions()
 	return self:getWorldPosition(self:getWidth(), self:getHeight())
 end

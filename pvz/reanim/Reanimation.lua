@@ -1,4 +1,4 @@
-Reanim = require 'pvz.reanim.Reanim'
+Reanim = require 'pvz.data.Reanim'
 AnimationController = require 'pvz.reanim.animation.AnimationController'
 
 local Reanimation = UIContainer:extend('Reanimation')
@@ -62,8 +62,8 @@ function Reanimation:replaceImage(image, newResource)
 	
 	trace(('%s: Could not find image ID %s'):format(self.reanim.name, tostr(img)))
 end
-function Reanimation:attachReanim(layer, reanim, basePose, offset)
-	return self.animation:attachReanim(layer, reanim, basePose, offset)
+function Reanimation:attach(layer, object, basePose, offset)
+	return self.animation:attach(layer, object, basePose, offset)
 end
 function Reanimation:getAnimationLayer(layer)
 	return self.animation:getLayer(layer)
@@ -183,10 +183,11 @@ function Reanimation.drawReanim(layers, textures, x, y, hiddenLayers)
 			end
 			
 			if #frame.attachments > 0 then
-				for _, attachment in ipairs(frame.attachments) do
-					local reanim = attachment.reanim
-					if reanim.visible then
-						reanim:render(x, y, {attachment.transform, reanim.transforms, frame})
+				for i = 1, #frame.attachments do
+					local attachment = frame.attachments[i]
+					local object = attachment.object
+					if object.visible then
+						object:render(x, y, {attachment.transform, object.transforms, frame})
 					end
 				end
 			end

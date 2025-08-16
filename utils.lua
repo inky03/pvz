@@ -87,6 +87,18 @@ end
 
 -- table
 
+function table.populate(entries, val)
+	local tbl = {}
+	for i = 1, entries do
+		if type(val) == 'table' then
+			table.insert(tbl, table.copy(val))
+		else
+			table.insert(tbl, val)
+		end
+	end
+	return tbl
+end
+
 function table.copy(tbl, track)
 	local new = {}
 	local track = (track or {})

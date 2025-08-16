@@ -27,8 +27,12 @@ function PoolChallenge:getWaveCount(challenge)
 	return (counts[challenge] or 10)
 end
 
+function PoolChallenge:getHouseMessage(challenge)
+	return Strings:get('PLAYERS_BACKYARD')
+end
+
 function PoolChallenge:getTitle(challenge)
-	return ('Level %d-%d'):format(3, challenge - 20)
+	return ('%s %d-%d'):format(Strings:get('LEVEL'), 3, challenge - 20)
 end
 
 return PoolChallenge

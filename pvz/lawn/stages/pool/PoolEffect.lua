@@ -26,21 +26,9 @@ function PoolEffect:init(pool, x, y)
 	
 	UIContainer.init(self, x, y, self.texture:getPixelDimensions())
 	
-	local function populate(entries, val)
-		local t = {}
-		for i = 1, entries do
-			if type(val) == 'table' then
-				table.insert(t, table.copy(val))
-			else
-				table.insert(t, val)
-			end
-		end
-		return t
-	end
-	
-	self.offsets = populate(3, populate(16, populate(6, {0, 0}))) -- ummm
-	self.verts = populate(#self.offsets, populate(150, populate(3, {-100, -100, -100, -100, 1, 1, 1, 1}))) -- yea!
-	self.vertMap = populate(#self.verts, {})
+	self.offsets = table.populate(3, table.populate(16, table.populate(6, {0, 0}))) -- ummm
+	self.verts = table.populate(#self.offsets, table.populate(150, table.populate(3, {-100, -100, -100, -100, 1, 1, 1, 1}))) -- yea!
+	self.vertMap = table.populate(#self.verts, {})
 	for a = 1, 3 do
 		for b = 1, 150 do
 			for c = 1, 3 do

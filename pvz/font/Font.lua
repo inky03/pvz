@@ -1,4 +1,4 @@
-FontData = require 'pvz.font.FontData'
+FontData = require 'pvz.data.FontData'
 
 local Font = UIContainer:extend('Font')
 
@@ -230,11 +230,18 @@ function Font:renderCanvas(x, y, transforms)
 	local active = true
 	local alpha = 1
 	
-	for i = 1, #stack do
-		local transform = stack[i]
-		active = (active and transform.active)
-		alpha = (alpha * transform.alpha)
+	local function transform(frame)
+		if type(frame) == 'table' and not class.isInstance(frame) then
+			for _, frame in ipairs(frame) do
+				transform(frame)
+			end
+			return
+		end
+		
+		active = (active and frame.active)
+		alpha = (alpha * frame.alpha)
 	end
+	transform(stack)
 	
 	if active and alpha > 0 then
 		local mesh = Reanimation.triangle

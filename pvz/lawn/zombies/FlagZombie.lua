@@ -1,6 +1,8 @@
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 local FlagZombie = BasicZombie:extend('FlagZombie')
 
+FlagZombie.showOnStreet = false
+
 function FlagZombie:init(x, y, challenge)
 	BasicZombie.init(self, x, y, challenge)
 	
@@ -13,7 +15,7 @@ function FlagZombie:init(x, y, challenge)
 	
 	self.flag = Reanimation:new('Zombie_flagpole')
 	self.flag.transform:setPosition(33, 15)
-	self:attachReanim('Zombie_flaghand', self.flag, 'idle')
+	self:attach('Zombie_flaghand', self.flag, 'idle')
 	
 	self.animation:get('walk'):setTrack(self.reanim:getTrack('walk2'))
 	self.animation:get('walk').speed = random.number(1.1, 1.25)

@@ -14,7 +14,7 @@ function PeaShooterZombie:init(x, y, challenge)
 	self.plantHead.animation:add('idle', 'head_idle')
 	self.plantHead.animation:play('idle', true)
 	self.plantHead.transform:set(-68, -6, -10, -10, -1, 1)
-	self:attachReanim('head1', self.plantHead, 'idle')
+	self:attach('head1', self.plantHead, 'idle')
 	
 	self.animation:get('walk'):setTrack(self.reanim:getTrack('walk2'))
 end

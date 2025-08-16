@@ -213,8 +213,12 @@ function Unit:drawSeedPacket()
 	self:render(4.75, 8.75)
 end
 
-function Unit:__tostring()
-	return ('%s(hp:%d, maxHp:%d)'):format(self.class.name, math.round(self.hp), math.round(self.maxHp))
+function Unit.__tostring(self)
+	if self.class then
+		return ('%s(hp:%d, maxHp:%d)'):format(self.class.name, math.round(self.hp), math.round(self.maxHp))
+	else
+		return ('%s(maxHp:%d)'):format(self.name, math.round(self.maxHp))
+	end
 end
 
 return Unit
