@@ -9,11 +9,10 @@ Cache = require 'pvz.Cache'
 Signal = require 'pvz.Signal'
 Constants = require 'pvz.Constants'
 UIContainer = require 'pvz.hud.UIContainer'
-
 Curve = require 'pvz.animate.Curve'
 
 Font = require 'pvz.font.Font'
-Strings = require('pvz.strings.Strings')
+Strings = require 'pvz.strings.Strings'
 Reanimation = require 'pvz.reanim.Reanimation'
 
 Unit = require 'pvz.lawn.Unit'

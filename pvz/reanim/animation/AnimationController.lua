@@ -48,12 +48,13 @@ end
 function AnimationController:update(dt, noDiff)
 	if self.paused or not self.reanim then return end
 	
-	lambda.foreach(self.list, function(anim)
+	for i = 1, #self.list do
+		local anim = self.list[i]
 		local active = ((anim == self._cur and self.crossFade >= 1) or (anim == self._prev and self.crossFade <= 0))
 		if active or self.parallel[anim.name] then
 			anim:update(dt * self.speed, active)
 		end
-	end)
+	end
 	
 	local ground, groundX = self._cur:getLayer('_ground'), 0
 	if ground then groundX = ground.x end

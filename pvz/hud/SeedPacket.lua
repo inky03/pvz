@@ -71,7 +71,7 @@ function SeedPacket:mousePressed(mouseX, mouseY, button)
 end
 
 function SeedPacket:update(dt)
-	if self.recharged < self.maxRecharge then
+	if self.lawn.challenge.challengeStarted and self.recharged < self.maxRecharge then
 		self.recharged = math.min(self.recharged + dt * Constants.tickPerSecond, self.maxRecharge)
 	end
 	
@@ -100,10 +100,14 @@ function SeedPacket:draw(x, y)
 	love.graphics.draw(self.displayCanvas, x, y)
 	love.graphics.setBlendMode('alpha')
 	
-	if not self.ready then
+	local challengeStarted = self.lawn.challenge.challengeStarted
+	if not self.ready or not challengeStarted then
 		love.graphics.setColor(0, 0, 0, .5)
 		love.graphics.rectangle('fill', x, y, self.w, self.h)
-		love.graphics.rectangle('fill', x, y, self.w, self.h * (self.picking and 1 or 1 - self.recharged / self.maxRecharge))
+		
+		if challengeStarted then
+			love.graphics.rectangle('fill', x, y, self.w, self.h * (self.picking and 1 or 1 - self.recharged / self.maxRecharge))
+		end
 	end
 	
 	UIContainer.draw(self, x, y)

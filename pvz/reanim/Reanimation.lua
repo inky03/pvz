@@ -205,8 +205,8 @@ function Reanimation.transformVertex(vert, frame, scaleCoords)
 	if frame == nil then return end
 	
 	if type(frame) == 'table' and not class.isInstance(frame) then
-		for _, frame in ipairs(frame) do
-			Reanimation.transformVertex(vert, frame, scaleCoords)
+		for i = 1, #frame do
+			Reanimation.transformVertex(vert, frame[i], scaleCoords)
 		end
 		return
 	end
