@@ -29,7 +29,7 @@ function StreetViewCutscene:update(dt)
 		Curve.animate(self.timePanRightStart, self.timePanRightEnd, self.counter, 0, self.panRightX, self.panCurve)
 	, self.panLeftX, self.panCurve)
 	
-	if self.counter >= 2250 then
+	if self.counter >= 2350 then
 		self.houseMessage.transform.alpha = math.max(self.houseMessage.transform.alpha - dt * 10, 0)
 	end
 	

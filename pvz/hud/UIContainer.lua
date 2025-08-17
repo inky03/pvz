@@ -85,6 +85,8 @@ function UIContainer:setHitbox(x, y, w, h)
 end
 
 function UIContainer:getHoveringElement(mouseX, mouseY)
+	if not self.alive then return nil end
+	
 	if self.canClickChildren then
 		for i = #self.children, 1, -1 do
 			local child = self.children[i]

@@ -63,4 +63,14 @@ function DayChallenge:queueCutscenes(challenge)
 	end
 end
 
+function DayChallenge:getFlags(challenge)
+	local flags = Challenge.getFlags(self, challenge)
+	
+	if challenge == 1 then
+		flags.startingSun = 150
+	end
+	
+	return flags
+end
+
 return DayChallenge

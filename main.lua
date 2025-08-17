@@ -4,6 +4,7 @@ trace('PVZ')
 
 gameWidth, gameHeight = love.graphics.getDimensions()
 hoveringElement = nil
+username = 'Player'
 accumulator = 0
 
 local gc = 0
@@ -23,6 +24,7 @@ function love.load()
 	love.mouse.setCursor(cursors.pointer)
 	-- love.window.setFullscreen(true, 'desktop')
 	
+	Strings:reload()
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
 	level = game:addElement(Cache.module('pvz.lawn.challenges.PoolChallenge'):new(21))
 	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)

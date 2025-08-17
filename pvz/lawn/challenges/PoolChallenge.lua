@@ -28,7 +28,7 @@ function PoolChallenge:getWaveCount(challenge)
 end
 
 function PoolChallenge:getHouseMessage(challenge)
-	return Strings:get('PLAYERS_BACKYARD')
+	return Strings:get('PLAYERS_BACKYARD', {PLAYER = username})
 end
 
 function PoolChallenge:getTitle(challenge)

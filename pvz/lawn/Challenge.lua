@@ -566,7 +566,7 @@ function Challenge:drawWindow()
 end
 
 function Challenge:getHouseMessage(challenge)
-	return Strings:get('PLAYERS_HOUSE')
+	return Strings:get('PLAYERS_HOUSE', {PLAYER = username})
 end
 function Challenge:getWaveCount(challenge)
 	return 10
