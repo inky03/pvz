@@ -1,15 +1,38 @@
 local State = UIContainer:extend('CutsceneState')
 
-function State:init()
+State.pauseState = false
+
+function State:init(superState)
 	UIContainer.init(self, 0, 0, game.w, game.h)
 	
 	self.cutscenes = {}
 	self.activeCutscene = nil
-	self.pausedOnCutscene = false
+	
+	self.subState = nil
+	self.updateFun = self.tryUpdate
 	
 	self.onStartCutscene = Signal:new()
 	self.onFinishCutscene = Signal:new()
 	self.onCutscenesFinished = Signal:new()
+	
+	self.onOpenSubState = Signal:new()
+	self.onCloseSubState = Signal:new()
+end
+
+function State:openSubState(subState, ...)
+	if self.subState then
+		trace('Sub-state (' .. tostring(self.subState) .. ') is already open')
+		return
+	elseif not subState then
+		trace('Sub-state is invalid')
+		return
+	end
+	
+	self.subState = self:addElement(subState:new(self, ...))
+end
+function State:close()
+	self.parent.subState = nil
+	self:destroy()
 end
 
 function State:queueCutscene(cutscene, pos, ...)
@@ -59,17 +82,17 @@ function State:startNextCutscene()
 	end
 end
 
-function State:update(dt)
+function State:tryUpdate(dt)
 	if not self.activeCutscene and #self.cutscenes > 0 then
 		self:startNextCutscene()
 	end
 	
-	if self.activeCutscene and self.pausedOnCutscene then
+	if self.subState and self.subState.pauseState then
+		self.subState:update(dt)
+	elseif self.activeCutscene and self.activeCutscene.pauseState then
 		self.activeCutscene:update(dt)
-	end
-	
-	if not self.pausedOnCutscene or not self.activeCutscene then
-		UIContainer.update(self, dt)
+	else
+		self:update(dt)
 	end
 end
 

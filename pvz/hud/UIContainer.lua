@@ -1,6 +1,7 @@
 local UIContainer = class('UIContainer')
 
 UIContainer.hitbox = nil
+UIContainer.useHand = false
 
 function UIContainer:init(x, y, w, h)
 	self.canClickChildren = true
@@ -10,7 +11,6 @@ function UIContainer:init(x, y, w, h)
 	self.alive = true
 	
 	self.hovering = false
-	self.useHand = false
 	self.visible = true
 	self.debug = false
 	self.children = {}
@@ -104,9 +104,31 @@ function UIContainer:getHoveringElement(mouseX, mouseY)
 	return ((math.within(xx, self.hitbox.x, self.hitbox.x + ww) and math.within(yy, self.hitbox.y, self.hitbox.y + hh)) and self or nil)
 end
 
+
+function UIContainer:mouseMoved(mouseX, mouseY, deltaX, deltaY, isTouch) end
 function UIContainer:mousePressed(mouseX, mouseY, button, isTouch, presses) end
 function UIContainer:mouseReleased(mouseX, mouseY, button, isTouch, presses) end
-function UIContainer:mouseMoved(mouseX, mouseY, deltaX, deltaY, isTouch, input) end
+function UIContainer:mouseMovedAnywhere(mouseX, mouseY, deltaX, deltaY, isTouch)
+	for _, child in ipairs(self.children) do
+		if child.active and child.alive then
+			child:mouseMovedAnywhere(mouseX, mouseY, deltaX, deltaY, isTouch)
+		end
+	end
+end
+function UIContainer:mousePressedAnywhere(mouseX, mouseY, button, isTouch, presses)
+	for _, child in ipairs(self.children) do
+		if child.active and child.alive then
+			child:mousePressedAnywhere(mouseX, mouseY, button, isTouch, presses)
+		end
+	end
+end
+function UIContainer:mouseReleasedAnywhere(mouseX, mouseY, button, isTouch, presses)
+	for _, child in ipairs(self.children) do
+		if child.active and child.alive then
+			child:mouseReleasedAnywhere(mouseX, mouseY, button, isTouch, presses)
+		end
+	end
+end
 function UIContainer:mouseEntered() end
 function UIContainer:mouseLeft() end
 
@@ -124,7 +146,13 @@ end
 
 function UIContainer:update(dt)
 	for _, child in ipairs(self.children) do
-		if child.active and child.alive then child:update(dt) end
+		if child.active and child.alive then
+			if child.updateFun then
+				child.updateFun(child, dt)
+			else
+				child:update(dt)
+			end
+		end
 	end
 end
 

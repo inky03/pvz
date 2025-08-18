@@ -37,7 +37,7 @@ function Cache.module(path)
 	end
 end
 
-function Cache.image(path, folder)
+function Cache.image(path, folder, nilIfFake)
 	if path == nil then return nil end
 	
 	local img
@@ -93,7 +93,7 @@ function Cache.image(path, folder)
 		end
 			
 		trace('Resource for ' .. folder .. path .. ' doesn\'t exist')
-		return Cache.unknownTexture
+		return (not nilIfFake and Cache.unknownTexture or nil)
 	else
 		return cached.images[key]
 	end

@@ -41,16 +41,19 @@ end
 function love.mousepressed(mouseX, mouseY, button, isTouch, presses)
 	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	updateHover(mouseX, mouseY)
+	game:mousePressedAnywhere(mouseX, mouseY, button, isTouch, presses)
 	if hoveringElement then hoveringElement:mousePressed(mouseX, mouseY, button, isTouch, presses) end
 end
 function love.mousereleased(mouseX, mouseY, button, isTouch, presses)
 	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	updateHover(mouseX, mouseY)
+	game:mouseReleasedAnywhere(mouseX, mouseY, button, isTouch, presses)
 	if hoveringElement then hoveringElement:mouseReleased(mouseX, mouseY, button, isTouch, presses) end
 end
 function love.mousemoved(mouseX, mouseY, deltaX, deltaY, touch)
 	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	updateHover(mouseX, mouseY)
+	game:mouseMovedAnywhere(mouseX, mouseY, deltaX, deltaY, touch)
 	if hoveringElement then hoveringElement:mouseMoved(mouseX, mouseY, deltaX, deltaY, touch) end
 end
 
@@ -86,9 +89,10 @@ function love.update(dt)
 			accumulator = (accumulator % 1)
 		end
 	else
-		game:update(dt)
+		game:update(math.min(dt, flags.maxFrameskip / Constants.tickPerSecond))
 	end
 	
+	updateHover(windowToGame(love.mouse:getPosition()))
 	updateCursor()
 	
 	gcTimer = (gcTimer - dt)

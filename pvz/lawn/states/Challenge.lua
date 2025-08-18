@@ -1,11 +1,13 @@
 local Lawn = Cache.module('pvz.lawn.Lawn')
-local SeedBank = Cache.module('pvz.hud.SeedBank')
-local WaveMeter = Cache.module('pvz.hud.WaveMeter')
+local SeedBank = Cache.module('pvz.lawn.hud.SeedBank')
+local WaveMeter = Cache.module('pvz.lawn.hud.WaveMeter')
 
 local Sun = Cache.module('pvz.lawn.collectibles.Sun')
 local FlagZombie = Cache.module(Cache.zombies('FlagZombie'))
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 
+local BigButton = Cache.module('pvz.lawn.hud.BigButton')
+local PauseMenu = Cache.module('pvz.lawn.states.PauseMenu')
 local StreetViewCutscene = Cache.module('pvz.lawn.cutscenes.StreetViewCutscene')
 local LawnPrepareCutscene = Cache.module('pvz.lawn.cutscenes.LawnPrepareCutscene')
 local ReadySetPlantCutscene = Cache.module('pvz.lawn.cutscenes.ReadySetPlantCutscene')
@@ -54,6 +56,13 @@ function Challenge:init(challenge)
 	
 	self.lawn = self:addElement(self.lawn:new(self, 0, 0))
 	self.seeds = self:addElement(SeedBank:new(self.lawn, 10, 0, self.flags.startingSun))
+	self.pauseButton = self:addElement(Button:new(681, -10, Strings:get('MENU_BUTTON'), function(button)
+		self:openSubState(PauseMenu)
+	end))
+	
+	-- self.testButton = self:addElement(BigButton:new(50, 100, 'Back To Game', function(button)
+	-- 	trace('pusch')
+	-- end))
 	
 	self.waveMeter = self:addElement(WaveMeter:new())
 	self.waveMeter:setPosition(gameWidth - 42 - self.waveMeter.w, gameHeight - 25)
@@ -105,7 +114,7 @@ function Challenge:init(challenge)
 end
 
 function Challenge:queueCutscenes(challenge)
-	self:queueCutscene(StreetViewCutscene)
+	-- self:queueCutscene(StreetViewCutscene)
 	self:queueCutscene(LawnPrepareCutscene)
 	self:queueCutscene(ReadySetPlantCutscene)
 end

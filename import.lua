@@ -8,8 +8,11 @@ Sound = require 'pvz.Sound'
 Cache = require 'pvz.Cache'
 Signal = require 'pvz.Signal'
 Constants = require 'pvz.Constants'
-UIContainer = require 'pvz.hud.UIContainer'
 Curve = require 'pvz.animate.Curve'
+
+UIContainer = require 'pvz.hud.UIContainer'
+
+Button = require 'pvz.lawn.hud.Button'
 
 Font = require 'pvz.font.Font'
 Strings = require 'pvz.strings.Strings'
@@ -22,4 +25,4 @@ Zombie = require 'pvz.lawn.Zombie'
 Cutscene = require 'pvz.lawn.Cutscene'
 Projectile = require 'pvz.lawn.Projectile'
 Collectible = require 'pvz.lawn.Collectible'
-Challenge = require 'pvz.lawn.Challenge'
+Challenge = require 'pvz.lawn.states.Challenge'

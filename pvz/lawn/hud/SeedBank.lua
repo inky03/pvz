@@ -1,4 +1,4 @@
-local SeedPacket = Cache.module('pvz.hud.SeedPacket')
+local SeedPacket = Cache.module('pvz.lawn.hud.SeedPacket')
 local SeedBank = UIContainer:extend('SeedBank')
 
 function SeedBank:init(lawn, x, y, sun)
@@ -21,11 +21,12 @@ function SeedBank:init(lawn, x, y, sun)
 	self:addSeed(Cache.plants('SunFlower'))
 	self:addSeed(Cache.plants('PeaShooter'))
 	self:addSeed(Cache.plants('Repeater'))
-	-- self:addSeed(Cache.plants('GatlingPea'))
+	self:addSeed(Cache.plants('GatlingPea'))
 	self:addSeed(Cache.plants('SnowPea'))
-	-- self:addSeed(Cache.plants('WallNut'))
-	self:addSeed(Cache.plants('LilyPad'))
-	self:addSeed(Cache.plants('FlowerPot'))
+	self:addSeed(Cache.plants('WallNut'))
+	-- self:addSeed(Cache.plants('LilyPad'))
+	-- self:addSeed(Cache.plants('FlowerPot'))
+	-- self:addSeed(Cache.plants('Pumpkin'))
 end
 
 function SeedBank:setMoney(money)

@@ -7,7 +7,7 @@ function Strings:reload()
 end
 
 function Strings:get(entry, replacements)
-	local lawnString = LawnStrings.strings[entry]
+	local lawnString = LawnStrings.strings[entry:upper()]
 	
 	if lawnString then
 		if not replacements then return lawnString end

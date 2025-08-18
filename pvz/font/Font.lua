@@ -2,7 +2,7 @@ FontData = require 'pvz.data.FontData'
 
 local Font = UIContainer:extend('Font')
 
-function Font:init(kind, size, x, y, w, h)
+function Font:init(kind, size, x, y, w, h, extra)
 	self.canvasPadding = 10
 	self.useCanvas = true
 	
@@ -19,6 +19,7 @@ function Font:init(kind, size, x, y, w, h)
 	self.mainLayer = ''
 	
 	self.canClick = false
+	self.extra = extra
 	self.kind = kind
 	
 	self:setAlignment()
@@ -77,11 +78,38 @@ function Font:setText(text)
 		self.text = text
 		self._dirty = true
 	end
+	
+	return self
+end
+function Font:setFont(font)
+	if self.font == font then return self end
+	
+	self.font = font
+	self._dirty = true
+	self:setFontData(Cache.font(self:getKey()))
+	
+	return self
 end
 function Font:setSize(size)
+	if self.size == size then return self end
+	
 	self.size = size
 	self._dirty = true
-	self:setFontData(Cache.font(self.kind .. size))
+	self:setFontData(Cache.font(self:getKey()))
+	
+	return self
+end
+function Font:setExtra(extra)
+	if self.extra == extra then return self end
+	
+	self.extra = extra
+	self._dirty = true
+	self:setFontData(Cache.font(self:getKey()))
+	
+	return self
+end
+function Font:getKey()
+	return (self.kind .. self.size .. (self.extra or ''))
 end
 function Font:setLayerColor(layer, r, g, b, a)
 	local t = self:getLayerTransform(layer)
