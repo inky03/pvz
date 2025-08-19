@@ -37,7 +37,7 @@ function Cache.module(path)
 	end
 end
 
-function Cache.image(path, folder, nilIfFake)
+function Cache.image(path, folder, eval)
 	if path == nil then return nil end
 	
 	local img
@@ -91,9 +91,10 @@ function Cache.image(path, folder, nilIfFake)
 			img = love.graphics.newImage(gif, {mipmaps = true})
 			goto loaded
 		end
-			
+		
+		if eval then return nil end
 		trace('Resource for ' .. folder .. path .. ' doesn\'t exist')
-		return (not nilIfFake and Cache.unknownTexture or nil)
+		return Cache.unknownTexture
 	else
 		return cached.images[key]
 	end

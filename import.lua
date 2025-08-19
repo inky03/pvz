@@ -13,6 +13,8 @@ Curve = require 'pvz.animate.Curve'
 UIContainer = require 'pvz.hud.UIContainer'
 
 Button = require 'pvz.lawn.hud.Button'
+Dialog = require 'pvz.lawn.hud.Dialog'
+CheckBox = require 'pvz.lawn.hud.CheckBox'
 
 Font = require 'pvz.font.Font'
 Strings = require 'pvz.strings.Strings'

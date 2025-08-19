@@ -2,6 +2,8 @@ local UIContainer = class('UIContainer')
 
 UIContainer.hitbox = nil
 UIContainer.useHand = false
+UIContainer.canDrag = false
+UIContainer.dragButton = 1
 
 function UIContainer:init(x, y, w, h)
 	self.canClickChildren = true
@@ -83,6 +85,11 @@ function UIContainer:setHitbox(x, y, w, h)
 	self.hitbox.w = (w or self.w)
 	self.hitbox.h = (h or self.h)
 end
+function UIContainer:center(inX, inY, round)
+	if inX ~= false then self.x = ((self.parent.w - self.w) * .5) end
+	if inY ~= false then self.y = ((self.parent.h - self.h) * .5) end
+	if round ~= false then self.x, self.y = math.floor(self.x), math.floor(self.y) end
+end
 
 function UIContainer:getHoveringElement(mouseX, mouseY)
 	if not self.alive then return nil end
@@ -104,6 +111,9 @@ function UIContainer:getHoveringElement(mouseX, mouseY)
 	return ((math.within(xx, self.hitbox.x, self.hitbox.x + ww) and math.within(yy, self.hitbox.y, self.hitbox.y + hh)) and self or nil)
 end
 
+function UIContainer:mouseGrabbed(mouseX, mouseY, button, isTouch, presses) end
+function UIContainer:mouseDrag(mouseX, mouseY, deltaX, deltaY, isTouch) end
+function UIContainer:mouseDropped(mouseX, mouseY, button, isTouch, presses) end
 
 function UIContainer:mouseMoved(mouseX, mouseY, deltaX, deltaY, isTouch) end
 function UIContainer:mousePressed(mouseX, mouseY, button, isTouch, presses) end

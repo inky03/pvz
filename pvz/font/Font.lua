@@ -344,7 +344,7 @@ function Font:renderText(x, y)
 					local texture = Cache.image(layer.textureName, self.fontData.origin)
 					local xOffset, yOffset = layer:getOffset(char)
 					local rX, rY, rW, rH = layer:getRect(char)
-					local glyphX, glyphY = (x + xx + xOffset + xOffsetT), (y + yy + yOffset + yOffsetT)
+					local glyphX, glyphY = math.round(x + xx + xOffset + xOffsetT), math.round(y + yy + yOffset + yOffsetT)
 					
 					self.quad:setViewport(rX, rY, rW, rH, texture:getPixelDimensions())
 					love.graphics.setColor(transform.r, transform.g, transform.b, transform.a)

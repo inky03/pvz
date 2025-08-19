@@ -6,7 +6,6 @@ local Sun = Cache.module('pvz.lawn.collectibles.Sun')
 local FlagZombie = Cache.module(Cache.zombies('FlagZombie'))
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 
-local BigButton = Cache.module('pvz.lawn.hud.BigButton')
 local PauseMenu = Cache.module('pvz.lawn.states.PauseMenu')
 local StreetViewCutscene = Cache.module('pvz.lawn.cutscenes.StreetViewCutscene')
 local LawnPrepareCutscene = Cache.module('pvz.lawn.cutscenes.LawnPrepareCutscene')
@@ -59,10 +58,6 @@ function Challenge:init(challenge)
 	self.pauseButton = self:addElement(Button:new(681, -10, Strings:get('MENU_BUTTON'), function(button)
 		self:openSubState(PauseMenu)
 	end))
-	
-	-- self.testButton = self:addElement(BigButton:new(50, 100, 'Back To Game', function(button)
-	-- 	trace('pusch')
-	-- end))
 	
 	self.waveMeter = self:addElement(WaveMeter:new())
 	self.waveMeter:setPosition(gameWidth - 42 - self.waveMeter.w, gameHeight - 25)

@@ -40,23 +40,25 @@ function PoolEffect:init(pool, x, y)
 	self.mesh = love.graphics.newMesh(self.vertMap[1], 'triangles', 'dynamic')
 	
 	self.canClick = false
-	-- self.debug = true
 end
 
 function PoolEffect:update(dt)
 	self.poolCounter = (self.pool and self.pool.poolCounter or (self.poolCounter + dt * Constants.tickPerSecond))
-	self.causticShader:send('counter', self.poolCounter)
+	if shaders then self.causticShader:send('counter', self.poolCounter) end
 end
 
 function PoolEffect:draw(x, y)
 	if not self.visible then return end
 	
-	-- love.graphics.draw(self.texture, x, y)
-	
 	local poolWidth, poolHeight = self.texture:getPixelDimensions()
 	local gridW, gridH = (poolWidth / 15), (poolHeight / 5)
-	
 	local off = self.offsets
+	
+	if not shaders then
+		love.graphics.draw(self.texture, x, y)
+		goto noshader
+	end
+	
 	for x = 1, 16 do
 		for y = 1, 6 do
 			local xx, yy = (x - 1), (y - 1)
@@ -140,6 +142,7 @@ function PoolEffect:draw(x, y)
 		love.graphics.setWireframe(false)
 	end
 	
+	::noshader::
 	UIContainer.draw(self, x, y)
 end
 

@@ -3,6 +3,7 @@ local Button = UIContainer:extend('Button')
 Button.slice = true
 Button.useHand = true
 Button.textureName = 'button'
+Button.clickSound = 'buttonclick'
 Button.fontName = 'DwarvenTodcraft'
 Button.fontSize = 18
 Button.fontExtra = {
@@ -11,9 +12,9 @@ Button.fontExtra = {
 	down = 'BrightGreenInset';
 }
 Button.fontOffsets = {
-	hovering = {x = 2; y = -3};
-	normal = {x = 2; y = -3};
-	down = {x = 2; y = -2};
+	hovering = {x = 3; y = -3};
+	normal = {x = 3; y = -3};
+	down = {x = 3; y = -2};
 }
 Button.buttonOffsets = {
 	down = {x = 1; y = 0};
@@ -32,17 +33,17 @@ function Button:init(x, y, text, fun, w)
 	self.onPress = Signal:new()
 	if fun then self.onPress:add(fun) end
 	
+	local w = w
 	if not w then
-		self.w = self.textures.normal.left:getPixelWidth()
+		w = self.textures.normal.left:getPixelWidth()
 		
 		if self.slice then
-			self.w = (self.w + self.textures.normal.middle:getPixelWidth() + self.textures.normal.right:getPixelWidth())
+			w = (w + self.textures.normal.middle:getPixelWidth() + self.textures.normal.right:getPixelWidth())
 		end
-	else
-		self.w = w
 	end
+	self.quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
 	
-	UIContainer.init(self, x, y, self.w, self.textures.normal.left:getPixelHeight())
+	UIContainer.init(self, x, y, w, self.textures.normal.left:getPixelHeight())
 	
 	self.font = self:addElement(Font:new(self.fontName, self.fontSize, 0, 0, self.w, self.h, self.fontExtra[self:getState()]))
 	self.font:setAlignment('center', 'center')
@@ -68,6 +69,7 @@ function Button:mouseReleasedAnywhere(mouseX, mouseY, button, isTouch, presses)
 	
 	if button == 1 then
 		if self.hovering and self.pushed then
+			Sound.play(self.clickSound)
 			self.onPress:dispatch(self)
 		end
 		self.pushed = false
@@ -86,10 +88,13 @@ function Button:draw(x, y)
 	love.graphics.draw(textures.left, x + buttonPos.x, y + buttonPos.y)
 	
 	if self.slice then
-		textures.middle:setWrap('repeat')
+		textures.middle:setWrap('repeat', 'clamp')
 		
-		local middleScale = ((self.w - textures.left:getPixelWidth() - textures.right:getPixelWidth()) / textures.middle:getPixelWidth())
-		if middleScale > 0 then love.graphics.draw(textures.middle, x + textures.left:getPixelWidth() + buttonPos.x, y + buttonPos.y, 0, middleScale, 1) end
+		local middleWidth = (self.w - textures.left:getPixelWidth() - textures.right:getPixelWidth())
+		if middleWidth > 0 then
+			self.quad:setViewport(0, 0, middleWidth, textures.middle:getPixelHeight(), textures.middle:getPixelDimensions())
+			love.graphics.draw(textures.middle, self.quad, x + textures.left:getPixelWidth() + buttonPos.x, y + buttonPos.y)
+		end
 		
 		love.graphics.draw(textures.right, x + self.w - textures.right:getPixelWidth() + buttonPos.x, y + buttonPos.y)
 	end

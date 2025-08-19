@@ -22,6 +22,7 @@ function love.conf(t)
 	
 	-- project flags
 	flags = {
+		shaders = true;
 		debugMode = false;
 		useFrameskip = false;
 		maxFrameskip = 15;

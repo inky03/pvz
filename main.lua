@@ -4,6 +4,7 @@ trace('PVZ')
 
 gameWidth, gameHeight = love.graphics.getDimensions()
 hoveringElement = nil
+draggingElement = nil
 username = 'Player'
 accumulator = 0
 
@@ -15,6 +16,7 @@ local fpsCount = 0
 local drawtime = {}
 
 function love.load()
+	shaders = flags.shaders
 	debugMode = flags.debugMode
 	math.randomseed(os.clock())
 	reloadCursors()
@@ -22,7 +24,6 @@ function love.load()
 	love.graphics.setLineWidth(1)
 	love.graphics.setLineStyle('rough')
 	love.mouse.setCursor(cursors.pointer)
-	-- love.window.setFullscreen(true, 'desktop')
 	
 	Strings:reload()
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
@@ -42,30 +43,52 @@ function love.mousepressed(mouseX, mouseY, button, isTouch, presses)
 	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	updateHover(mouseX, mouseY)
 	game:mousePressedAnywhere(mouseX, mouseY, button, isTouch, presses)
-	if hoveringElement then hoveringElement:mousePressed(mouseX, mouseY, button, isTouch, presses) end
+	if hoveringElement then
+		hoveringElement:mousePressed(mouseX, mouseY, button, isTouch, presses)
+		
+		if hoveringElement.canDrag and button == hoveringElement.dragButton then
+			draggingElement = hoveringElement
+			draggingElement:mouseGrabbed(mouseX, mouseY, button, isTouch, presses)
+		end
+	end
 end
 function love.mousereleased(mouseX, mouseY, button, isTouch, presses)
 	local mouseX, mouseY = windowToGame(mouseX, mouseY)
+	
+	if draggingElement and button == draggingElement.dragButton then
+		draggingElement:mouseDropped(mouseX, mouseY, button, isTouch, presses)
+		draggingElement = nil
+	end
+	
 	updateHover(mouseX, mouseY)
 	game:mouseReleasedAnywhere(mouseX, mouseY, button, isTouch, presses)
 	if hoveringElement then hoveringElement:mouseReleased(mouseX, mouseY, button, isTouch, presses) end
 end
 function love.mousemoved(mouseX, mouseY, deltaX, deltaY, touch)
+	local aspect = getAspectRatio()
 	local mouseX, mouseY = windowToGame(mouseX, mouseY)
+	local deltaX, deltaY = (deltaX / aspect), (deltaY / aspect)
+	
+	if draggingElement then draggingElement:mouseDrag(mouseX, mouseY, deltaX, deltaY, touch) end
+	
 	updateHover(mouseX, mouseY)
 	game:mouseMovedAnywhere(mouseX, mouseY, deltaX, deltaY, touch)
 	if hoveringElement then hoveringElement:mouseMoved(mouseX, mouseY, deltaX, deltaY, touch) end
 end
 
 function updateHover(mouseX, mouseY)
+	if draggingElement then return end
+	
 	local prevHovering = hoveringElement
 	hoveringElement = game:getHoveringElement(mouseX, mouseY)
 	
 	if prevHovering ~= hoveringElement and prevHovering then prevHovering:setHovering(false) end
+	if hoveringElement then hoveringElement:setHovering(true) end
 end
 function updateCursor()
-	if hoveringElement then hoveringElement:setHovering(true) end
-	if hoveringElement and hoveringElement.useHand and hoveringElement:canBeClicked() then
+	if draggingElement then
+		love.mouse.setCursor(cursors.drag)
+	elseif hoveringElement and hoveringElement.useHand and hoveringElement:canBeClicked() then
 		love.mouse.setCursor(cursors.hand)
 	else
 		love.mouse.setCursor(cursors.pointer)
@@ -74,6 +97,7 @@ end
 function reloadCursors()
 	cursors = {
 		pointer = love.mouse.newCursor(love.image.newImageData('resources/cursor.png'));
+		drag = love.mouse.newCursor(love.image.newImageData('resources/drag.png'), 9, 6);
 		hand = love.mouse.newCursor(love.image.newImageData('resources/hand.png'), 4);
 	}
 end
@@ -143,6 +167,11 @@ function windowToGame(x, y)
 	local ratio = getAspectRatio()
 	local winW, winH = love.graphics.getDimensions()
 	return (math.round(x - (winW - gameWidth * ratio) * .5) / ratio), (math.round(y - (winH - gameHeight * ratio) * .5) / ratio)
+end
+function gameToWindow(x, y)
+	local ratio = getAspectRatio()
+	local winW, winH = love.graphics.getDimensions()
+	return (math.round(x + (winW / ratio - gameWidth) * .5) * ratio), (math.round(y + (winH / ratio - gameHeight) * .5) * ratio)
 end
 
 function drawDebug()

@@ -29,8 +29,13 @@ function State:openSubState(subState, ...)
 	end
 	
 	self.subState = self:addElement(subState:new(self, ...))
+	self.subState.drawToTop = true
+	self.onOpenSubState:dispatch(self.subState)
 end
+function State:onClose() end
 function State:close()
+	self:onClose()
+	self.parent.onCloseSubState:dispatch(self)
 	self.parent.subState = nil
 	self:destroy()
 end
