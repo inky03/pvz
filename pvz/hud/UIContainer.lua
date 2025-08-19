@@ -1,6 +1,7 @@
 local UIContainer = class('UIContainer')
 
 UIContainer.hitbox = nil
+UIContainer.cursor = nil
 UIContainer.useHand = false
 UIContainer.canDrag = false
 UIContainer.dragButton = 1
@@ -13,6 +14,7 @@ function UIContainer:init(x, y, w, h)
 	self.alive = true
 	
 	self.hovering = false
+	self.dragging = false
 	self.visible = true
 	self.debug = false
 	self.children = {}

@@ -48,6 +48,7 @@ function love.mousepressed(mouseX, mouseY, button, isTouch, presses)
 		
 		if hoveringElement.canDrag and button == hoveringElement.dragButton then
 			draggingElement = hoveringElement
+			draggingElement.dragging = true
 			draggingElement:mouseGrabbed(mouseX, mouseY, button, isTouch, presses)
 		end
 	end
@@ -56,6 +57,7 @@ function love.mousereleased(mouseX, mouseY, button, isTouch, presses)
 	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	
 	if draggingElement and button == draggingElement.dragButton then
+		draggingElement.dragging = false
 		draggingElement:mouseDropped(mouseX, mouseY, button, isTouch, presses)
 		draggingElement = nil
 	end
@@ -88,8 +90,8 @@ end
 function updateCursor()
 	if draggingElement then
 		love.mouse.setCursor(cursors.drag)
-	elseif hoveringElement and hoveringElement.useHand and hoveringElement:canBeClicked() then
-		love.mouse.setCursor(cursors.hand)
+	elseif hoveringElement and (hoveringElement.cursor or hoveringElement.useHand) and hoveringElement:canBeClicked() then
+		love.mouse.setCursor(hoveringElement.cursor and cursors[hoveringElement.cursor] or cursors.hand)
 	else
 		love.mouse.setCursor(cursors.pointer)
 	end

@@ -23,10 +23,15 @@ function PauseMenu:init(superState)
 	end
 	
 	local isFullscreen = love.window.getFullscreen()
-	self.shaderOption = self.dialogBox:addElement(CheckBox:new(0, 174, 'Complex Visuals', nil, nil, shaders))
+	self.shaderOption = self.dialogBox:addElement(CheckBox:new(0, 175, 'Complex Visuals', nil, nil, shaders))
 	self.shaderOption:center(true, false)
 	self.fullscreenOption = self.dialogBox:addElement(CheckBox:new(0, 207, 'Full Screen', nil, nil, isFullscreen))
 	self.fullscreenOption:center(true, false)
+	
+	self.musicOption = self.dialogBox:addElement(Slider:new(0, 128, 'Music', 220, nil, 1))
+	self.musicOption:center(true, false)
+	self.musicOption = self.dialogBox:addElement(Slider:new(0, 157, 'Sound', 220, function(progress) Sound.volume = progress end, Sound.volume))
+	self.musicOption:center(true, false)
 	
 	self.backButton = self.dialogBox:addElement(BigButton:new(30, 381, Strings:get('BACK_TO_GAME'), function(button) self:close() end))
 end

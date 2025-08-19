@@ -10,7 +10,6 @@ Dialog.columnNames = { 'left' ; 'middle' ; 'right' }
 Dialog.rowNames = { 'top' ; 'center' ; 'bottom' }
 
 function Dialog:init(x, y, w, h)
-	self.dragging = false
 	self.textures = {}
 	self:create()
 	

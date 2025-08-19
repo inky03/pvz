@@ -10,10 +10,8 @@ CheckBox.fontHeight = 30
 CheckBox.fontSize = 18
 
 function CheckBox:init(x, y, text, w, fun, checked)
-	self.textures = {
-		unchecked = Cache.image(self.textureName .. '0', 'images');
-		checked = Cache.image(self.textureName .. '1', 'images');
-	}
+	self.uncheckedTexture = Cache.image(self.textureName .. '0', 'images')
+	self.checkedTexture = Cache.image(self.textureName .. '1', 'images')
 	
 	self.pushed = false
 	self.useHand = true
@@ -21,9 +19,9 @@ function CheckBox:init(x, y, text, w, fun, checked)
 	self.checked = (checked or false)
 	if fun then self.onCheck:add(fun) end
 	
-	UIContainer.init(self, x, y, w or 230, self.textures.unchecked:getPixelHeight())
+	UIContainer.init(self, x, y, w or 230, self.uncheckedTexture:getPixelHeight())
 	
-	self:setHitbox(self.w - self.textures.unchecked:getPixelWidth(), 0, self.textures.unchecked:getPixelDimensions())
+	self:setHitbox(self.w - self.uncheckedTexture:getPixelWidth(), 0, self.uncheckedTexture:getPixelDimensions())
 	
 	self.font = self:addElement(Font:new(self.fontName, self.fontSize, 0, 0, self.hitbox.x - self.fontDistance, self.fontHeight))
 	self.font:setLayerColor('Main', unpack(self.fontColor))
@@ -51,7 +49,7 @@ end
 
 function CheckBox:draw(x, y)
 	local o = (self.pushed and 1 or 0)
-	love.graphics.draw(self.checked and self.textures.checked or self.textures.unchecked, x + self.w - self.textures.unchecked:getPixelWidth() + o, y + o)
+	love.graphics.draw(self.checked and self.checkedTexture or self.uncheckedTexture, x + self.w - self.uncheckedTexture:getPixelWidth() + o, y + o)
 	
 	UIContainer.draw(self, x, y)
 end

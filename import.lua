@@ -14,6 +14,7 @@ UIContainer = require 'pvz.hud.UIContainer'
 
 Button = require 'pvz.lawn.hud.Button'
 Dialog = require 'pvz.lawn.hud.Dialog'
+Slider = require 'pvz.lawn.hud.Slider'
 CheckBox = require 'pvz.lawn.hud.CheckBox'
 
 Font = require 'pvz.font.Font'
