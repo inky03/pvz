@@ -87,10 +87,12 @@ end
 
 -- table
 
-function table.populate(entries, val)
+function table.populate(entries, val, fun)
 	local tbl = {}
 	for i = 1, entries do
-		if type(val) == 'table' then
+		if type(val) == 'function' and fun ~= false then
+			table.insert(tbl, val(i))
+		elseif type(val) == 'table' then
 			table.insert(tbl, table.copy(val))
 		else
 			table.insert(tbl, val)

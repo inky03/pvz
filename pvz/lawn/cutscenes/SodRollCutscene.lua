@@ -21,7 +21,6 @@ function SodRollCutscene:init(challenge, sodRows)
 		
 		sodRoll:setPosition(rollX - 40, rollY - 280)
 		rolls = (rolls + 1)
-		
 	end
 end
 

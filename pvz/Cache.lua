@@ -37,14 +37,14 @@ function Cache.module(path)
 	end
 end
 
-function Cache.image(path, folder, eval)
+function Cache.image(path, folder, eval, maskPath)
 	if path == nil then return nil end
 	
 	local img
 	local key = path:lower()
 	local folder = (folder and folder .. '/' or '')
 	if not cached.images[key] then
-		local fpathMaskPng, fpathMaskJpg = Cache.main(folder .. path .. '_.png'), Cache.main(folder .. path .. '_.jpg')
+		local fpathMaskPng, fpathMaskJpg = Cache.main(folder .. (maskPath or path .. '_') .. '.png'), Cache.main(folder .. (maskPath or path .. '_') .. '.jpg')
 		local fpathPng, fpathJpg = Cache.main(folder .. path .. '.png'), Cache.main(folder .. path .. '.jpg')
 		local fpath = (
 			(love.filesystem.getInfo(fpathPng) and fpathPng) or

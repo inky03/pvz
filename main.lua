@@ -16,7 +16,8 @@ local fpsCount = 0
 local drawtime = {}
 
 function love.load()
-	shaders = flags.shaders
+	shaders = true
+	complex = flags.complex
 	debugMode = flags.debugMode
 	math.randomseed(os.clock())
 	reloadCursors()
@@ -27,7 +28,7 @@ function love.load()
 	
 	Strings:reload()
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
-	level = game:addElement(Cache.module('pvz.lawn.challenges.PoolChallenge'):new(21))
+	level = game:addElement(Cache.module('pvz.lawn.challenges.FogChallenge'):new(31))
 	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
 	
 	debugCanvas = love.graphics.newCanvas(220, 200)

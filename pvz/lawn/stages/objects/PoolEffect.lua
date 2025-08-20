@@ -1,9 +1,12 @@
 local PoolEffect = UIContainer:extend('PoolEffect')
 
+PoolEffect.causticAlpha = nil
 PoolEffect.textureName = 'pool'
 PoolEffect.baseTextureName = 'pool_base'
 PoolEffect.shadingTextureName = 'pool_shading'
 PoolEffect.causticTextureName = 'pool_caustic_effect'
+PoolEffect.shadingMaskTextureName = 'pool_shading_'
+PoolEffect.baseMaskTextureName = 'pool_base_'
 PoolEffect.textureOffset = {
 	x = 1;
 	y = 1;
@@ -18,9 +21,9 @@ function PoolEffect:init(pool, x, y)
 	self.poolCounter = 0
 	
 	self.texture = Cache.image(self.textureName, 'images')
-	self.baseTexture = Cache.image(self.baseTextureName, 'images')
-	self.shadingTexture = Cache.image(self.shadingTextureName, 'images')
+	self.baseTexture = Cache.image(self.baseTextureName, 'images', nil, self.baseMaskTextureName)
 	self.causticTexture = Cache.image(self.causticTextureName, 'images')
+	self.shadingTexture = Cache.image(self.shadingTextureName, 'images', nil, self.shadingMaskTextureName)
 	self.causticShader = Cache.shader('caustic')
 	self.causticTexture:setWrap('repeat')
 	
@@ -54,7 +57,7 @@ function PoolEffect:draw(x, y)
 	local gridW, gridH = (poolWidth / 15), (poolHeight / 5)
 	local off = self.offsets
 	
-	if not shaders then
+	if not (complex and shaders) then
 		love.graphics.draw(self.texture, x, y)
 		goto noshader
 	end
@@ -109,6 +112,8 @@ function PoolEffect:draw(x, y)
 						
 						if indexX == 0 or indexX == 15 or indexY == 0 then
 							vert[8] = (0x20 / 255)
+						elseif self.causticAlpha then
+							vert[8] = self.causticAlpha
 						else
 							vert[8] = ((indexX <= 7 and 0xc0 or 0x80) / 255)
 						end

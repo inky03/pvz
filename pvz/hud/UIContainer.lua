@@ -25,10 +25,18 @@ function UIContainer:init(x, y, w, h)
 	self:setHitbox()
 end
 
-function UIContainer:addElement(element)
-	table.insert(self.children, element)
+function UIContainer:addElement(element, index)
+	table.insert(self.children, index or #self.children + 1, element)
 	element.parent = self
 	return element
+end
+function UIContainer:indexOf(element)
+	for i, child in ipairs(self.children) do
+		if child == element then
+			return i
+		end
+	end
+	return -1
 end
 function UIContainer:kill()
 	self.alive = false

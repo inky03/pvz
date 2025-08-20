@@ -101,15 +101,15 @@ function Challenge:init(challenge)
 	self.challengeDebug = true
 	
 	self.seeds:kill()
-	self.onStartCutscene:add(function(_) self:stopChallenge() end, 'stopChallenge')
-	self.onCutscenesFinished:add(function() self:startChallenge() end, 'startChallenge')
+	self.onStartCutscene:add(function(_) self:stopChallenge(challenge) end, 'stopChallenge')
+	self.onCutscenesFinished:add(function() self:startChallenge(challenge) end, 'startChallenge')
 	self:queueCutscenes(challenge)
 	
 	trace('Challenge ' .. self.challenge)
 end
 
 function Challenge:queueCutscenes(challenge)
-	-- self:queueCutscene(StreetViewCutscene)
+	self:queueCutscene(StreetViewCutscene)
 	self:queueCutscene(LawnPrepareCutscene)
 	self:queueCutscene(ReadySetPlantCutscene)
 end

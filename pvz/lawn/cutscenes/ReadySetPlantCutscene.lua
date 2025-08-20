@@ -5,6 +5,7 @@ function ReadySetPlantCutscene:init(challenge)
 	
 	Sound.play('readysetplant')
 	
+	self.drawToTop = true
 	self.introAnimation = self:addElement(Reanimation:new('StartReadySetPlant', self.w * .5, self.h * .5))
 	self.introAnimation.animation:add('introA', 'Ready')
 	self.introAnimation.animation:add('introB', 'Set')

@@ -23,8 +23,8 @@ function PauseMenu:init(superState)
 	end
 	
 	local isFullscreen = love.window.getFullscreen()
-	self.shaderOption = self.dialogBox:addElement(CheckBox:new(0, 175, 'Complex Visuals', nil, nil, shaders))
-	self.shaderOption:center(true, false)
+	self.complexOption = self.dialogBox:addElement(CheckBox:new(0, 175, 'Complex Visuals', nil, nil, complex))
+	self.complexOption:center(true, false)
 	self.fullscreenOption = self.dialogBox:addElement(CheckBox:new(0, 207, 'Full Screen', nil, nil, isFullscreen))
 	self.fullscreenOption:center(true, false)
 	
@@ -37,7 +37,7 @@ function PauseMenu:init(superState)
 end
 
 function PauseMenu:onClose()
-	shaders = self.shaderOption.checked
+	complex = self.complexOption.checked
 	
 	local mouseX, mouseY = windowToGame(love.mouse.getPosition())
 	love.window.setFullscreen(self.fullscreenOption.checked, 'desktop')

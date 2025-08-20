@@ -15,6 +15,11 @@ function LawnPrepareCutscene:init(challenge)
 	
 	challenge.seeds.y = -challenge.seeds.h
 	challenge.seeds:revive()
+	
+	if challenge.fog then
+		challenge.fogBlownCountdown = challenge.fogIntroReturnTime
+		challenge.animateFog = true
+	end
 end
 
 function LawnPrepareCutscene:update(dt)
@@ -22,7 +27,8 @@ function LawnPrepareCutscene:update(dt)
 	
 	self.state.seeds.y = math.round(Curve.animate(self.timeSeedBankStart, self.timeSeedBankEnd, self.counter, -self.state.seeds.h, 0, self.curve))
 	
-	if self.counter >= self.timeSeedBankEnd and self.counter >= self.lawnMowerStart[1] + self.lawnMowerDuration then
+	local fogFinished = (not self.state.fog or self.state.fogBlownCountdown <= 0)
+	if self.counter >= self.timeSeedBankEnd and self.counter >= self.lawnMowerStart[1] + self.lawnMowerDuration and fogFinished then
 		self:finish()
 	end
 end

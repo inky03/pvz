@@ -53,7 +53,7 @@ function State:findCutsceneIndex(cutscene, start)
 			return i
 		end
 	end
-	return nil
+	return -1
 end
 function State:dequeueCutscene(cutscene)
 	local index = self:findCutsceneIndex(cutscene)

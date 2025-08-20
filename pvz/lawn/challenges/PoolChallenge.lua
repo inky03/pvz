@@ -1,5 +1,5 @@
 local DayPool = Cache.module('pvz.lawn.stages.DayPool')
-local PoolChallenge = Challenge:extend('DayChallenge')
+local PoolChallenge = Challenge:extend('PoolChallenge')
 
 local BasicZombie = Cache.module(Cache.zombies('BasicZombie'))
 
