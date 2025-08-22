@@ -71,8 +71,5 @@ end
 function FogChallenge:getHouseMessage(challenge)
 	return Strings:get('PLAYERS_BACKYARD', {PLAYER = username})
 end
-function FogChallenge:getTitle(challenge)
-	return ('%s %d-%d'):format(Strings:get('LEVEL'), 4, challenge - 30)
-end
 
 return FogChallenge

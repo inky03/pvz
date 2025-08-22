@@ -83,6 +83,7 @@ function Challenge:init(challenge)
 	self.challengeText:setLayerColor('Main', 223 / 255, 186 / 255, 97 / 255)
 	self.challengeText:setAlignment('right')
 	self.challengeText:setText(self.challengeTitle)
+	self.challengeText.drawToTop = true
 	
 	self.streetZombieGrid = table.populate(5, table.populate(5, false))
 	self.streetZombies = {}
@@ -117,10 +118,12 @@ end
 function Challenge:startChallenge()
 	self.challengeStarted = true
 	self.challengeText:revive()
+	self.pauseButton:revive()
 end
 function Challenge:stopChallenge()
 	self.challengeStarted = false
 	self.challengeText:kill()
+	self.pauseButton:kill()
 end
 function Challenge:initWaves()
 	table.clear(self.flagWaves)
@@ -585,7 +588,7 @@ function Challenge:getFlags(challenge)
 	}
 end
 function Challenge:getTitle(challenge)
-	return ('Challenge %d'):format(challenge)
+	return ('%s %d-%d'):format(Strings:get('LEVEL'), math.floor((challenge - 1) / 10 + 1), (challenge - 1) % 10 + 1)
 end
 
 function Challenge:getIntroZombie(challenge)

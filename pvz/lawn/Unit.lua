@@ -6,6 +6,7 @@ Unit.reanimName = 'SunFlower'
 Unit.previewAnimation = 'idle'
 Unit.packetRecharge = 750
 Unit.packetCost = 100
+Unit.id = -1
 
 Unit.maxHp = 300
 

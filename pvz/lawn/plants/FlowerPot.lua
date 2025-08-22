@@ -8,6 +8,7 @@ FlowerPot.defaultBlinkAnim = ''
 FlowerPot.reanimName = 'Pot'
 FlowerPot.packetCost = 25
 FlowerPot.kind = 'pot'
+FlowerPot.id = 33
 
 function FlowerPot:init(x, y, challenge)
 	Plant.init(self, x, y, challenge)

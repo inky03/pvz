@@ -41,10 +41,6 @@ function DayChallenge:getWaveCount(challenge)
 	return (counts[challenge] or 10)
 end
 
-function DayChallenge:getTitle(challenge)
-	return ('%s %d-%d'):format(Strings:get('LEVEL'), 1, challenge)
-end
-
 function DayChallenge:queueCutscenes(challenge)
 	Challenge.queueCutscenes(self, challenge)
 	

@@ -300,7 +300,7 @@ function Font:renderCanvas(x, y, transforms)
 		end
 	end
 	
-	for i = 1, (transforms and #transforms or 1) do
+	for i = 1, (transforms and #transforms or #self.transforms) do
 		table.remove(Reanimation.transformStack, 1)
 	end
 end

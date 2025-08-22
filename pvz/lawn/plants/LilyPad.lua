@@ -7,6 +7,7 @@ LilyPad.canCarry = true
 LilyPad.reanimName = 'LilyPad'
 LilyPad.packetCost = 25
 LilyPad.kind = 'water'
+LilyPad.id = 16
 
 function LilyPad:init(x, y, challenge)
 	Plant.init(self, x, y, challenge)

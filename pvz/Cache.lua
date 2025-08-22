@@ -9,6 +9,7 @@ local Cache = {
 		
 		font = {}; -- data type
 		reanim = {};
+		particles = {};
 		
 		levels = {}; -- module
 		entities = {};
@@ -18,6 +19,8 @@ local Cache = {
 local cached = Cache.cached
 
 function Cache.module(path)
+	local path = path:gsub('%.lua$', '')
+	
 	if cached.entities[path] then
 		return cached.entities[path]
 	end
@@ -101,7 +104,8 @@ function Cache.image(path, folder, eval, maskPath)
 	
 	::loaded::
 	cached.images[key] = img
-	img:setMipmapFilter('linear', .75)
+	local mipmap = img:getMipmapFilter()
+	if mipmap ~= 'none' then img:setMipmapFilter('linear', .75) end
 	return img
 end
 
@@ -149,6 +153,33 @@ function Cache.reanim(kind, folder)
 	return cached.reanim[key]
 end
 
+function Cache.particle(kind, folder)
+	if kind == nil then return nil end
+	
+	local t = os.clock()
+	local key = kind:lower()
+	if not cached.particles[key] then
+		local path = (folder and (folder .. '/' .. kind) or ('compiled/particles/' .. kind))
+		local fpathCompiled = Cache.main(path .. '.xml.compiled')
+		local fpath = Cache.main(path .. '.xml')
+		local format = ''
+		
+		if love.filesystem.getInfo(fpath) then
+			format = 'XML'
+			cached.particles[key] = Particles.loadXML(fpath, kind)
+		elseif love.filesystem.getInfo(fpathCompiled) then
+			format = 'Binary'
+			cached.particles[key] = Particles.loadBinary(fpathCompiled, kind)
+		else
+			trace('Resource for ' .. fpath .. ' doesn\'t exist')
+			return Particles:new()
+		end
+		trace(('%s Particle (%s) (%.2fms)'):format(kind, format, (os.clock() - t) * 1000))
+	end
+	
+	return cached.particles[key]
+end
+
 function Cache.font(name, folder)
 	if name == nil then return nil end
 	
@@ -184,6 +215,30 @@ function Cache.shader(name)
 	end
 	
 	return cached.shaders[key]
+end
+
+function Cache.fileList(path, recursive, filter)
+	local filePaths = {}
+	local path = path:gsub('%.', '/')
+	local files = love.filesystem.getDirectoryItems(path)
+	
+	for _, file in ipairs(files) do
+		local filePath = (path .. '/' .. file)
+		local info = love.filesystem.getInfo(filePath)
+		
+		if info then
+			if filter and not file:gmatch(filter) then
+				-- nothing
+			elseif recursive and info.type == 'directory' then
+				local otherFiles = Cache.filelist(file)
+				for i = 1, #otherFiles do table.insert(filePaths, otherFiles[i]) end
+			else
+				table.insert(filePaths, filePath)
+			end
+		end
+	end
+	
+	return filePaths
 end
 
 function Cache.resources(path)

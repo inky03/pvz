@@ -1,3 +1,4 @@
+bit = require 'bit'
 utils = require 'utils'
 require 'table.clear'
 
@@ -19,6 +20,7 @@ CheckBox = require 'pvz.lawn.hud.CheckBox'
 
 Font = require 'pvz.font.Font'
 Strings = require 'pvz.strings.Strings'
+Particle = require 'pvz.particle.Particle'
 Reanimation = require 'pvz.reanim.Reanimation'
 
 Unit = require 'pvz.lawn.Unit'

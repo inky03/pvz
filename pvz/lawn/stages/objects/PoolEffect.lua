@@ -1,5 +1,6 @@
 local PoolEffect = UIContainer:extend('PoolEffect')
 
+PoolEffect.glistening = true
 PoolEffect.causticAlpha = nil
 PoolEffect.textureName = 'pool'
 PoolEffect.baseTextureName = 'pool_base'
@@ -43,11 +44,25 @@ function PoolEffect:init(pool, x, y)
 	self.mesh = love.graphics.newMesh(self.vertMap[1], 'triangles', 'dynamic')
 	
 	self.canClick = false
+	
+	if self.glistening then
+		self.sparkly = self:addElement(Particle:new('PoolSparkly', 420, 15))
+	end
 end
 
 function PoolEffect:update(dt)
 	self.poolCounter = (self.pool and self.pool.poolCounter or (self.poolCounter + dt * Constants.tickPerSecond))
 	if shaders then self.causticShader:send('counter', self.poolCounter) end
+	
+	if self.sparkly then
+		if complex and not self.sparkly.alive then
+			self.sparkly:revive()
+		elseif not complex and self.sparkly.alive then
+			self.sparkly:kill()
+		end
+	end
+	
+	UIContainer.update(self, dt)
 end
 
 function PoolEffect:draw(x, y)

@@ -3,6 +3,7 @@ local Repeater = PeaShooter:extend('Repeater')
 
 Repeater.reanimName = 'PeaShooter'
 Repeater.packetCost = 200
+Repeater.id = 7
 
 function Repeater:init(x, y, challenge)
 	PeaShooter.init(self, x, y, challenge)

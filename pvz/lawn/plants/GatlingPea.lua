@@ -8,6 +8,7 @@ GatlingPea.reanimName = 'GatlingPea'
 GatlingPea.stemLayer = 'idle'
 GatlingPea.packetRecharge = 5000
 GatlingPea.packetCost = 250
+GatlingPea.id = 40
 
 function GatlingPea:animate()
 	self.head.animation.onFrame:add(function(animation)

@@ -3,6 +3,7 @@ local SunFlower = Plant:extend('SunFlower')
 
 SunFlower.reanimName = 'SunFlower'
 SunFlower.packetCost = 50
+SunFlower.id = 1
 
 function SunFlower:init(x, y, challenge)
 	Plant.init(self, x, y, challenge)

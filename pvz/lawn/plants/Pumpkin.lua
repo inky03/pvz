@@ -7,6 +7,7 @@ Pumpkin.reanimName = 'Pumpkin'
 Pumpkin.packetRecharge = 3000
 Pumpkin.packetCost = 125
 Pumpkin.maxHp = 4000
+Pumpkin.id = 30
 
 function Pumpkin:init(x, y, challenge)
 	Plant.init(self, x, y, challenge)

@@ -41,6 +41,6 @@ you might now test the project as any other love2d project. if everything is don
 ## todo
 
 - finish the entire freaking game
-- implement Particles (needs research)
+- implement Particles (IN PROGRESS)
 - improve Reanimations (attaching particles ~~and more reanimations~~ (that sorta works now))
 - bass.dll...?

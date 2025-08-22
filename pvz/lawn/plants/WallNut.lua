@@ -5,6 +5,7 @@ WallNut.reanimName = 'Wallnut'
 WallNut.packetRecharge = 3000
 WallNut.packetCost = 50
 WallNut.maxHp = 4000
+WallNut.id = 3
 
 function WallNut:init(x, y, challenge)
 	Plant.init(self, x, y, challenge)

@@ -2,7 +2,6 @@ local Button = UIContainer:extend('Button')
 
 Button.slice = true
 Button.useHand = true
-Button.textureName = 'button'
 Button.clickSound = 'buttonclick'
 Button.fontName = 'DwarvenTodcraft'
 Button.fontSize = 18
@@ -15,6 +14,11 @@ Button.fontOffsets = {
 	hovering = {x = 3; y = -3};
 	normal = {x = 3; y = -3};
 	down = {x = 3; y = -2};
+}
+Button.textureNames = {
+	hovering = 'button';
+	normal = 'button';
+	down = 'button_down';
 }
 Button.buttonOffsets = {
 	down = {x = 1; y = 0};
@@ -50,12 +54,16 @@ function Button:init(x, y, text, fun, w)
 	self.font:setText(text)
 end
 function Button:create()
-	for _, tex in ipairs({ 'left' ; 'middle' ; 'right' }) do
-		local normalTexture = Cache.image(self.textureName .. '_' .. tex, 'images')
-		
-		self.textures.normal[tex] = normalTexture
-		self.textures.down[tex] = (Cache.image(self.textureName .. '_down_' .. tex, 'images', true) or normalTexture)
-		self.textures.hovering[tex] = (Cache.image(self.textureName .. '_hovering_' .. tex, 'images', true) or normalTexture)
+	if self.slice then
+		for _, tex in ipairs({ 'left' ; 'middle' ; 'right' }) do
+			self.textures.hovering[tex] = Cache.image(self.textureNames.hovering .. '_' .. tex, 'images')
+			self.textures.normal[tex] = Cache.image(self.textureNames.normal .. '_' .. tex, 'images')
+			self.textures.down[tex] = Cache.image(self.textureNames.down .. '_' .. tex, 'images')
+		end
+	else
+		self.textures.hovering.left = Cache.image(self.textureNames.hovering, 'images')
+		self.textures.normal.left = Cache.image(self.textureNames.normal, 'images')
+		self.textures.down.left = Cache.image(self.textureNames.down, 'images')
 	end
 end
 

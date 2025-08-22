@@ -28,6 +28,7 @@ for k, twn in pairs{ --in functions
 	Curve[k .. '_OUT_IN'] = Curve.outIn(Curve[k .. '_OUT'], twn)
 end
 --outliers
+Curve.CONSTANT = function(t) return 0 end
 Curve.LINEAR = function(t) return t end
 Curve.BOUNCE_OUT = function(t) -- what the hell
 	if t < B1 then return (7.5625 * t * t) end

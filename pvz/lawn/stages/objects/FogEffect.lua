@@ -94,6 +94,7 @@ function FogEffect:draw(x, y)
 		end
 	end
 	
+	love.graphics.setColor(1, 1, 1)
 	UIContainer.draw(self, x, y)
 end
 

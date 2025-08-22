@@ -4,6 +4,7 @@ local SnowPeaProjectile = Cache.module(Cache.projectiles('SnowPeaProjectile'))
 
 SnowPea.reanimName = 'SnowPea'
 SnowPea.packetCost = 175
+SnowPea.id = 5
 
 SnowPea.projectile = SnowPeaProjectile
 

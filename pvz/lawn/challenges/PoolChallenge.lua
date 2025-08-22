@@ -17,7 +17,6 @@ function PoolChallenge:getZombies(challenge)
 	
 	return (zombies[challenge] or { BasicZombie })
 end
-
 function PoolChallenge:getWaveCount(challenge)
 	local counts = {
 		[21] = 10;	 [22] = 20;	 [23] = 20;	 [24] = 30;	 [25] = 20;
@@ -26,13 +25,8 @@ function PoolChallenge:getWaveCount(challenge)
 	
 	return (counts[challenge] or 10)
 end
-
 function PoolChallenge:getHouseMessage(challenge)
 	return Strings:get('PLAYERS_BACKYARD', {PLAYER = username})
-end
-
-function PoolChallenge:getTitle(challenge)
-	return ('%s %d-%d'):format(Strings:get('LEVEL'), 3, challenge - 20)
 end
 
 return PoolChallenge

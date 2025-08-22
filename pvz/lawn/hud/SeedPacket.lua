@@ -58,7 +58,7 @@ end
 
 function SeedPacket:mousePressed(mouseX, mouseY, button)
 	if button ~= 1 then return end
-	if self:isReady() and not self.lawn.hoveringEntity then
+	if self:isReady() and not self.picking and not self.lawn.hoveringEntity then
 		self.lawn:pickPlant(self.entity:new(0, 0, self.lawn.challenge), self, mouseX, mouseY)
 		
 		self.parent.canClickChildren = false
@@ -75,13 +75,25 @@ function SeedPacket:update(dt)
 		self.recharged = math.min(self.recharged + dt * Constants.tickPerSecond, self.maxRecharge)
 	end
 	
-	self.ready = self:isReady()
-	self.useHand = self.ready
+	local challengeStarted = self.lawn.challenge.challengeStarted
+	if challengeStarted then
+		local wasReady = self.ready
+		
+		self.ready = self:isReady()
+		self.useHand = self.ready
+	
+		if wasReady ~= self.ready and self.ready then
+			self:flash()
+		end
+	end
 	
 	UIContainer.update(self, dt)
 end
 function SeedPacket:isReady()
-	return (self.entity and self.recharged >= self.maxRecharge and (not self.bank or self.cost <= self.bank.money) and not self.picking)
+	return (self.entity and self.recharged >= self.maxRecharge and (not self.bank or self.cost <= self.bank.money))
+end
+function SeedPacket:flash()
+	return self:addElement(Particle:new('SeedPacketFlash'))
 end
 
 function SeedPacket:onPlanted()
@@ -89,7 +101,6 @@ function SeedPacket:onPlanted()
 	self.picking = false
 	self.bank:setMoney(self.bank.money - self.cost)
 end
-
 function SeedPacket:onReturned()
 	self.picking = false
 end
@@ -101,7 +112,7 @@ function SeedPacket:draw(x, y)
 	love.graphics.setBlendMode('alpha')
 	
 	local challengeStarted = self.lawn.challenge.challengeStarted
-	if not self.ready or not challengeStarted then
+	if not self.ready or self.picking or not challengeStarted then
 		love.graphics.setColor(0, 0, 0, .5)
 		love.graphics.rectangle('fill', x, y, self.w, self.h)
 		

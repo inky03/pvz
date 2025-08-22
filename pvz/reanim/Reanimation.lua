@@ -136,7 +136,7 @@ function Reanimation:render(x, y, transforms)
 	
 	love.graphics.setColor(1, 1, 1, 1)
 	
-	for i = 1, (transforms and #transforms or 1) do
+	for i = 1, (transforms and #transforms or #self.transforms) do
 		table.remove(Reanimation.transformStack, 1)
 	end
 end

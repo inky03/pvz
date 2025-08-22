@@ -32,12 +32,12 @@ function string.trim(str) return string.ltrim(string.rtrim(str)) end
 random = {}
 function random.shuffle() math.randomseed(os.clock()) end
 function random.number(min, max, precision)
-	max = max or (min and 1 or 0)
+	max = max or (min and 0 or 1)
 	min = min or 0
 	return math.lerp(min, max, math.random())
 end
 function random.int(min, max)
-	max = max or (min and 1 or 0)
+	max = max or (min and 0 or 1)
 	min = min or 0
 	return math.random(min, max)
 end
@@ -204,5 +204,6 @@ function trace(...)
 	local info = debug.getinfo(2, 'Sl')
 	local file = (info.source:match('@(.*)%.lua$') or info.source)
 	for i, val in ipairs(v) do v[i] = tostr(val) end
+	if #v == 0 then v = {'nil'} end
 	return print(('%s:%d: %s'):format(file:gsub('[/\\]', '.'), info.currentline, table.concat(v, '\t')))
 end
