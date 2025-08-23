@@ -12,6 +12,7 @@ function UIContainer:init(x, y, w, h)
 	self.canClick = true
 	self.active = true
 	self.alive = true
+	self.destroyed = false
 	
 	self.hovering = false
 	self.dragging = false
@@ -53,6 +54,8 @@ function UIContainer:destroy()
 			end
 		end
 	end
+	
+	self.destroyed = true
 end
 function UIContainer:getCount()
 	local objects = 1

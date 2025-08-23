@@ -50,7 +50,7 @@ function AnimationController:update(dt, noDiff)
 	
 	for i = 1, #self.list do
 		local anim = self.list[i]
-		local active = ((anim == self._cur and self.crossFade >= 1) or anim == self._prev)
+		local active = (anim == self._cur or anim == self._prev)
 		if active or self.parallel[anim.name] then
 			anim:update(dt * self.speed, active)
 		end

@@ -11,6 +11,7 @@ SnowPea.projectile = SnowPeaProjectile
 function SnowPea:fireProjectile()
 	PeaShooter.fireProjectile(self)
 	Sound.play('snow_pea_sparkles', 10)
+	self.lawn:spawnParticle('SnowPeaPuff', self.x + 68, self.y + 20)
 end
 
 return SnowPea

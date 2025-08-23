@@ -53,24 +53,28 @@ function ParticleObject:destroy()
 end
 
 function ParticleObject:update(dt)
-	if self.dead then return end
+	if self.dead then
+		self:destroy()
+		return
+	end
 	local speedMultiplier = self.emitter.speed
 	local die = false
 	
 	self.age = (self.age + dt * Constants.tickPerSecond * speedMultiplier)
 	if self.age >= self.duration then
-		self.age = self.duration
-		die = true
+		if Particles.getEmitterFlag(self.emitter.emitter, 'particleLoops') then
+			self.age = (self.age % self.duration)
+		else
+			self.age = self.duration
+			self.dead = true
+			return
+		end
 	end
 	
 	self.timeValue = (self.age / self.duration)
 	self:updateParticle(dt * speedMultiplier)
 	self:updateFields(dt * speedMultiplier)
 	self.lastTimeValue = self.timeValue
-	
-	if die then
-		self:destroy()
-	end
 	
 	UIContainer.update(self, dt)
 end
@@ -92,7 +96,7 @@ function ParticleObject:updateParticle(dt)
 	
 	local ang = math.deg(self.angle)
 	self.transform:setShear(ang, ang)
-	self.transform:setScale(self.scale * stretch, self.scale)
+	self.transform:setScale(self.scale, self.scale * stretch)
 end
 function ParticleObject:updateFields(dt)
 	if self.fields.Friction then
@@ -119,8 +123,8 @@ function ParticleObject:updateFields(dt)
 	end
 	if self.fields.GroundConstraint then
 		self.floorY = (self.fields.GroundConstraint.y and self:evaluateFieldTrack('GroundConstraint', 'y') or 0)
-		if self.y + self.h * .5 >= self.emitter.systemCenter.y + self.floorY then
-			self.y = -self.h * .5 + self.emitter.systemCenter.y + self.floorY
+		if self.y >= self.emitter.systemCenter.y + self.floorY then
+			self.y = self.emitter.systemCenter.y + self.floorY
 			
 			local reflect, spin = self:evaluateParticleTrack('collisionReflect'), self:evaluateParticleTrack('collisionSpin')
 			self.angleVelocity = (self.angleVelocity * spin)
@@ -152,8 +156,9 @@ function ParticleObject:setVelocity(x, y)
 end
 
 function ParticleObject:reloadTexture()
-	local columns, rows = (self.columns or self.frames), (self.rows or 1)
-	self.textureCoord.w, self.textureCoord.h = (self.texture:getWidth() / columns), (self.texture:getHeight() / rows)
+	self.columns, self.rows = Resources.getImageGrid(self.textureKey)
+	
+	self.textureCoord.w, self.textureCoord.h = (self.texture:getWidth() / self.columns), (self.texture:getHeight() / self.rows)
 	self.transform:setOrigin(self.textureCoord.w * .5, self.textureCoord.h * .5)
 	self.transform:setOffset(self.transform.xOrigin, self.transform.yOrigin)
 	self:setDimensions(self.textureCoord.w, self.textureCoord.h)
@@ -167,15 +172,17 @@ function ParticleObject:draw(x, y)
 end
 function ParticleObject:render(x, y)
 	local x, y = ((x or 0) + self.shake.x), ((y or 0) + self.shake.y)
+	local additive = Particles.getEmitterFlag(self.emitter.emitter, 'additive')
 	local fullscreen = Particles.getEmitterFlag(self.emitter.emitter, 'fullscreen')
 	
-	self.textureCoord.x = (math.floor(self.frame - 1) % self.columns * self.textureCoord.w)
-	self.textureCoord.y = (math.floor((self.frame - 1) / self.columns) * self.textureCoord.h)
-	
+	local oldTexture = self.texture
 	self.texture = (self.images[self.textureKey] or Cache.unknownTexture)
 	if oldTexture ~= self.texture then
 		self:reloadTexture()
 	end
+	
+	self.textureCoord.x = (math.floor(self.frame - 1) % self.columns * self.textureCoord.w)
+	self.textureCoord.y = (math.floor((self.frame - 1) / self.columns) * self.textureCoord.h)
 	
 	local stack = Reanimation.transformStack
 	for i, transform in ipairs(transforms or self.transforms) do
@@ -226,10 +233,13 @@ function ParticleObject:render(x, y)
 			self:evaluateParticleTrack('particleAlpha') * self.emitter.systemAlpha
 		)
 		
+		if additive then love.graphics.setBlendMode('add') end
+		
 		mesh.mesh:setVertices(vert)
 		mesh.mesh:setTexture(self.texture)
 		love.graphics.draw(mesh.mesh, fullscreen and 0 or x, fullscreen and 0 or y)
 		
+		love.graphics.setBlendMode('alpha')
 		love.graphics.setColor(1, 1, 1)
 	end
 	

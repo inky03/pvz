@@ -2,8 +2,8 @@ local Projectile = Unit:extend('Projectile')
 
 Projectile.reanimName = nil
 
-function Projectile:init(x, y)
-	Unit.init(self, x, y)
+function Projectile:init(x, y, challenge)
+	Unit.init(self, x, y, challenge)
 	
 	self:setHitbox(2, 2, 24, 24)
 	

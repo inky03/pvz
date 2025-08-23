@@ -213,14 +213,14 @@ function Reanimation.transformVertex(vert, frame, scaleCoords)
 	
 	local xScale, yScale = (scaleCoords and frame.xScale or 1), (scaleCoords and frame.yScale or 1)
 	
-	vert[1] = ((vert[1] - frame.xOrigin) * xScale - frame.xOffset - frame._internalXOffset)
-	vert[2] = ((vert[2] - frame.yOrigin) * yScale - frame.yOffset - frame._internalYOffset)
+	vert[1] = ((vert[1] - frame.xOrigin) * xScale)
+	vert[2] = ((vert[2] - frame.yOrigin) * yScale)
 	
 	local rX = (vert[1] * math.dcos(frame.yShear) - vert[2] * math.dsin(frame.xShear))
 	local rY = (vert[1] * math.dsin(frame.yShear) + vert[2] * math.dcos(frame.xShear))
 	
-	vert[1] = (frame.x * (frame.scaleCoords and xScale or 1) + rX + frame.xOrigin)
-	vert[2] = (frame.y * (frame.scaleCoords and yScale or 1) + rY + frame.yOrigin)
+	vert[1] = (frame.x * (frame.scaleCoords and xScale or 1) + rX + frame.xOrigin - frame.xOffset - frame._internalXOffset)
+	vert[2] = (frame.y * (frame.scaleCoords and yScale or 1) + rY + frame.yOrigin - frame.yOffset - frame._internalYOffset)
 end
 
 function Reanimation:getName()

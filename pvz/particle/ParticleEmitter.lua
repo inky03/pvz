@@ -11,6 +11,7 @@ function ParticleEmitter:init(emitterData, system)
 	self:reset()
 	self.speed = 1
 	self.particles = {}
+	self.canClick = false
 	
 	if self.emitter.systemDuration then
 		self.systemDuration = Particles.evaluateTrack(self.emitter.systemDuration, 0, random.number())
@@ -50,10 +51,17 @@ end
 
 function ParticleEmitter:update(dt)
 	if self.dead then
-		if #self.particles <= 0 and self.destroyOnFinish then
-			self:destroy()
+		if self.systemAge >= self.systemDuration or #self.particles <= 0 then
+			if self.destroyOnFinish then
+				self:destroy()
+			else
+				for _, part in ipairs(self.particles) do
+					self.part:destroy()
+				end
+			end
 		end
-		return
+		
+		return UIContainer.update(self, dt)
 	end
 	
 	local speedMultiplier = self.speed
@@ -91,7 +99,18 @@ function ParticleEmitter:updateEmitter(dt)
 	self.systemBlue = self:evaluateSystemTrack('systemBlue')
 	self.systemAlpha = self:evaluateSystemTrack('systemAlpha')
 end
+function ParticleEmitter:moveDelta(deltaX, deltaY)
+	if Particles.getEmitterFlag(self.emitter, 'particlesDontFollow') then
+		for i = 1, #self.particles do
+			local particle = self.particles[i]
+			particle.x = (particle.x - deltaX)
+			particle.y = (particle.y - deltaY)
+		end
+	end
+end
 function ParticleEmitter:updateSpawn(dt)
+	if self.dead then return end
+	
 	self.spawnAccum = (self.spawnAccum + self:evaluateSystemTrack('spawnRate') * dt)
 	local spawnCount = math.floor(self.spawnAccum)
 	self.spawnAccum = (self.spawnAccum % 1)
@@ -149,7 +168,6 @@ function ParticleEmitter:spawnParticle()
 	
 	particle.textureKey = self.emitter.image
 	particle.frames = self.emitter.imageFrames
-	particle.columns, particle.rows = (self.emitter.imageColumns or self.emitter.imageFrames), self.emitter.imageRows
 	particle:setPosition(
 		self.systemCenter.x + x + y * Particles.evaluateTrack(self.emitter.emitterSkewX, t, random.number()),
 		self.systemCenter.y + y + x * Particles.evaluateTrack(self.emitter.emitterSkewY, t, random.number())
@@ -175,7 +193,7 @@ function ParticleEmitter:spawnParticle()
 		self.angle = launchAngle
 	end
 	
-	table.insert(self.particles, self.system:addElement(particle))
+	table.insert(self.particles, self:addElement(particle))
 	self.particlesSpawned = (self.particlesSpawned + 1)
 	
 	return particle

@@ -4,6 +4,7 @@ Sound.volume = 1
 
 function Sound.play(path, deviation, pitch)
 	if not path or path == '' then return nil end
+	local path = (type(path) == 'table' and random.object(path) or path)
 	local snd = Cache.sound(path)
 	if snd then
 		local snd = snd:clone()
@@ -17,8 +18,8 @@ function Sound.play(path, deviation, pitch)
 	return nil
 end
 
-function Sound.playRandom(paths, deviation, pitch)
-	return Sound.play(random.object(paths), deviation, pitch)
+function Sound.playRandom(paths, deviation, pitch) -- deprecated
+	return Sound.play(paths, deviation, pitch)
 end
 
 return Sound

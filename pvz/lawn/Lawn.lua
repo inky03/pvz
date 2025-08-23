@@ -21,7 +21,6 @@ function Lawn:init(challenge, x, y)
 	UIContainer.init(self, 0, 0, 1400, 600)
 	
 	self.challenge = challenge
-	self.particles = {}
 	self.units = {}
 	
 	self.selectedPacket = nil
@@ -44,7 +43,7 @@ function Lawn:init(challenge, x, y)
 end
 
 function Lawn:getCount()
-	return (UIContainer.getCount(self) + #self.particles + #self.units)
+	return (UIContainer.getCount(self) + #self.units)
 end
 
 function Lawn:unitAt(x, y, entityGroup)
@@ -75,13 +74,11 @@ function Lawn:removeUnit(needle)
 		end
 	end
 end
-function Lawn:removeParticle(needle)
-	for i, unit in ipairs(self.particles) do
-		if unit == needle then
-			table.remove(self.particles, i)
-			return
-		end
-	end
+function Lawn:spawnParticle(part, x, y, top)
+	local part = self:addElement(Particle:new(part, x, y))
+	part.drawToTop = (top ~= false)
+	
+	return part
 end
 
 function Lawn:mousePressed(mouseX, mouseY, button)
@@ -113,8 +110,9 @@ end
 function Lawn:update(dt)
 	UIContainer.update(self, dt)
 	
-	for _, unit in ipairs(self.units) do unit:update(dt) end
-	for _, part in ipairs(self.particles) do part:update(dt) end
+	for _, unit in ipairs(self.units) do
+		unit:update(dt)
+	end
 end
 function Lawn:updateHover(mouseX, mouseY)
 	if self.hoveringEntity then
@@ -234,7 +232,9 @@ function Lawn:tryPlant(entity, eval)
 end
 function Lawn:onPlant(entity, col, row)
 	if self:getSurfaceAt(col, row) == 'ground' then
+		local xx, yy = self:getWorldPosition(col, row)
 		Sound.playRandom({ 'plant' ; 'plant2' })
+		self:spawnParticle('Planting', xx + self.tileSize.x * .5, yy + 80)
 	end
 end
 
@@ -259,11 +259,10 @@ function Lawn:drawTop(x, y) -- draw units
 	if not self.visible then return end
 	
 	for _, unit in ipairs(self.units) do unit:draw(x + unit.x, y + unit.y) end
-	for _, part in ipairs(self.particles) do part:draw(x + part.x, y + part.y) end
-	
-	self:drawHover(x, y)
 	
 	UIContainer.drawTop(self, x, y)
+	
+	self:drawHover(x, y)
 end
 function Lawn:drawHover(x, y)
 	if self.hoveringEntity then

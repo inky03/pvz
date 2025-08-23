@@ -48,7 +48,7 @@ Particles.curves = { -- TODO: update curve and finish
 	Bounce = Curve.BOUNCE_OUT;
 }
 Particles.definitions = { -- yup !
-	{'systemDuration', 0};
+	{'systemDuration', nil};
 	{'spawnRate', 0};
 	{'spawnMinActive', nil};
 	{'spawnMaxActive', nil};
@@ -152,8 +152,8 @@ function Particles.loadBinary(path, kind)
 		bytePos = (bytePos + 4)
 		
 		local emitter = {}
-		v = readByte('i32') if v ~= 0 then emitter.imageColumns = v end
-		v = readByte('i32') if v ~= 0 then emitter.imageRows = v end
+		v = readByte('i32') if v ~= 0 then emitter.imageColumn = v end
+		v = readByte('i32') if v ~= 0 then emitter.imageRow = v end
 		v = readByte('i32') emitter.imageFrames = v
 		v = readByte('i32') emitter.animated = (v ~= 0)
 		v = readByte('i32') emitter.particleFlags = v
@@ -288,7 +288,7 @@ function Particles.evaluateCurve(time, first, last, curve)
 end
 
 function Particles.getResource(key)
-	return (key and Cache.image(key:gsub('IMAGE_', ''), 'particles') or nil)
+	return (key and (Cache.image(key:gsub('IMAGE_', ''), 'particles', true) or Resources.fetch(key, 'Image')))
 end
 
 return Particles

@@ -206,7 +206,7 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 end
 
 function Reanim.getResource(key)
-	return (key and Cache.image(key:gsub('IMAGE_REANIM_', ''), 'reanim') or nil)
+	return (key and (Cache.image(key:gsub('IMAGE_REANIM_', ''), 'reanim', true) or Resources.fetch(key, 'Image')))
 end
 
 function Reanim:__tostring()

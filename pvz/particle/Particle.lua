@@ -11,12 +11,20 @@ Particle.triangle.mesh = love.graphics.newMesh(Particle.triangle.vert, 'strip', 
 function Particle:init(kind, x, y)
 	UIContainer.init(self, x, y, 50, 50)
 	
-	self.canClick = false
+	self.canClickChildren = false
 	
 	self.speed = 1
 	self.images = {}
 	self.emitters = {}
 	self:setParticleData(Cache.particle(kind))
+end
+
+function Particle:moveTo(x, y)
+	local oldX, oldY = self.x, self.y
+	self:setPosition(x or oldX, y or oldY)
+	for i = 1, #self.emitters do
+		self.emitters[i]:moveDelta(self.x - oldX, self.y - oldY)
+	end
 end
 
 function Particle:update(dt)
@@ -45,6 +53,9 @@ end
 function Particle:destroyEmitters()
 	for _, emitter in ipairs(self.emitters) do emitter:destroy() end
 	table.clear(self.emitters)
+end
+function Particle:killEmitters()
+	for _, emitter in ipairs(self.emitters) do emitter.dead = true end
 end
 
 function Particle:replaceImage(image, newResource)

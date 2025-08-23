@@ -2,7 +2,7 @@ LawnStrings = require 'pvz.data.LawnStrings'
 
 local Strings = {}
 
-function Strings:reload()
+function Strings.reload()
 	LawnStrings.load(Cache.main('properties/LawnStrings.txt'))
 end
 

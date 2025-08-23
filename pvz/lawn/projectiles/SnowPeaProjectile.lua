@@ -1,10 +1,20 @@
 local Pea = Cache.module(Cache.projectiles('Pea'))
 local SnowPeaProjectile = Pea:extend('SnowPeaProjectile')
 
-function SnowPeaProjectile:init()
-	Pea.init(self, x, y)
+SnowPeaProjectile.particleName = 'SnowPeaSplat'
+
+function SnowPeaProjectile:init(challenge)
+	Pea.init(self, challenge)
 	
 	self.texture = Cache.image('ProjectileSnowPea', 'images')
+	
+	self.trail = self.lawn:spawnParticle('SnowPeaTrail')
+end
+
+function SnowPeaProjectile:update(dt)
+	Pea.update(self, dt)
+	
+	self.trail:moveTo(self.x, self.y + 23)
 end
 
 function SnowPeaProjectile:hit(collision)
@@ -15,6 +25,11 @@ function SnowPeaProjectile:hit(collision)
 		collision.speedMultiplier = math.min(collision.speedMultiplier, .5)
 		collision.frost = 15
 	end
+end
+function SnowPeaProjectile:destroy()
+	Pea.destroy(self)
+	
+	self.trail:killEmitters()
 end
 
 return SnowPeaProjectile

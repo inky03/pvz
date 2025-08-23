@@ -55,8 +55,6 @@ function DayPool:drawTop(x, y) -- draw units
 		unit:draw(x + unit.x, y + unit.y + yOffset)
 	end
 	
-	for _, part in ipairs(self.particles) do part:draw(x + part.x, y + part.y) end
-	
 	self:drawHover(x, y)
 	
 	UIContainer.drawTop(self, x, y)

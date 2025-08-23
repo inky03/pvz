@@ -1,5 +1,6 @@
-local deflate = require 'lib.deflate.deflatelua'
-local gif = require 'lib.gifload'
+Resources = require 'pvz.data.Resources'
+Deflate = require 'lib.deflate.deflatelua'
+Gif = require 'lib.gifload'
 
 local Cache = {
 	cached = {
@@ -109,7 +110,7 @@ function Cache.image(path, folder, eval, maskPath)
 	return img
 end
 
-function Cache.sound(snd)
+function Cache.sound(snd, eval)
 	local key = snd:lower()
 	if not cached.sounds[key] then
 		local fpathOgg = Cache.main('sounds/' .. snd .. '.ogg')
@@ -118,8 +119,11 @@ function Cache.sound(snd)
 		)
 		if fpath then
 			cached.sounds[key] = love.audio.newSource(fpath, 'static')
+		elseif eval then
+			return nil
 		else
 			trace('Resource for ' .. snd .. ' doesn\'t exist')
+			return Cache.unknownSound
 		end
 	end
 	
@@ -145,7 +149,7 @@ function Cache.reanim(kind, folder)
 			cached.reanim[key] = Reanim.loadBinary(fpathCompiled, kind)
 		else
 			trace('Resource for ' .. fpath .. ' doesn\'t exist')
-			return Reanim:new()
+			return Cache.unknownReanim
 		end
 		trace(('%s Reanimation (%s) (%.2fms)'):format(kind, format, (os.clock() - t) * 1000))
 	end
@@ -172,7 +176,7 @@ function Cache.particle(kind, folder)
 			cached.particles[key] = Particles.loadBinary(fpathCompiled, kind)
 		else
 			trace('Resource for ' .. fpath .. ' doesn\'t exist')
-			return Particles:new()
+			return Cache.unknownParticle
 		end
 		trace(('%s Particle (%s) (%.2fms)'):format(kind, format, (os.clock() - t) * 1000))
 	end
@@ -180,7 +184,7 @@ function Cache.particle(kind, folder)
 	return cached.particles[key]
 end
 
-function Cache.font(name, folder)
+function Cache.font(name, folder, eval)
 	if name == nil then return nil end
 	
 	local key = name:lower()
@@ -190,9 +194,11 @@ function Cache.font(name, folder)
 		
 		if love.filesystem.getInfo(fpath) then
 			cached.font[key] = FontData.load(name, folder)
+		elseif eval then
+			return nil
 		else
 			trace('Resource for ' .. fpath .. ' doesn\'t exist')
-			return FontData:new()
+			return Cache.unknownFont
 		end
 	end
 	
@@ -263,7 +269,7 @@ function Cache.decompressFile(path)
 	local int = love.data.unpack('<i4', val)
 	if int == -559022380 then -- zlib compressed reanimation
 		local bytes = {}
-		local output = deflate.inflate_zlib({
+		local output = Deflate.inflate_zlib({
 			input = file:read():sub(5);
 			output = function(b) table.insert(bytes, string.char(b)) end;
 		})
@@ -275,7 +281,7 @@ function Cache.decompressFile(path)
 end
 function Cache.loadGifFile(path, frames)
 	local file = love.filesystem.newFile(path, 'r')
-	local gif = gif()
+	local gif = Gif()
 	
 	while true do
 		local data = file:read(65536)
@@ -288,7 +294,13 @@ function Cache.loadGifFile(path, frames)
 	return gif:done()
 end
 
-Cache.unknownTexture = love.graphics.newImage(Cache.resources('noTexture.png'))
-Cache.unknownTexture:setFilter('nearest', 'nearest')
+function Cache.createDefaults()
+	Cache.unknownTexture = love.graphics.newImage(Cache.resources('noTexture.png'))
+	Cache.unknownTexture:setFilter('nearest', 'nearest')
+	Cache.unknownSound = love.sound.newSoundData(1)
+	Cache.unknownParticle = Particles:new()
+	Cache.unknownReanim = Reanim:new()
+	Cache.unknownFont = FontData:new()
+end
 
 return Cache
