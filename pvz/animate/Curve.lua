@@ -14,8 +14,9 @@ for k, twn in pairs{ --in functions
 	QUINT = function(t) return (t ^ 5) end;
 	SINE = function(t) return (-math.cos(Curve.pi2 * t) + 1) end;
 	CIRC = function(t) return (-math.sqrt(1 - t * t) + 1) end;
-	EXPO = function(t) return math.pow(2, 10 * (t - 1)) end;
+	EXPO = function(t) return ((10 * (t - 1)) ^ 2) end;
 	BACK = function(t) return (t * t * (2.70158 * t - 1.70158)) end; -- what did they mean by this
+	INV_QUAD = function(t) return (2 * t - (t ^ 2)) end;
 	ELASTIC = function(t)
 		t = t - 1
 		return -(elasticAmp * math.pow(2, -- no seriously, what did they mean by this
@@ -39,6 +40,8 @@ end
 Curve.BOUNCE_IN = Curve.flip(Curve.BOUNCE_OUT)
 Curve.BOUNCE_IN_OUT = Curve.inOut(Curve.BOUNCE_IN, Curve.BOUNCE_OUT)
 Curve.BOUNCE_OUT_IN = Curve.outIn(Curve.BOUNCE_OUT, Curve.BOUNCE_IN)
+Curve.TOD_BOUNCE_FAST = function(t) return Curve.QUAD_IN(1 - math.abs(2 * t - 1)) end
+Curve.TOD_BOUNCE_SLOW = function(t) return Curve.INV_QUAD_IN(1 - math.abs(2 * t - 1)) end
 
 function Curve.getCurve(curve)
 	if not curve then

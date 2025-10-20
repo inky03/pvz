@@ -89,7 +89,7 @@ function ParticleObject:updateParticle(dt)
 	
 	local spinSpeed = self:evaluateParticleTrack('particleSpinSpeed')
 	local diffSpinAngle = (self:evaluateParticleTrack('particleSpinAngle') - self:evaluateParticleTrack('particleSpinAngle', self.lastTimeValue))
-	self.angle = (self.angle + (math.rad(spinSpeed + diffSpinAngle) + self.angleVelocity) * dt)
+	self.angle = (self.angle - math.rad(diffSpinAngle) - (math.rad(spinSpeed) - self.angleVelocity) * dt)
 	
 	local stretch = self:evaluateParticleTrack('particleStretch')
 	self.scale = self:evaluateParticleTrack('particleScale')
@@ -139,6 +139,7 @@ function ParticleObject:updateFields(dt)
 end
 
 function ParticleObject:evaluateParticleTrack(particleTrack, t)
+	if t and t < 0 then return 0 end
 	local track = self.emitter.emitter[particleTrack]
 	if not track then return trace(particleTrack .. ' not a valid particle track') end
 	return Particles.evaluateTrack(track, t or self.timeValue, self.interp[Particles.definitionIds[particleTrack]])

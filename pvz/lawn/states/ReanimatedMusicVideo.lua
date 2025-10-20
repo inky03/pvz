@@ -9,10 +9,25 @@ local CreditBrainType = {
 	FAST_OFF = 4; FAST_ON = 5;
 }
 
+local CreditBrain = UIContainer:extend('CreditBrain')
+function CreditBrain:init(x, y)
+	self.texture = Cache.image('brain', 'images')
+	
+	UIContainer.init(self, x, y, self.texture:getPixelDimensions())
+end
+function CreditBrain:draw(x, y)
+	if not self.visible then return end
+	
+	love.graphics.draw(self.texture, x, y)
+	
+	UIContainer.draw(self, x, y)
+end
+
 local ReanimatedMusicVideo = State:extend('ReanimatedMusicVideo') -- get it
 
 ReanimatedMusicVideo.CreditBrainType = CreditBrainType
 ReanimatedMusicVideo.CreditWordType = CreditWordType
+ReanimatedMusicVideo.CreditBrain = CreditBrain
 ReanimatedMusicVideo.timing = {
 	{frame = 128.5; word = CreditWordType.AW ; wordX = 	 0; brain = CreditBrainType.OFF	   };
 	{frame = 133.0; word = CreditWordType.OH ; wordX = 	 0; brain = CreditBrainType.OFF	   };
@@ -302,46 +317,15 @@ function ReanimatedMusicVideo:init()
 	self.credits = self:addElement(Reanimation:new('Credits_Main'))
 	self.sunflowerFace = 'Sunflower_head'
 	
-	--[[self.sunflowerFace = 'Sunflower_head'
-	self.sunFlower = Reanimation:new('SunFlower')
-	self.sunFlower.animation:add('idle', 'idle')
-	self.sunFlower.animation:play('idle', true)
-	self.stage = Reanimation:new('Credits_stage')
-	self.zombieArmy1 = Reanimation:new('Credits_ZombieArmy1')
-	self.zombieArmy2 = Reanimation:new('Credits_ZombieArmy2')
-	self.zombie1 = Reanimation:new('Zombie_credits_dance')
-	self.zombie2 = Reanimation:new('Zombie_credits_dance')
-	
-	self.dancers = {self.sunFlower, self.sunFlower2}
-	
-	self.credits:attach('attacher__Stage', self.stage)
-	self.credits:attach('attacher__Stage2', self.stage)
-	self.credits:attach('attacher__SunFlower', self.sunFlower)
-	self.credits:attach('attacher__SunFlower2', self.sunFlower)
-	self.credits:attach('attacher__ZombieArmy', self.zombieArmy1)
-	self.credits:attach('attacher__ZombieArmy2', self.zombieArmy2)
-	self.credits:attach('attacher__Zombie1', self.zombie1)
-	self.credits:attach('attacher__Zombie2', self.zombie2)
-	for _, army in ipairs{self.zombieArmy1, self.zombieArmy2} do
-		for _, layer in ipairs(army.reanim:getLayers()) do
-			local anim = layer.frames[1].text
-			anim = anim:sub(#('attacher__Zombie_credits_dance__anim_') + 1, anim:find('%[') - 1)
-			
-			local zombie = Reanimation:new('Zombie_credits_dance')
-			zombie.animation:add('dance', anim)
-			zombie.animation:play('dance', true)
-			
-			army:attach(layer.name, zombie)
-			table.insert(self.dancers, zombie)
-		end
-	end
-	for _, zombie in ipairs{self.zombie1, self.zombie2} do
-		zombie.animation:add('dance2', 'dance2')
-		zombie.animation:add('dance4', 'dance4')
-		zombie.animation:play('dance2', true)
-	end]]
+	self.brain = self:addElement(CreditBrain:new())
 	
 	self.song:play()
+	
+	self:jump(15)
+end
+
+function ReanimatedMusicVideo:jump(time)
+	self.song:seek(time)
 end
 
 function ReanimatedMusicVideo:update(dt)
@@ -413,6 +397,7 @@ function ReanimatedMusicVideo:updateMovie()
 	end
 	
 	self.sunflowerFace = 'Sunflower_head'
+	self.brain.visible = false
 	
 	if self.previousTiming and self.afterTiming then
 		local framesForWord = (self.afterTiming.frame - self.previousTiming.frame)
@@ -424,6 +409,36 @@ function ReanimatedMusicVideo:updateMovie()
 			self.sunflowerFace = 'Sunflower_head_sing1'
 		else
 			self.sunflowerFace = ('Sunflower_head_sing' .. (self.previousTiming.word + 1))
+		end
+		
+		self.brain.visible = true
+		if self.afterTiming.brain == CreditBrainType.FLY_ON then
+			self.brain:setPosition(
+				Curve.animate(0, 1, self.timingFraction, -50, self.afterTiming.wordX - 15, Curve.QUAD_IN_OUT),
+				Curve.animate(0, 1, self.timingFraction, 505, 485, Curve.TOD_BOUNCE_FAST)
+			)
+		elseif self.afterTiming.brain == CreditBrainType.FAST_ON then
+			self.brain:setPosition(
+				self.afterTiming.wordX - Curve.animate(0, 1, self.timingFraction, 50, 15, Curve.QUAD_IN_OUT),
+				Curve.animate(0, 1, self.timingFraction, 485, 505, Curve.QUAD_IN_OUT)
+			)
+		elseif self.afterTiming.brain == CreditBrainType.FLY_OFF then
+			self.brain:setPosition(
+				Curve.animate(0, 1, self.timingFraction, self.previousTiming.wordX - 15, gameWidth + 50, Curve.QUAD_IN_OUT),
+				Curve.animate(0, 1, self.timingFraction, 505, 485, Curve.TOD_BOUNCE_FAST)
+			)
+		elseif self.afterTiming.brain == CreditBrainType.FAST_OFF then
+			self.brain:setPosition(
+				self.previousTiming.wordX + Curve.animate(0, 1, self.timingFraction, -15, 25, Curve.QUAD_IN_OUT),
+				Curve.animate(0, 1, self.timingFraction, 505, 485, Curve.QUAD_IN_OUT)
+			)
+		elseif self.previousTiming.brain == CreditBrainType.FLY_ON or self.previousTiming.brain == CreditBrainType.FAST_ON or self.previousTiming.brain == CreditBrainType.NEXT_WORD then
+			self.brain:setPosition(
+				Curve.animate(0, 1, self.timingFraction, self.previousTiming.wordX, self.afterTiming.wordX, Curve.QUAD_IN_OUT) - 15,
+				Curve.animate(0, 1, self.timingFraction, 505, 485, Curve.TOD_BOUNCE_FAST)
+			)
+		else
+			self.brain.visible = false
 		end
 	end
 	
