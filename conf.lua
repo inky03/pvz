@@ -26,5 +26,6 @@ function love.conf(t)
 		debugMode = false;
 		useFrameskip = false;
 		maxFrameskip = 15;
+		maxFramerate = 120;
 	}
 end

@@ -19,6 +19,7 @@ function love.load()
 	shaders = true
 	complex = flags.complex
 	debugMode = flags.debugMode
+	tickPerSecond = (flags.maxFramerate > 0 and (1 / flags.maxFramerate) or -1)
 	math.randomseed(os.clock())
 	reloadCursors()
 	
@@ -30,7 +31,8 @@ function love.load()
 	Resources.reload()
 	Cache.createDefaults()
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
-	level = game:addElement(Cache.module('pvz.lawn.challenges.FogChallenge'):new(31))
+	state = game:addElement(Cache.module('pvz.lawn.states.ReanimatedMusicVideo'):new())
+	-- state = game:addElement(Cache.module('pvz.lawn.challenges.FogChallenge'):new(35))
 	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
 	
 	debugCanvas = love.graphics.newCanvas(220, 200)
@@ -107,26 +109,62 @@ function reloadCursors()
 	}
 end
 
-function love.update(dt)
-	if flags.useFrameskip then
-		accumulator = (accumulator + dt * Constants.tickPerSecond)
-		
-		if accumulator >= 1 then
-			for i = 1, math.floor(math.min(flags.maxFrameskip, accumulator)) do
-				game:update(1 / Constants.tickPerSecond)
+function love.run()
+	if love.load then love.load(love.arg.parseGameArguments(arg), arg) end
+	if love.timer then love.timer.step() end
+	
+	local accumulator = 0
+	return function()
+		if love.event then -- Process events.
+			love.event.pump()
+			for name, a,b,c,d,e,f in love.event.poll() do
+				if name == "quit" then
+					if not love.quit or not love.quit() then
+						return a or 0
+					end
+				end
+				love.handlers[name](a,b,c,d,e,f)
 			end
-			accumulator = (accumulator % 1)
 		end
-	else
-		game:update(math.min(dt, flags.maxFrameskip / Constants.tickPerSecond))
+		
+		accumulator = (accumulator + love.timer.step())
+		
+		if accumulator >= (flags.useFrameskip and Constants.tickPerSecond or tickPerSecond) then
+			if love.update then
+				if flags.useFrameskip then
+					for i = 1, math.floor(math.min(flags.maxFrameskip, accumulator)) do
+						game:update(1 / Constants.tickPerSecond)
+					end
+					
+					accumulator = (accumulator % 1)
+				else
+					love.update(math.min(accumulator, flags.maxFrameskip / Constants.tickPerSecond))
+					
+					accumulator = 0
+				end
+			end
+
+			if love.graphics and love.graphics.isActive() then
+				love.graphics.origin()
+				love.graphics.clear(love.graphics.getBackgroundColor())
+
+				if love.draw then love.draw() end
+
+				love.graphics.present()
+			end
+		end
+		
+		love.timer.sleep(.0001)
 	end
+end
+function love.update(dt)
+	game:update(dt)
 	
 	updateHover(windowToGame(love.mouse:getPosition()))
 	updateCursor()
 	
 	gcTimer = (gcTimer - dt)
 end
-
 function love.draw()
 	love.graphics.setCanvas(debugCanvas)
 	love.graphics.clear()
