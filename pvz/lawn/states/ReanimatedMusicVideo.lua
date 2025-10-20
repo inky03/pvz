@@ -312,16 +312,12 @@ function ReanimatedMusicVideo:init()
 	self.previousTiming = nil
 	self.afterTiming = nil
 	
-	-- animation
-	
 	self.credits = self:addElement(Reanimation:new('Credits_Main'))
 	self.sunflowerFace = 'Sunflower_head'
 	
 	self.brain = self:addElement(CreditBrain:new())
 	
 	self.song:play()
-	
-	self:jump(15)
 end
 
 function ReanimatedMusicVideo:jump(time)

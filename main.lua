@@ -15,10 +15,10 @@ local gcTimer = 0
 local fpsCount = 0
 local drawtime = {}
 
-function love.load()
+function love.load(arguments)
 	shaders = true
 	complex = flags.complex
-	debugMode = flags.debugMode
+	debugMode = (table.find(arguments, '-debug') or flags.debugMode)
 	tickPerSecond = (flags.maxFramerate > 0 and (1 / flags.maxFramerate) or -1)
 	math.randomseed(os.clock())
 	reloadCursors()
