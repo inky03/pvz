@@ -192,58 +192,6 @@ function Reanimation:drawReanim(layers, textures, x, y, hiddenLayers)
 				love.graphics.draw(mesh.mesh, x, y)
 			end
 			
-			if frame.font then
-				if not frame.attachment or not frame.attachment:instanceOf(Font) then
-					frame.attachment = Font:new(Resources.fetch(frame.font, 'Font'), nil, 0, 0, gameWidth)
-					frame.attachment.transform:setOffset(frame.attachment.w * .5, 0)
-					frame.attachment:setAlignment('middle')
-				else
-					frame.attachment:setFontData(Resources.fetch(frame.font, 'Font'))
-				end
-				
-				frame.attachment:setText(frame.text)
-			elseif frame.text then
-				local attacherInfo = frame.text:split('__')
-				if #attacherInfo >= 2 then
-					local tags = {}
-					for i, s in ipairs(attacherInfo) do
-						for tag in s:gmatch('%[(.-)%]') do
-							table.insert(tags, tag)
-						end
-						
-						local idx = s:find('%[')
-						attacherInfo[i] = s:sub(1, idx and idx - 1 or nil)
-					end
-					
-					if not frame.attachment or not frame.attachment:instanceOf(Reanimation) then
-						frame.attachment = Reanimation:new(attacherInfo[2])
-					elseif frame.attachment.reanim.name ~= attacherInfo[2] then
-						frame.attachment:setReanim(Cache.reanim(attacherInfo[2]))
-					end
-					
-					local anim = attacherInfo[3]
-					if anim then
-						local animFake = (not frame.attachment.animation:get(anim))
-						
-						if animFake then
-							frame.attachment.animation:add(anim, anim)
-						end
-						frame.attachment.animation:play(anim, animFake)
-					end
-					
-					for _, tag in ipairs(tags) do
-						if tag == 'hold' then
-							frame.attachment.animation._cur.loop = false
-						elseif tag == 'once' then
-							frame.attachment.animation._cur.loop = false
-						else
-							local f = tonumber(tag)
-							if f then frame.attachment.animation._cur.fps = f end
-						end
-					end
-				end
-			end
-			
 			if #frame.attachments > 0 then
 				for i = 1, #frame.attachments do
 					local attachment = frame.attachments[i]

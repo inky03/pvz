@@ -211,7 +211,7 @@ function trace(...)
 	local v = {...}
 	local info = debug.getinfo(2, 'Sl')
 	local file = (info.source:match('@(.*)%.lua$') or info.source)
-	for i, val in ipairs(v) do v[i] = tostr(val) end
+	for i, val in ipairs(v) do v[i] = tostr(val, '') end
 	if #v == 0 then v = {'nil'} end
 	return print(('%s:%d: %s'):format(file:gsub('[/\\]', '.'), info.currentline, table.concat(v, '\t')))
 end

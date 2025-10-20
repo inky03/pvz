@@ -1,7 +1,3 @@
-require 'import'
-
-trace('PVZ')
-
 gameWidth, gameHeight = love.graphics.getDimensions()
 hoveringElement = nil
 draggingElement = nil
@@ -16,6 +12,8 @@ local fpsCount = 0
 local drawtime = {}
 
 function love.load(arguments)
+	require 'import' trace('PVZ')
+	
 	shaders = true
 	complex = flags.complex
 	debugMode = (table.find(arguments, '-debug') or flags.debugMode)
@@ -32,8 +30,9 @@ function love.load(arguments)
 	Cache.createDefaults()
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
 	state = game:addElement(Cache.module('pvz.lawn.states.ReanimatedMusicVideo'):new())
-	-- state = game:addElement(Cache.module('pvz.lawn.challenges.FogChallenge'):new(35))
+	-- state = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(7))
 	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
+	debugInfo:setLayerColor('Main')
 	
 	debugCanvas = love.graphics.newCanvas(220, 200)
 	

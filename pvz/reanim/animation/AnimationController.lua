@@ -59,6 +59,7 @@ function AnimationController:update(dt, noDiff)
 	local ground, groundX = self._cur:getLayer('_ground'), 0
 	if ground then groundX = ground.x end
 	
+	self._cur.loop = self.current.loop
 	self.current.lerp = self._cur.lerp
 	self.current.next = self._cur.next
 	self.current.frame = self._cur.frame
@@ -100,6 +101,8 @@ function AnimationController:updateFrame(dt)
 			self._cur.layers[i],
 			self.crossFade
 		)
+		
+		layer:updateAttacher()
 		
 		if layer.active then
 			for _, attachment in ipairs(layer.attachments) do
@@ -193,6 +196,7 @@ function AnimationController:play(name, force, crossFade, reset)
 			
 			self._cur = anim
 			self.current.name = anim.name
+			self.current.loop = anim.loop
 			self.current.length = anim.length
 			self.current.track = anim.track
 			self.current.first = anim.first
@@ -219,8 +223,8 @@ function AnimationController:setLoop(loop)
 	self.loop = loop
 	return loop
 end
-function AnimationController:setFrame(index, next)
-	self._cur:setFrame(index, next)
+function AnimationController:setFrame(index, next, lerp)
+	self._cur:setFrame(index, next, lerp)
 	self:update(0)
 end
 function AnimationController:getFrame()

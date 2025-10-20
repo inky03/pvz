@@ -304,20 +304,39 @@ function ReanimatedMusicVideo:init()
 	
 	self.creditsFrame = 0
 	self.creditsPhase = 1
-	self.song = Sound.play('ZombiesOnYourLawn', 0, 1, 'stream', false)
+	self.creditsOffsets = {0, 400, 785}
 	self.songTime = 0
 	self.bpm = 105
 	self.beat = 0
 	
+	self.song = Sound.play('ZombiesOnYourLawn', 0, 1, 'stream', false)
+	
+	self.credits = self:addElement(Reanimation:new('Credits_Main'))
+	self.credits.animation:add('main', nil, false)
+	self.credits.animation:play('main', true)
+	self.credits.animation.onFinish:add(function()
+		if self.credits:getName() == 'Credits_Main' then
+			self.credits:setReanim(Cache.reanim('Credits_Main2'))
+			self.creditsPhase = 2
+		elseif self.credits:getName() == 'Credits_Main2' then
+			self.credits:setReanim(Cache.reanim('Credits_Main3'))
+			self.creditsPhase = 3
+		else
+			trace('Credits sequence finished')
+			return
+		end
+		self.credits.animation:add('main', nil, false)
+		self.credits.animation:play('main', true)
+	end)
+	
+	self.brain = self:addElement(CreditBrain:new())
+	self.sunflowerFace = 'Sunflower_head'
 	self.previousTiming = nil
 	self.afterTiming = nil
 	
-	self.credits = self:addElement(Reanimation:new('Credits_Main'))
-	self.sunflowerFace = 'Sunflower_head'
-	
-	self.brain = self:addElement(CreditBrain:new())
-	
 	self.song:play()
+	
+	self:jump(58)
 end
 
 function ReanimatedMusicVideo:jump(time)
@@ -328,26 +347,12 @@ function ReanimatedMusicVideo:update(dt)
 	State.update(self, dt)
 	
 	self:updateMovie()
-	
-	-- for _, dancer in ipairs(self.dancers) do
-		-- dancer.animation:setFrame(self.beat % 2 / 2 * (dancer.animation.length - 1))
-	-- end
 end
 
 function ReanimatedMusicVideo:updateTiming()
 	self.songTime = self.song:tell()
 	self.beat = (self.songTime / (60 / self.bpm))
-	self.creditsFrame = self.credits.animation.frameFloat
-	
-	if self.creditsPhase == 1 then
-		self.creditsFrame = (self.creditsFrame + 2)
-	elseif self.creditsPhase == 2 then
-		self.creditsFrame = (self.creditsFrame + 400)
-	elseif self.creditsPhase == 3 then
-		self.creditsFrame = (self.creditsFrame + 785)
-	else
-		self.creditsFrame = 0
-	end
+	self.creditsFrame = (self.credits.animation.frameFloat + self.creditsOffsets[self.creditsPhase])
 	
 	if self.creditsFrame < self.timing[1].frame then
 		self.previousTiming = nil
@@ -367,11 +372,11 @@ function ReanimatedMusicVideo:updateTiming()
 end
 
 function ReanimatedMusicVideo:updateMovie()
-	self.credits.animation:setFrame(math.max(self.credits.animation.frameFloat, self.songTime * self.credits.reanim.fps))
+	self.credits.animation:setFrame(math.max(self.credits.animation.frameFloat, self.songTime * self.credits.reanim.fps + 1 - (self.creditsOffsets[self.creditsPhase] or 0)))
 	
 	self:updateTiming()
 	
-	local frameFactor = (1 / self.credits.animation.length)
+	local frameFactor = (1 / (self.credits.animation.length - 1))
 	if self.creditsPhase == 1 then
 		if self.credits:shouldTriggerTimedEvent(frameFactor * 128) or
 			self.credits:shouldTriggerTimedEvent(frameFactor * 130) or
@@ -389,6 +394,28 @@ function ReanimatedMusicVideo:updateMovie()
 		end if self.credits:shouldTriggerTimedEvent(frameFactor * 337) and self.scream then
 			self.scream:stop()
 			self.scream = nil
+		end
+	else
+		if self.credits.animation.frame < 125 then
+			for _, layer in ipairs(self.credits.animation.current.layers) do
+				if layer.font then
+					layer.font = 'FONT_BRIANNETOD32BLACK'
+					layer:updateAttacher()
+					
+					if layer.attachment then layer.attachment:setLayerColor('Main', 0, 0, 0) end
+				end
+			end
+		end
+		local undead = self.credits:findAttachment('Credits_WeAreTheUndead')
+		if undead then
+			for _, layer in ipairs(undead.animation.current.layers) do
+				if layer.font then
+					layer.font = 'FONT_BRIANNETOD32BLACK'
+					layer:updateAttacher()
+					
+					if layer.attachment then layer.attachment:setLayerColor('Main', 0, 0, 0) end
+				end
+			end
 		end
 	end
 	
@@ -438,10 +465,15 @@ function ReanimatedMusicVideo:updateMovie()
 		end
 	end
 	
-	if prevFace ~= self.sunflowerFace then
-		local sunFlower = self.credits:findAttachment('Sunflower')
-		if sunFlower then sunFlower:replaceImage('Sunflower_head', Reanim.getResource(self.sunflowerFace)) end
+	if self.creditsPhase == 3 and self.credits.animation.frameFloat >= 256 then
+		self.sunflowerFace = 'Sunflower_head_wink'
+		
+		local obj = self.credits:findAttachment('Sunflower') if obj then obj.animation.paused = true end
+		local obj = self.credits:findAttachment('Credits_stage') if obj then obj.animation.paused = true end
 	end
+	
+	local sunFlower = self.credits:findAttachment('Sunflower')
+	if sunFlower then sunFlower:replaceImage('Sunflower_head', Reanim.getResource(self.sunflowerFace)) end
 end
 
 return ReanimatedMusicVideo

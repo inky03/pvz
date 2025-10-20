@@ -348,8 +348,8 @@ function Font:renderText(x, y)
 					local rX, rY, rW, rH = layer:getRect(char)
 					local glyphX, glyphY = math.round(x + xx + xOffset + xOffsetT), math.round(y + yy + yOffset + yOffsetT)
 					
-					local multR, multG, multB = (bit.rshift(layer.color, 16) % 256), (bit.rshift(layer.color, 8) % 256), (layer.color % 256)
-					local addR, addG, addB = (bit.rshift(layer.colorAdd, 16) % 256), (bit.rshift(layer.colorAdd, 8) % 256), (layer.colorAdd % 256)
+					local multR, multG, multB = (bit.rshift(layer.color, 16) % 256 / 255), (bit.rshift(layer.color, 8) % 256 / 255), (layer.color % 256 / 255)
+					local addR, addG, addB = (bit.rshift(layer.colorAdd, 16) % 256 / 255), (bit.rshift(layer.colorAdd, 8) % 256 / 255), (layer.colorAdd % 256 / 255)
 					
 					self.quad:setViewport(rX, rY, rW, rH, texture:getPixelDimensions())
 					love.graphics.setColor(transform.r * multR + addR, transform.g * multG + addG, transform.b * multB + addB, transform.a)
