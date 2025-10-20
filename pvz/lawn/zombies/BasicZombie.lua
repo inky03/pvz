@@ -71,7 +71,7 @@ function BasicZombie:setDamagePhase(phase)
 		self:toggleLayer('Zombie_outerarm_hand', false)
 		self:toggleLayer('Zombie_outerarm_lower', false)
 		self:replaceImage('Zombie_outerarm_upper', Reanim.getResource('Zombie_outerarm_upper2'))
-		self.board:spawnParticle('ZombieArm', self.x + self.w * .5, self.y + self.h * .5)
+		self.lawn:spawnParticle('ZombieArm', self.x + self.w * .5, self.y + self.h * .5)
 	elseif phase == 2 then
 		Sound.play('limbs_pop', 10)
 		self:setState('dead')
@@ -79,7 +79,7 @@ function BasicZombie:setDamagePhase(phase)
 		self:toggleLayer('head1', false)
 		self:toggleLayer('head2', false)
 		self:toggleLayer('tongue', false)
-		self.board:spawnParticle('ZombieHead', self.x + 18, self.y - 18)
+		self.lawn:spawnParticle('ZombieHead', self.x + 24, self.y - 16)
 	end
 end
 

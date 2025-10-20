@@ -101,8 +101,11 @@ function AnimationController:updateFrame(dt)
 			self.crossFade
 		)
 		
-		for _, attachment in ipairs(layer.attachments) do
-			attachment.object:update(dt)
+		if layer.active then
+			for _, attachment in ipairs(layer.attachments) do
+				attachment.object:update(dt)
+			end
+			if layer.attachment then layer.attachment:update(dt) end
 		end
 	end
 end
@@ -112,32 +115,34 @@ function AnimationController:framesToSeconds(n)
 end
 
 function AnimationController:attach(layer, object, basePose)
-	local basePose = (basePose or self.name)
+	local basePose = (basePose or (#self.name > 0 and self.name or nil))
 	local baseLayer = self:getLayer(layer)
 	
 	if baseLayer then
-		local transform = nil
-		local base = Animation:new(self, self.reanim)
-		local reanimTrack = self.reanim:getTrack(basePose)
+		local transform = ReanimFrame:new()
 		
-		if reanimTrack then
-			base:setTrack(reanimTrack)
-			base:reset()
-			base:updateFrame(0)
+		if basePose then
+			local base = Animation:new(self, self.reanim)
+			local reanimTrack = self.reanim:getTrack(basePose)
 			
-			local baseFrame = base:getLayer(layer)
-			transform = ReanimFrame:new()
-			transform:setShear(-baseFrame.xShear, -baseFrame.yShear)
-			transform:setScale(1 / baseFrame.xScale, 1 / baseFrame.yScale)
-			transform:setPosition(-baseFrame.x / baseFrame.xScale, -baseFrame.y / baseFrame.yScale)
-		else
-			print(('%s: Track %s doesn\'t exist'):format(self.reanim.name, basePose))
-			return
+			if reanimTrack then
+				base:setTrack(reanimTrack)
+				base:reset()
+				base:updateFrame(0)
+				
+				local baseFrame = base:getLayer(layer)
+				transform:setShear(-baseFrame.xShear, -baseFrame.yShear)
+				transform:setScale(1 / baseFrame.xScale, 1 / baseFrame.yScale)
+				transform:setPosition(-baseFrame.x / baseFrame.xScale, -baseFrame.y / baseFrame.yScale)
+			else
+				print(('%s: Track %s doesn\'t exist'):format(self.reanim.name, basePose))
+				return
+			end
 		end
 		
 		baseLayer:attach(object, transform)
 	else
-		print(('%s: Layer %s doesn\'t exist'):format(self.reanim.name, track))
+		print(('%s: Layer %s doesn\'t exist'):format(self.reanim.name, layer))
 	end
 end
 
@@ -192,6 +197,7 @@ function AnimationController:play(name, force, crossFade, reset)
 			self.current.track = anim.track
 			self.current.first = anim.first
 			self.current.last = anim.last
+			self.current.fps = anim.fps
 			self.loop = anim.loop
 			self.name = name
 			

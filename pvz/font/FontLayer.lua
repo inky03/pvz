@@ -18,6 +18,9 @@ FontLayer.defaultWidth = 0
 FontLayer.defaultOffset = {0, 0}
 FontLayer.defaultRect = {0, 0, 0, 0}
 
+FontLayer.color = 0xffffff
+FontLayer.colorAdd = 0x0
+
 function FontLayer:init(name)
 	self.name = name
 end
@@ -72,6 +75,12 @@ function FontLayer:setKerningPairs(kerningPairs, kerningValues)
 	for i = 1, #kerningPairs do
 		self.kerningPairs[kerningPairs[i]] = kerningValues[i]
 	end
+end
+function FontLayer:setColorMult(color)
+	self.color = color
+end
+function FontLayer:setColorAdd(color)
+	self.colorAdd = color
 end
 
 function FontLayer:__tostring()

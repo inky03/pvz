@@ -102,10 +102,10 @@ end
 function Animation:setFrameFromIndex(index) -- set frame to index in reanim
 	self:setFrame(self:getFrameFromIndex(index))
 end
-function Animation:setFrame(index, next) -- set frame to index in animation
-	self.frame = math.clamp(index, 1, self.length)
-	self.next = math.clamp(next or index, 1, self.length)
-	self.lerp = 0
+function Animation:setFrame(index, next, lerp) -- set frame to index in animation
+	self.frame = math.wrap(math.floor(index), 1, self.length)
+	self.next = math.wrap(next or math.ceil(index), 1, self.length)
+	self.lerp = (lerp or index % 1)
 end
 
 function Animation:setTrack(track)

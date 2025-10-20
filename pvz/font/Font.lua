@@ -36,7 +36,12 @@ function Font:init(kind, size, x, y, w, h, extra)
 	self._lineWidths = {}
 	self._lineHeights = {}
 	
-	self:setSize(size)
+	if class.isInstance(kind) and kind:instanceOf(FontData) then
+		self:setFontData(kind)
+	else
+		self:setSize(size)
+	end
+	
 	self:setText('Hello World!')
 end
 
@@ -51,7 +56,7 @@ function Font:resetCanvas()
 end
 
 function Font:setFontData(fontData)
-	if not fontData or #fontData.layers < 1 then return end
+	if not fontData or #fontData.layers < 1 or fontData == self.fontData then return end
 	
 	self.fontData = fontData
 	self.mainLayer = fontData.layers[#fontData.layers].name
@@ -85,7 +90,6 @@ function Font:setFont(font)
 	if self.font == font then return self end
 	
 	self.font = font
-	self._dirty = true
 	self:setFontData(Cache.font(self:getKey()))
 	
 	return self
@@ -94,7 +98,6 @@ function Font:setSize(size)
 	if self.size == size then return self end
 	
 	self.size = size
-	self._dirty = true
 	self:setFontData(Cache.font(self:getKey()))
 	
 	return self
@@ -103,7 +106,6 @@ function Font:setExtra(extra)
 	if self.extra == extra then return self end
 	
 	self.extra = extra
-	self._dirty = true
 	self:setFontData(Cache.font(self:getKey()))
 	
 	return self
@@ -346,8 +348,11 @@ function Font:renderText(x, y)
 					local rX, rY, rW, rH = layer:getRect(char)
 					local glyphX, glyphY = math.round(x + xx + xOffset + xOffsetT), math.round(y + yy + yOffset + yOffsetT)
 					
+					local multR, multG, multB = (bit.rshift(layer.color, 16) % 256), (bit.rshift(layer.color, 8) % 256), (layer.color % 256)
+					local addR, addG, addB = (bit.rshift(layer.colorAdd, 16) % 256), (bit.rshift(layer.colorAdd, 8) % 256), (layer.colorAdd % 256)
+					
 					self.quad:setViewport(rX, rY, rW, rH, texture:getPixelDimensions())
-					love.graphics.setColor(transform.r, transform.g, transform.b, transform.a)
+					love.graphics.setColor(transform.r * multR + addR, transform.g * multG + addG, transform.b * multB + addB, transform.a)
 					love.graphics.draw(texture, self.quad, glyphX, glyphY)
 					
 					if self.debug then

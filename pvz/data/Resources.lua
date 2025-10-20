@@ -96,22 +96,22 @@ function Resources.fetch(id, type, blob, eval)
 		elseif type == 'Sound' then
 			return Cache.sound(Resources.formatPath(path, folder))
 		elseif type == 'Font' then
-			return Cache.font(path, folder)
+			return Cache.font(path:gsub('.txt', ''), folder)
 		end
 	else
 		local lastResort
 		if type == 'Image' then
 			if id:find('IMAGE_REANIM_') then
 				local img = id:gsub('IMAGE_REANIM_', '')
-				lastResort = Cache.image(img, 'reanim', true)
+				lastResort = Cache.image(img, 'reanim', true) or Cache.image(img, 'images', true) or Cache.image(img, 'particles', true)
 			else
 				local img = id:gsub('IMAGE_', '')
 				lastResort = Cache.image(img, 'images', true) or Cache.image(img, 'particles', true)
 			end
 		elseif type == 'Sound' then
-			lastResort = Cache.sound(id, true)
+			lastResort = Cache.sound(id:gsub('SOUND_', ''), true)
 		elseif type == 'Font' then
-			lastResort = Cache.font(id, nil, true)
+			lastResort = Cache.font(id:gsub('FONT_', ''), nil, true)
 		end
 		if lastResort then return lastResort end
 		

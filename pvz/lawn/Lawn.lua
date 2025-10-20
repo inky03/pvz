@@ -77,6 +77,7 @@ end
 function Lawn:spawnParticle(part, x, y, top)
 	local part = self:addElement(Particle:new(part, x, y))
 	part.drawToTop = (top ~= false)
+	part:update(0)
 	
 	return part
 end

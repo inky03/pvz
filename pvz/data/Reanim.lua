@@ -53,6 +53,8 @@ function Reanim.loadXML(path, kind)
 	local reanim = Reanim:new(kind)
 	reanim.fps = content.fps
 	
+	if not content.track or #content.track == 0 then return nil end
+	
 	for _, track in ipairs(content.track) do
 		reanim.length = math.max(#track.t, reanim.length)
 		
@@ -92,6 +94,8 @@ function Reanim.loadXML(path, kind)
 			previousFrame.xShear = (frame.ky or previousFrame.xShear)
 			previousFrame.yShear = (frame.kx or previousFrame.yShear) -- its goofy for some reason, so invert X and Y
 			previousFrame.active = (active == nil and previousFrame.active or active or false) -- yup !
+			previousFrame.text = (frame.text or previousFrame.text)
+			previousFrame.font = (frame.font or previousFrame.font)
 			
 			table.insert(frames, ReanimFrame:new(previousFrame))
 		end
@@ -178,20 +182,22 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 		end
 		if anim.last < anim.first then anim.last = transforms[i] end
 		
-		local lastImg, lastText, lastFont
+		local lastImg, lastFont, lastText
 		if (anim.name == '_ground') then
 			lastImg = 'IMAGE_REANIM_GROUND'
 		end
 		for i = 1, transforms[i] do
-			local img = readByte('string', readByte('i32'))
-			if (#img > 0) then
-				reanim.images[img] = Reanim.getResource(img)
-				lastImg = img
+			local f = readByte('string', readByte('i32'))
+			if (#f > 0) then
+				reanim.images[f] = Reanim.getResource(f)
+				lastImg = f
 			end
-			local img = readByte('string', readByte('i32')) if (#img > 0) then lastText = text end
-			local img = readByte('string', readByte('i32')) if (#img > 0) then lastFont = font end
+			local f = readByte('string', readByte('i32')) if (#f > 0) then lastFont = f end
+			local f = readByte('string', readByte('i32')) if (#f > 0) then lastText = f end
 			
 			frames[i].image = lastImg
+			frames[i].font = lastFont
+			frames[i].text = lastText
 		end
 		
 		reanim.length = math.max(reanim.length, transforms[i])

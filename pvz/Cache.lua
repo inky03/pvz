@@ -110,7 +110,7 @@ function Cache.image(path, folder, eval, maskPath)
 	return img
 end
 
-function Cache.sound(snd, eval)
+function Cache.sound(snd, eval, kind)
 	local key = snd:lower()
 	if not cached.sounds[key] then
 		local fpathOgg = Cache.main('sounds/' .. snd .. '.ogg')
@@ -118,7 +118,7 @@ function Cache.sound(snd, eval)
 			(love.filesystem.getInfo(fpathOgg) and fpathOgg)
 		)
 		if fpath then
-			cached.sounds[key] = love.audio.newSource(fpath, 'static')
+			cached.sounds[key] = love.audio.newSource(fpath, kind or 'static')
 		elseif eval then
 			return nil
 		else
@@ -144,10 +144,12 @@ function Cache.reanim(kind, folder)
 		if love.filesystem.getInfo(fpath) then
 			format = 'XML'
 			cached.reanim[key] = Reanim.loadXML(fpath, kind)
-		elseif love.filesystem.getInfo(fpathCompiled) then
+		end
+		if not cached.reanim[key] and love.filesystem.getInfo(fpathCompiled) then
 			format = 'Binary'
 			cached.reanim[key] = Reanim.loadBinary(fpathCompiled, kind)
-		else
+		end
+		if not cached.reanim[key] then
 			trace('Resource for ' .. fpath .. ' doesn\'t exist')
 			return Cache.unknownReanim
 		end

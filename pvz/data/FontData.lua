@@ -30,8 +30,10 @@ function FontData:_setInstructions(instructions)
 		end;
 		LayerSetImage = function(layer, image) layer.textureName = image end;
 		LayerSetAscent = function(layer, ascent) layer.ascent = ascent end;
-		LayerSetAscentPadding = function(layer, ascent) layer.ascentPadding = ascent end;
+		LayerSetColorAdd = function(layer, color) layer:setColorAdd(color) end;
+		LayerSetColorMult = function(layer, color) layer:setColorMult(color) end;
 		LayerSetPointSize = function(layer, pointSize) layer.pointSize = pointSize end;
+		LayerSetAscentPadding = function(layer, ascent) layer.ascentPadding = ascent end;
 		LayerSetLineSpacingOffset = function(layer, spacing) layer.lineSpacing = spacing end;
 		LayerSetImageMap = function(layer, characterList, rectList) layer:addRects(characterList, rectList) end;
 		LayerSetCharWidths = function(layer, characterList, widthList) layer:addWidths(characterList, widthList) end;

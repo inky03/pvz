@@ -88,7 +88,7 @@ function State:startNextCutscene()
 end
 
 function State:tryUpdate(dt)
-	if not self.activeCutscene and #self.cutscenes > 0 then
+	if not self.subState and not self.activeCutscene and #self.cutscenes > 0 then
 		self:startNextCutscene()
 	end
 	

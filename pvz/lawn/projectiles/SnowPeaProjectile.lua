@@ -14,7 +14,7 @@ end
 function SnowPeaProjectile:update(dt)
 	Pea.update(self, dt)
 	
-	self.trail:moveTo(self.x, self.y + 23)
+	self.trail:moveTo(self.x, self.y + 44 + self.yOffset)
 end
 
 function SnowPeaProjectile:hit(collision)

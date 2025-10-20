@@ -19,8 +19,16 @@ function math.eucldistance(xA, yA, xB, yB) return math.sqrt((xB - xA) ^ 2 + (yB 
 
 function string.split(str, delimiter)
 	local strings = {}
-	for sub in str:gmatch('[^' .. delimiter .. ']+') do table.insert(strings, sub) end
-	return strings
+	while true do
+		local idx = str:find(delimiter)
+		if idx then
+			table.insert(strings, str:sub(1, idx - 1))
+			str = str:sub(idx + #delimiter)
+		else
+			table.insert(strings, str)
+			return strings
+		end
+	end
 end
 function string.rtrim(str) local trim = str:gsub('[ \t\r]+$', '') ; return trim end
 function string.ltrim(str) local trim = str:gsub('^[ \t\r]+', '') ; return trim end

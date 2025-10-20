@@ -10,12 +10,14 @@ ReanimFrame.xShear = 0
 ReanimFrame.yShear = 0
 ReanimFrame.xOrigin = 0
 ReanimFrame.yOrigin = 0
+ReanimFrame.active = true
+ReanimFrame.font = nil
+ReanimFrame.text = ''
+
+ReanimFrame.scaleCoords = false
+ReanimFrame.layerName = ''
 ReanimFrame.xOffset = 0
 ReanimFrame.yOffset = 0
-ReanimFrame.active = true
-ReanimFrame.layerName = ''
-ReanimFrame.scaleCoords = false
--- TODO: IMPLEMENT TEXT AND FONT ?
 
 ReanimFrame._internalXOffset = 0
 ReanimFrame._internalYOffset = 0
@@ -37,6 +39,8 @@ function ReanimFrame:set(x, y, xShear, yShear, xScale, yScale)
 end
 
 function ReanimFrame:copy(frame)
+	self.font = frame.font
+	self.text = frame.text
 	self.image = frame.image
 	self.alpha = frame.alpha
 	self.active = frame.active
@@ -54,8 +58,10 @@ function ReanimFrame:lerp(a, b, t)
 	if t == 0 then return self:copy(a)
 	elseif t == 1 then return self:copy(b) end
 	
+	self.font = a.font
+	self.text = a.text
 	self.image = a.image
-	self.active = a.active
+	self.active = (a.active and b.active)
 	self.alpha = math.lerp(a.alpha, b.alpha, t)
 	self:setPosition(math.lerp(a.x, b.x, t), math.lerp(a.y, b.y, t))
 	self:setScale(math.lerp(a.xScale, b.xScale, t), math.lerp(a.yScale, b.yScale, t))
