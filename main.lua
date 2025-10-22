@@ -215,6 +215,11 @@ function gameToWindow(x, y)
 	local winW, winH = love.graphics.getDimensions()
 	return (math.round(x + (winW / ratio - gameWidth) * .5) * ratio), (math.round(y + (winH / ratio - gameHeight) * .5) * ratio)
 end
+function rectToWindow(x, y, w, h)
+	local x, y = gameToWindow(x or 0, y or 0)
+	local w, h = gameToWindow(w or 0, h or 0)
+	return x, y, math.max(w, 0), math.max(h, 0)
+end
 
 function drawDebug()
 	if gcTimer < 0 then

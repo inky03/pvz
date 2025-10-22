@@ -34,16 +34,16 @@ function DayLawn:drawBackground(x, y)
 				love.graphics.draw(Cache.image('images/sod1row'), x + 239, y + 265)
 			end
 			
-			love.graphics.setScissor(0, 0, xx, yy)
+			love.graphics.setScissor(rectToWindow(0, 0, xx, yy))
 			love.graphics.draw(Cache.image('images/sod3row'), x + 235, y + 149)
 		else
-			love.graphics.setScissor(0, 0, xx, yy)
+			love.graphics.setScissor(rectToWindow(0, 0, xx, yy))
 			love.graphics.draw(Cache.image('images/sod1row'), x + 239, y + 265)
 		end
 	else
 		if self.sodRollX < gameWidth then love.graphics.draw(Cache.image('images/sod3row'), x + 235, y + 149) end
 		
-		love.graphics.setScissor(0, 0, xx, yy)
+		love.graphics.setScissor(rectToWindow(0, 0, xx, yy))
 		love.graphics.draw(self.soddedTexture, x + (self.w - self.tW) * .5, y + (self.h - self.tH) * .5)
 	end
 	

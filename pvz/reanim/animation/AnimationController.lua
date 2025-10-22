@@ -102,14 +102,14 @@ function AnimationController:updateFrame(dt)
 			self.crossFade
 		)
 		
-		layer:updateAttacher()
-		
 		if layer.active then
 			for _, attachment in ipairs(layer.attachments) do
 				attachment.object:update(dt)
 			end
 			if layer.attachment then layer.attachment:update(dt) end
 		end
+		
+		layer:updateAttacher()
 	end
 end
 

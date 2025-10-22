@@ -57,6 +57,8 @@ function FogEffect:updateFog(dt)
 end
 
 function FogEffect:draw(x, y)
+	if not self.visible then return end
+	
 	for row = 1, #self.fogAlpha do
 		for col = 1, #self.fogAlpha[row] do
 			local xx, yy = (col - 1), (row - 1)

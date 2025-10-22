@@ -76,9 +76,9 @@ function ReanimAnimationFrame:updateAttacher()
 				
 				for _, tag in ipairs(tags) do
 					if tag == 'hold' then
-						self.attachment.animation._cur.loop = false
+						self.attachment.animation.current.loop = false
 					elseif tag == 'once' then
-						self.attachment.animation._cur.loop = false
+						self.attachment.animation.current.loop = false
 					else
 						local f = tonumber(tag)
 						if f then self.attachment.animation._cur.fps = f end
