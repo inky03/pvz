@@ -257,8 +257,8 @@ function Font:renderCanvas(x, y, transforms)
 	end
 	
 	local stack = Reanimation.transformStack
+	local red, green, blue, alpha = 1, 1, 1, 1
 	local active = true
-	local alpha = 1
 	
 	local function transform(frame)
 		if type(frame) == 'table' and not class.isInstance(frame) then
@@ -269,7 +269,10 @@ function Font:renderCanvas(x, y, transforms)
 		end
 		
 		active = (active and frame.active)
-		alpha = (alpha * frame.alpha)
+		
+		if active then
+			red, green, blue, alpha = (red * frame.red), (green * frame.green), (blue * frame.blue), (alpha * frame.alpha)
+		end
 	end
 	transform(stack)
 	
@@ -288,7 +291,7 @@ function Font:renderCanvas(x, y, transforms)
 		mesh.mesh:setTexture(self.canvas)
 		
 		love.graphics.setBlendMode('alpha', 'premultiplied')
-		love.graphics.setColor(alpha, alpha, alpha, alpha)
+		love.graphics.setColor(red * alpha, green * alpha, blue * alpha, alpha)
 		love.graphics.draw(mesh.mesh, x, y)
 		love.graphics.setBlendMode('alpha')
 		

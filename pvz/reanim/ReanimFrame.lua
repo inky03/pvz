@@ -2,7 +2,6 @@ local ReanimFrame = class('ReanimFrame')
 
 ReanimFrame.x = 0
 ReanimFrame.y = 0
-ReanimFrame.alpha = 1
 ReanimFrame.image = nil
 ReanimFrame.xScale = 1
 ReanimFrame.yScale = 1
@@ -22,11 +21,20 @@ ReanimFrame.yOffset = 0
 ReanimFrame._internalXOffset = 0
 ReanimFrame._internalYOffset = 0
 
+ReanimFrame.lerpFields = {
+	'red'; 'green'; 'blue'; 'alpha';
+	'xOrigin'; 'yOrigin';
+	'xOffset'; 'yOffset';
+	'xScale'; 'yScale';
+	'x'; 'y';
+}
+
 function ReanimFrame:init(frameOrX, y, xShear, yShear, xScale, yScale)
 	if class.isInstance(frameOrX) then
 		self:copy(frameOrX)
 	else
 		self:set(frameOrX, y, xShear, yShear, xScale, yScale)
+		self:setColor()
 	end
 end
 
@@ -42,14 +50,13 @@ function ReanimFrame:copy(frame)
 	self.font = frame.font
 	self.text = frame.text
 	self.image = frame.image
-	self.alpha = frame.alpha
 	self.active = frame.active
 	self.layerName = frame.layerName
-	self:setPosition(frame.x, frame.y)
-	self:setScale(frame.xScale, frame.yScale)
 	self:setShear(frame.xShear, frame.yShear)
-	self:setOrigin(frame.xOrigin, frame.yOrigin)
-	self:setOffset(frame.xOffset, frame.yOffset)
+	for i = 1, #self.lerpFields do
+		local f = self.lerpFields[i]
+		self[f] = frame[f]
+	end
 	
 	return self
 end
@@ -62,11 +69,10 @@ function ReanimFrame:lerp(a, b, t)
 	self.text = a.text
 	self.image = a.image
 	self.active = (a.active and b.active)
-	self.alpha = math.lerp(a.alpha, b.alpha, t)
-	self:setPosition(math.lerp(a.x, b.x, t), math.lerp(a.y, b.y, t))
-	self:setScale(math.lerp(a.xScale, b.xScale, t), math.lerp(a.yScale, b.yScale, t))
-	self:setOrigin(math.lerp(a.xOrigin, b.xOrigin, t), math.lerp(a.yOrigin, b.yOrigin, t))
-	self:setOffset(math.lerp(a.xOffset, b.xOffset, t), math.lerp(a.yOffset, b.yOffset, t))
+	for i = 1, #self.lerpFields do
+		local f = self.lerpFields[i]
+		self[f] = math.lerp(a[f], b[f], t)
+	end
 	
 	local xsDiff, ysDiff = (b.xShear - a.xShear), (b.yShear - a.yShear) -- TODO: this is probably not right...
 	xsDiff = (xsDiff > 180 and -360 or (xsDiff < -180 and 360 or 0))
@@ -107,6 +113,10 @@ function ReanimFrame:setOrigin(x, y)
 end
 function ReanimFrame:setOffset(x, y)
 	self.xOffset, self.yOffset = (x or 0), (y or 0)
+	return self
+end
+function ReanimFrame:setColor(r, g, b, a)
+	self.red, self.green, self.blue, self.alpha = (r or 1), (g or 1), (b or 1), (a or 1)
 	return self
 end
 

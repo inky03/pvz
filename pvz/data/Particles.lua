@@ -99,19 +99,20 @@ function Particles.getCurve(curve)
 	return (curve and Particles.curves[Particles.getCurveName(curve)] or Curve.LINEAR)
 end
 
-function Particles:init()
+function Particles:init(name)
 	self.emitters = {}
 	self.images = {}
+	self.name = name
 end
 
 function Particles.loadXML(path, kind)
 	trace('XML currently unsupported')
 	
-	return Particles:new()
+	return Particles:new(kind)
 end
 
 function Particles.loadBinary(path, kind)
-	local particle = Particles:new()
+	local particle = Particles:new(kind)
 	local bytePos = 0x08
 	local null = -10000
 	

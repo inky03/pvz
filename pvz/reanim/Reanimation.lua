@@ -157,7 +157,7 @@ function Reanimation:drawReanim(layers, textures, x, y, hiddenLayers)
 	local function renderFrame(frame)
 		local stack = Reanimation.transformStack
 		local image = textures[frame.image]
-		local alpha = frame.alpha
+		local red, green, blue, alpha = frame.red, frame.green, frame.blue, frame.alpha
 		local active = true
 		
 		local function transform(frame)
@@ -169,7 +169,10 @@ function Reanimation:drawReanim(layers, textures, x, y, hiddenLayers)
 			end
 			
 			active = (active and frame.active)
-			alpha = (alpha * frame.alpha)
+			
+			if active then
+				red, green, blue, alpha = (red * frame.red), (green * frame.green), (blue * frame.blue), (alpha * frame.alpha)
+			end
 		end
 		transform(stack)
 		
@@ -188,7 +191,7 @@ function Reanimation:drawReanim(layers, textures, x, y, hiddenLayers)
 				mesh.mesh:setVertices(vert)
 				mesh.mesh:setTexture(image)
 				
-				love.graphics.setColor(1, 1, 1, alpha)
+				love.graphics.setColor(red, green, blue, alpha)
 				love.graphics.draw(mesh.mesh, x, y)
 			end
 			

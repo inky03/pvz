@@ -28,7 +28,7 @@ function Particle:moveTo(x, y)
 end
 
 function Particle:update(dt)
-	if self.particleData and #self.emitters <= 0 and #self.children <= 0 and self.destroyOnFinish then
+	if self.data and #self.emitters <= 0 and #self.children <= 0 and self.destroyOnFinish then
 		self:destroy()
 	end
 	
@@ -39,13 +39,13 @@ function Particle:setParticleData(particles)
 	if not particles then return end
 	
 	self.images = table.copy(particles.images)
-	self.particleData = particles
+	self.data = particles
 	self:reloadEmitters()
 end
 function Particle:reloadEmitters(cleanup)
 	if cleanup then self:destroyEmitters() end
 	
-	for _, emitter in ipairs(self.particleData.emitters) do
+	for _, emitter in ipairs(self.data.emitters) do
 		local newEmitter = self:addElement(ParticleEmitter:new(emitter, self))
 		table.insert(self.emitters, newEmitter)
 	end
@@ -77,7 +77,7 @@ function Particle:replaceImage(image, newResource)
 		end
 	end
 	
-	trace(('%s: Could not find image ID %s'):format(self.particleData.name, tostr(img)))
+	trace(('%s: Could not find image ID %s'):format(self.data.name, tostr(img)))
 end
 
 return Particle
