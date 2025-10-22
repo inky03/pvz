@@ -15,19 +15,23 @@ function ReanimAnimationFrame:attach(object, transform)
 		transform = transform;
 	})
 end
-function ReanimAnimationFrame:findAttachment(name)
+function ReanimAnimationFrame:findAttachment(needle)
 	if not self.active then return end
 	
-	if self.attachment and self.attachment:instanceOf(Reanimation) then
-		if self.attachment:getName() == name then return self.attachment end
-		local attachment = self.attachment:findAttachment(name)
+	if self.attachment == needle then
+		return self.attachment
+	elseif self.attachment and self.attachment:instanceOf(Reanimation) then
+		if self.attachment:getName() == needle then return self.attachment end
+		local attachment = self.attachment:findAttachment(needle)
 		if attachment then return attachment end
 	end
 	
 	for _, attachment in ipairs(self.attachments) do
-		if attachment.object:instanceOf(Reanimation) then
-			if attachment.object:getName() == name then return attachment.object end
-			local attachment = attachment.object:findAttachment(name)
+		if attachment.object == needle then
+			return attachment
+		elseif attachment.object:instanceOf(Reanimation) then
+			if attachment.object:getName() == needle then return attachment.object end
+			local attachment = attachment.object:findAttachment(needle)
 			if attachment then return attachment end
 		end
 	end

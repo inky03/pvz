@@ -65,9 +65,9 @@ end
 function Reanimation:attach(layer, object, basePose, offset)
 	return self.animation:attach(layer, object, basePose, offset)
 end
-function Reanimation:findAttachment(name)
+function Reanimation:findAttachment(needle)
 	for _, layer in ipairs(self.animation.current.layers) do
-		local attachment = layer:findAttachment(name)
+		local attachment = layer:findAttachment(needle)
 		if attachment then return attachment end
 	end
 	return nil

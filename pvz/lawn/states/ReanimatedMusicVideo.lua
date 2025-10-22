@@ -317,6 +317,13 @@ function ReanimatedMusicVideo:init()
 	self.nightPool = NightPool:new()
 	self.nightPool.size.x = 14 -- well this is cheating
 	self.fog = self:addElement(FogEffect:new(self.nightPool, self.nightPool.size.x))
+	self.discoTexture = Resources.fetch('IMAGE_REANIM_CREDITS_DISCOLIGHTS', 'Image')
+	
+	self.blinkReanim = Reanimation:new('Sunflower')
+	self.blinkReanim.animation:add('blink', 'blink', false)
+	self.blinkReanim.animation.onFinish:add(function(_) self.blinkReanim.visible = false end)
+	self.blinkReanim.visible = false
+	self.blinkCountdown = random.int(400, 800)
 	
 	self.credits = self:addElement(Reanimation:new('Credits_Main'))
 	self.credits.animation.onFinish:add(function()
@@ -362,6 +369,13 @@ end
 
 function ReanimatedMusicVideo:update(dt)
 	State.update(self, dt)
+	
+	self.blinkCountdown = (self.blinkCountdown - dt * Constants.tickPerSecond)
+	if self.blinkCountdown < 0 then
+		self.blinkReanim.visible = true
+		self.blinkReanim.animation:play('blink', true)
+		self.blinkCountdown = random.int(400, 800)
+	end
 	
 	self:updateMovie()
 end
@@ -526,7 +540,15 @@ function ReanimatedMusicVideo:updateMovie()
 	end
 	
 	local sunFlower = self.credits:findAttachment('Sunflower')
-	if sunFlower then sunFlower:replaceImage('Sunflower_head', Reanim.getResource(self.sunflowerFace)) end
+	if sunFlower and sunFlower.active then
+		if self.sunflowerFace == 'Sunflower_head_wink' then
+			self.blinkReanim.visible = false
+		elseif not sunFlower:findAttachment(self.blinkReanim) then
+			sunFlower:attach('idle', self.blinkReanim, 'idle')
+		end
+		
+		sunFlower:replaceImage('Sunflower_head', Reanim.getResource(self.sunflowerFace))
+	end
 end
 
 function ReanimatedMusicVideo:draw(x, y)
@@ -652,11 +674,11 @@ function ReanimatedMusicVideo:drawDisco(x, y, time)
 	local vert = {
 		{ math.cos(time) * 600, math.sin(time) * 200; 0, 0 };
 		{ math.cos(time + math.pi / 2) * 600, math.sin(time + math.pi / 2) * 200; 1, 0 };
-		{ math.cos(time + math.pi + math.pi / 2) * 600, math.sin(time + math.pi + math.pi / 2) * 200; 0, 1 };
+		{ math.cos(time + math.pi / 2 * 3) * 600, math.sin(time + math.pi / 2 * 3) * 200; 0, 1 };
 		{ math.cos(time + math.pi) * 600, math.sin(time + math.pi) * 200; 1, 1 };
 	}
 	mesh.mesh:setVertices(vert)
-	mesh.mesh:setTexture(Resources.fetch('IMAGE_REANIM_CREDITS_DISCOLIGHTS', 'Image'))
+	mesh.mesh:setTexture(self.discoTexture)
 	
 	love.graphics.setColor(1, 1, 1, .5)
 	love.graphics.draw(mesh.mesh, x, y)
