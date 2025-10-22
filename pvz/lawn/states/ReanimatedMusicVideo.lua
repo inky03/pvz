@@ -335,8 +335,6 @@ function ReanimatedMusicVideo:init()
 	self.afterTiming = nil
 	
 	self.song:play()
-	
-	self:jump(58)
 end
 
 function ReanimatedMusicVideo:jump(time)
@@ -396,13 +394,45 @@ function ReanimatedMusicVideo:updateMovie()
 			self.scream = nil
 		end
 	else
+		if self.creditsPhase == 2 then
+			for t = 111.5, 243.5, 4 do
+				if self.credits:shouldTriggerTimedEvent(frameFactor * t) then
+					self:addElement(Particle:new('Credits_Strobe'))
+				end
+			end
+			if self.credits:shouldTriggerTimedEvent(frameFactor * 332) then
+				self:addElement(Particle:new('MelonImpact', 678, 352))
+			end
+			if self.credits:shouldTriggerTimedEvent(frameFactor * 336) then
+				for _, child in ipairs(self.children) do
+					if child:instanceOf(Particle) and child.data.name == 'MelonImpact' then
+						child:destroy()
+						break
+					end
+				end
+			end
+			if self.credits:shouldTriggerTimedEvent(frameFactor * 342) then
+				self:addElement(Particle:new('Credits_Strobe'))
+			end
+		elseif self.creditsPhase == 3 then
+			if self.credits:shouldTriggerTimedEvent(frameFactor * 64) then
+				Sound.play('dolphin_appears')
+			end
+			for t = 111, 247, 4 do
+				if self.credits:shouldTriggerTimedEvent(frameFactor * t) then
+					self:addElement(Particle:new('Credits_Strobe'))
+				end
+			end
+		end
+		if self.credits:shouldTriggerTimedEvent(frameFactor * 120) then
+			self:addElement(Particle:new('Credits_ZombieHeadWipe', gameWidth * .5, gameHeight * .5))
+		end
 		if self.credits.animation.frame < 125 then
 			for _, layer in ipairs(self.credits.animation.current.layers) do
 				if layer.font then
 					layer.font = 'FONT_BRIANNETOD32BLACK'
 					layer:updateAttacher()
-					
-					if layer.attachment then layer.attachment:setLayerColor('Main', 0, 0, 0) end
+					layer:setColor(0, 0, 0)
 				end
 			end
 		end
@@ -412,8 +442,7 @@ function ReanimatedMusicVideo:updateMovie()
 				if layer.font then
 					layer.font = 'FONT_BRIANNETOD32BLACK'
 					layer:updateAttacher()
-					
-					if layer.attachment then layer.attachment:setLayerColor('Main', 0, 0, 0) end
+					layer:setColor(0, 0, 0)
 				end
 			end
 		end
