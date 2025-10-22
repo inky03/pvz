@@ -99,23 +99,19 @@ function ParticleObject:updateParticle(dt)
 	self.transform:setScale(self.scale, self.scale * stretch)
 end
 function ParticleObject:updateFields(dt)
-	if self.fields.Friction then
-		local pos = self.fields.Friction
+	local pos = self.fields.Friction if pos then
 		if pos.x then self.velocity.x = (self.velocity.x * math.pow(1 - self:evaluateFieldTrack('Friction', 'x'), dt * Constants.tickPerSecond)) end
 		if pos.y then self.velocity.y = (self.velocity.y * math.pow(1 - self:evaluateFieldTrack('Friction', 'y'), dt * Constants.tickPerSecond)) end
 	end
-	if self.fields.Acceleration then
-		local pos = self.fields.Acceleration
+	pos = self.fields.Acceleration if pos then
 		if pos.x then self.velocity.x = (self.velocity.x + self:evaluateFieldTrack('Acceleration', 'x') * dt) end
 		if pos.y then self.velocity.y = (self.velocity.y + self:evaluateFieldTrack('Acceleration', 'y') * dt) end
 	end
-	if self.fields.Velocity then
-		local pos = self.fields.Velocity
+	pos = self.fields.Velocity if self.fields.Velocity then
 		if pos.x then self.x = (self.x + self:evaluateFieldTrack('Velocity', 'x') * dt) end
 		if pos.y then self.y = (self.y + self:evaluateFieldTrack('Velocity', 'y') * dt) end
 	end
-	if self.fields.Position then
-		local pos = self.fields.Position
+	pos = self.fields.Position if pos then
 		local diffX, diffY = 0, 0
 		if pos.x then diffX = (self:evaluateFieldTrack('Position', 'x') - self:evaluateFieldTrack('Position', 'x', self.lastTimeValue)) end
 		if pos.y then diffY = (self:evaluateFieldTrack('Position', 'y') - self:evaluateFieldTrack('Position', 'y', self.lastTimeValue)) end
@@ -135,6 +131,28 @@ function ParticleObject:updateFields(dt)
 	if self.fields.Shake then
 		local shakeX, shakeY = self:evaluateFieldTrack('Shake', 'x'), self:evaluateFieldTrack('Shake', 'y')
 		self.shake.x, self.shake.y = random.number(-shakeX, shakeX), random.number(-shakeY, shakeY)
+	end
+	pos = self.fields.Circle if pos then
+		local toCenterX, toCenterY = (self.x - self.emitter.systemCenter.x), (self.y - self.emitter.systemCenter.y)
+		
+		local motionX, motionY = -toCenterY, toCenterX
+		local radius = math.sqrt(motionX ^ 2 + motionY ^ 2)
+		if radius ~= 0 then motionX, motionY = (motionX / radius), (motionY / radius) end
+		
+		local pos = self.fields.Circle
+		local motionF = (dt * ((pos.x and self:evaluateFieldTrack('Circle', 'x') or 0) + radius * (pos.y and self:evaluateFieldTrack('Circle', 'y') or 0)))
+		self.x, self.y = (self.x + motionX * motionF), (self.y + motionY * motionF)
+	end
+	pos = self.fields.Away if pos then
+		local toCenterX, toCenterY = (self.x - self.emitter.systemCenter.x), (self.y - self.emitter.systemCenter.y)
+		
+		local motionX, motionY = toCenterX, toCenterY
+		local radius = math.sqrt(motionX ^ 2 + motionY ^ 2)
+		if radius ~= 0 then motionX, motionY = (motionX / radius), (motionY / radius) end
+		
+		local pos = self.fields.Circle
+		local motionF = (dt * ((pos.x and self:evaluateFieldTrack('Away', 'x') or 0) + radius * (pos.y and self:evaluateFieldTrack('Away', 'y') or 0)))
+		self.x, self.y = (self.x + motionX * motionF), (self.y + motionY * motionF)
 	end
 end
 

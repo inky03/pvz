@@ -129,36 +129,39 @@ function ParticleEmitter:updateSpawn(dt)
 	end
 	
 	for i = 1, spawnCount do
-		self:spawnParticle()
+		self:spawnParticle(i, spawnCount)
 	end
 end
-function ParticleEmitter:spawnParticle()
+function ParticleEmitter:spawnParticle(index, spawnCount)
+	local interp = self.trackInterp
+	local def = Particles.definitionIds
+	
 	local t = self.systemTimeValue
 	local particle = ParticleObject:new(self.emitter.fields, self)
 	
-	particle.duration = Particles.evaluateTrack(self.emitter.particleDuration, self.systemTimeValue, random.number())
+	particle.duration = Particles.evaluateTrack(self.emitter.particleDuration, self.systemTimeValue, interp[def.particleDuration])
 	
 	local x, y = 0, 0
 	local launchAngle = 0
-	local launchSpeed = (Particles.evaluateTrack(self.emitter.launchSpeed, t, random.number()) * .01)
+	local launchSpeed = (Particles.evaluateTrack(self.emitter.launchSpeed, t, interp[def.launchSpeed]) * .01)
 	
 	local emitterType = Particles.getEmitterType(self.emitter)
 	
 	if emitterType == 'CirclePath' then
 		-- todo
 	elseif emitterType == 'CircleEvenSpacing' then
-		-- todo
+		launchAngle = (2 * math.pi * index / spawnCount + math.rad(Particles.evaluateTrack(self.emitter.launchAngle, t, interp[def.launchAngle])))
 	elseif Particles.trackIsConstantZero(self.emitter.launchAngle) then
 		launchAngle = random.number(2 * math.pi)
 	else
-		launchAngle = math.rad(Particles.evaluateTrack(self.emitter.launchAngle, t, random.number()))
+		launchAngle = math.rad(Particles.evaluateTrack(self.emitter.launchAngle, t, interp[def.launchAngle]))
 	end
 	
 	if emitterType == 'Box' then
-		x = Particles.evaluateTrack(self.emitter.emitterBoxX, t, random.number())
-		y = Particles.evaluateTrack(self.emitter.emitterBoxY, t, random.number())
+		x = Particles.evaluateTrack(self.emitter.emitterBoxX, t, interp[def.emitterBoxX])
+		y = Particles.evaluateTrack(self.emitter.emitterBoxY, t, interp[def.emitterBoxY])
 	elseif emitterType == 'Circle' or emitterType == 'CirclePath' or emitterType == 'CircleEvenSpacing' then
-		local radius = self:evaluateSystemTrack('emitterRadius', t, random.number())
+		local radius = self:evaluateSystemTrack('emitterRadius', t, interp[def.emitterRadius])
 		x, y = (math.sin(launchAngle) * radius), (math.cos(launchAngle) * radius)
 	elseif emitterType == 'BoxPath' then
 		-- todo
@@ -169,16 +172,16 @@ function ParticleEmitter:spawnParticle()
 	particle.textureKey = self.emitter.image
 	particle.frames = self.emitter.imageFrames
 	particle:setPosition(
-		self.systemCenter.x + x + y * Particles.evaluateTrack(self.emitter.emitterSkewX, t, random.number()),
-		self.systemCenter.y + y + x * Particles.evaluateTrack(self.emitter.emitterSkewY, t, random.number())
+		self.systemCenter.x + x + y * Particles.evaluateTrack(self.emitter.emitterSkewX, t, interp[def.emitterSkewX]),
+		self.systemCenter.y + y + x * Particles.evaluateTrack(self.emitter.emitterSkewY, t, interp[def.emitterSkewY])
 	)
 	particle:setVelocity(
 		math.sin(launchAngle) * launchSpeed,
 		math.cos(launchAngle) * launchSpeed
 	)
 	particle:setPosition(
-		particle.x + Particles.evaluateTrack(self.emitter.emitterOffsetX, t, random.number()) - particle.textureCoord.w * .5,
-		particle.y + Particles.evaluateTrack(self.emitter.emitterOffsetY, t, random.number()) - particle.textureCoord.h * .5
+		particle.x + Particles.evaluateTrack(self.emitter.emitterOffsetX, t, interp[def.emitterOffsetX]) - particle.textureCoord.w * .5,
+		particle.y + Particles.evaluateTrack(self.emitter.emitterOffsetY, t, interp[def.emitterOffsetY]) - particle.textureCoord.h * .5
 	)
 	
 	if self.emitter.animated or self.emitter.animationRate then
