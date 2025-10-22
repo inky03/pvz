@@ -99,6 +99,28 @@ function Reanimation:toggleLayer(layer, on)
 		trace(('%s: Could not find layer %s'):format(self.reanim.name, layer))
 	end
 end
+function Reanimation:assignRenderGroupToTrack(layer, renderGroup)
+	local foundLayer = self:getAnimationLayer(layer)
+	
+	if foundLayer then
+		foundLayer.renderGroup = renderGroup
+	else
+		trace(('%s: Could not find layer %s'):format(self.reanim.name, layer))
+	end
+end
+function Reanimation:assignRenderGroupToPrefix(prefix, renderGroup)
+	local foundLayer = false
+	for i, layer in ipairs(self.animation.current.layers) do
+		if layer.layerName:sub(1, #prefix) == prefix then
+			layer.renderGroup = renderGroup
+			foundLayer = true
+		end
+	end
+	
+	if not foundLayer then
+		trace(('%s: Could not find any layer with prefix %s'):format(self.reanim.name, prefix))
+	end
+end
 
 function Reanimation:update(dt)
 	UIContainer.update(self, dt)
@@ -126,23 +148,24 @@ function Reanimation:shouldTriggerTimedEvent(t)
 end
 
 function Reanimation:draw(x, y, transforms)
+	UIContainer.draw(self, x, y, transforms)
+end
+function Reanimation:drawRenderGroup(renderGroup, x, y, transforms)
 	if not self.reanim or not self.visible then return end
 	
 	love.graphics.setShader(self.shader)
-	self:render(x, y, transforms)
+	self:render(x, y, transforms, renderGroup)
 	love.graphics.setShader(nil)
-	
-	UIContainer.draw(self, x, y)
 end
 
 Reanimation.transformStack = {}
 
-function Reanimation:render(x, y, transforms)
+function Reanimation:render(x, y, transforms, renderGroup)
 	for i, transform in ipairs(transforms or self.transforms) do
 		table.insert(Reanimation.transformStack, i, transform)
 	end
 	
-	self:drawReanim(self.animation.current.layers, self.images, x, y, self.hiddenLayers)
+	self:drawReanim(renderGroup or 1, self.animation.current.layers, self.images, x, y, self.hiddenLayers)
 	
 	love.graphics.setColor(1, 1, 1, 1)
 	
@@ -151,8 +174,11 @@ function Reanimation:render(x, y, transforms)
 	end
 end
 
-function Reanimation:drawReanim(layers, textures, x, y, hiddenLayers)
+function Reanimation:drawReanim(renderGroup, layers, textures, x, y, hiddenLayers)
 	x, y = (x or 0), (y or 0)
+	
+	local mesh = Reanimation.triangle
+	local vert = mesh.vert
 	
 	local function renderFrame(frame)
 		local stack = Reanimation.transformStack
@@ -178,10 +204,8 @@ function Reanimation:drawReanim(layers, textures, x, y, hiddenLayers)
 		
 		if active and alpha > 0 then
 			if image then
-				local mesh = Reanimation.triangle
-				local vert = mesh.vert
-				
-				for i, corner in ipairs(vert) do
+				for i = 1, #vert do
+					local corner = vert[i]
 					corner[1] = ((i % 2 == 1 and 0 or image:getPixelWidth()) * frame.xScale)
 					corner[2] = ((i <= 2 and 0 or image:getPixelHeight()) * frame.yScale)
 					
@@ -209,8 +233,9 @@ function Reanimation:drawReanim(layers, textures, x, y, hiddenLayers)
 		end
 	end
 	
-	for i, layer in ipairs(layers) do
-		if layer.active and not (hiddenLayers and hiddenLayers[layer.layerName]) then
+	for i = 1, #layers do
+		local layer = layers[i]
+		if layer.renderGroup == renderGroup and layer.active and not (hiddenLayers and hiddenLayers[layer.layerName]) then
 			renderFrame(layer)
 		end
 	end

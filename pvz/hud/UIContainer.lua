@@ -12,6 +12,7 @@ function UIContainer:init(x, y, w, h)
 	self.canClick = true
 	self.active = true
 	self.alive = true
+	self.renderGroup = 1
 	self.destroyed = false
 	
 	self.hovering = false
@@ -179,16 +180,21 @@ function UIContainer:update(dt)
 	end
 end
 
-function UIContainer:draw(x, y)
+function UIContainer:draw(x, y, ...)
+	if not self.visible then return end
+	
+	self:drawRenderGroup(1, x, y, ...)
+	
+	if debugMode or self.debug then self:debugDraw(x, y, ...) end
+end
+function UIContainer:drawRenderGroup(renderGroup, x, y)
 	if not self.visible then return end
 	
 	for _, child in ipairs(self.children) do
-		if not child.drawToTop and child.alive then
+		if (not renderGroup or child.renderGroup == renderGroup) and not child.drawToTop and child.alive then
 			child:draw(child.x + x, child.y + y)
 		end
 	end
-	
-	if debugMode or self.debug then self:debugDraw(x, y) end
 end
 function UIContainer:drawTop(x, y)
 	if not self.visible then return end

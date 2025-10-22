@@ -3,6 +3,7 @@ local ReanimAnimationFrame = ReanimFrame:extend('ReanimAnimationFrame')
 function ReanimAnimationFrame:init(frame)
 	ReanimFrame.init(self, frame)
 	
+	self.renderGroup = 1
 	self.attachments = {}
 	self.attachment = nil
 	self.font = nil
