@@ -26,7 +26,6 @@ function AnimationController:setReanim(reanim)
 	if not reanim then return end
 	
 	self.reanim = reanim
-	self.parallel = {}
 	self.list = {}
 	
 	self._prev = nil
@@ -50,9 +49,8 @@ function AnimationController:update(dt, noDiff)
 	
 	for i = 1, #self.list do
 		local anim = self.list[i]
-		local active = (anim == self._cur or anim == self._prev)
-		if active or self.parallel[anim.name] then
-			anim:update(dt * self.speed, active)
+		if anim == self._cur or anim == self._prev or anim.parallel then
+			anim:update(dt * self.speed, anim == self._cur)
 		end
 	end
 	
@@ -103,8 +101,8 @@ function AnimationController:updateFrame(dt)
 		)
 		
 		if layer.active then
-			for _, attachment in ipairs(layer.attachments) do
-				attachment.object:update(dt)
+			for i = 1, #layer.attachments do
+				layer.attachments[i].object:update(dt)
 			end
 			if layer.attachment then layer.attachment:update(dt) end
 		end
@@ -219,7 +217,7 @@ function AnimationController:play(name, force, crossFade, reset)
 	end
 end
 function AnimationController:setLoop(loop)
-	self._cur.loop = loop
+	self.current.loop = loop
 	self.loop = loop
 	return loop
 end

@@ -190,7 +190,9 @@ end
 function UIContainer:drawRenderGroup(renderGroup, x, y)
 	if not self.visible then return end
 	
-	for _, child in ipairs(self.children) do
+	local children = self.children
+	for i = 1, #children do
+		local child = children[i];
 		if (not renderGroup or child.renderGroup == renderGroup) and not child.drawToTop and child.alive then
 			child:draw(child.x + x, child.y + y)
 		end

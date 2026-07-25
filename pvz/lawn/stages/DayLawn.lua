@@ -26,7 +26,7 @@ end
 function DayLawn:drawBackground(x, y)
 	Lawn.drawBackground(self, x, y)
 	
-	local xx, yy = windowToGame(self.sodRollX, gameHeight)
+	local xx, yy = self.sodRollX, gameHeight
 	if self.challenge.challenge <= 3 then
 		if self.challenge.challenge > 1 then
 			if self.sodRollX < gameWidth then

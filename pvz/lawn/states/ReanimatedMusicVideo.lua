@@ -342,6 +342,8 @@ function ReanimatedMusicVideo:init()
 	self:newPhase(1)
 	
 	self.brain = self:addElement(CreditBrain:new())
+	self.brain.renderGroup = 4
+	
 	self.sunflowerFace = 'Sunflower_head'
 	self.previousTiming = nil
 	self.afterTiming = nil
@@ -547,8 +549,12 @@ function ReanimatedMusicVideo:updateMovie()
 			sunFlower:attach('idle', self.blinkReanim, 'idle')
 		end
 		
-		sunFlower:replaceImage('Sunflower_head', Reanim.getResource(self.sunflowerFace))
+		if self._prevSunflowerFace ~= self.sunflowerFace then
+			sunFlower:replaceImage('Sunflower_head', Reanim.getResource(self.sunflowerFace))
+		end
 	end
+	
+	self._prevSunflowerFace = self.sunflowerFace
 end
 
 function ReanimatedMusicVideo:draw(x, y)
@@ -667,6 +673,7 @@ function ReanimatedMusicVideo:draw(x, y)
 	UIContainer.draw(self, x, y)
 	
 	self.credits:drawRenderGroup(4, x, y)
+	self:drawRenderGroup(4, x, y)
 end
 
 function ReanimatedMusicVideo:drawDisco(x, y, time)

@@ -21,10 +21,8 @@ function PeaShooter:init(x, y, challenge)
 	
 	self.head = Reanimation:new(self.reanimName)
 	self.head.animation.speed = self.animation.speed
-	self.head.animation.parallel['idle'] = true
-	self.head.animation:add('idle', 'head_idle')
-	self.head.animation:add('shoot', 'shooting', false)
-	self.head.animation:get('shoot').speed = 3
+	self.head.animation:add('idle', 'head_idle').parallel = true
+	self.head.animation:add('shoot', 'shooting', false).speed = 3
 	self.head.animation:play('idle', true)
 	
 	self:animate()

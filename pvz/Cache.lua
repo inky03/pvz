@@ -261,6 +261,9 @@ end
 function Cache.zombies(path)
 	return ('pvz.lawn.zombies.' .. path)
 end
+function Cache.modifiers(path)
+	return ('pvz.lawn.modifiers.' .. path)
+end
 function Cache.projectiles(path)
 	return ('pvz.lawn.projectiles.' .. path)
 end
@@ -269,14 +272,15 @@ function Cache.decompressFile(path)
 	local file = love.filesystem.newFile(path, 'r')
 	local val = file:read(4)
 	local int = love.data.unpack('<i4', val)
-	if int == -559022380 then -- zlib compressed reanimation
+	
+	if int == -559022380 then -- zlib compressed
 		local bytes = {}
 		local output = Deflate.inflate_zlib({
 			input = file:read():sub(5);
 			output = function(b) table.insert(bytes, string.char(b)) end;
 		})
 		
-		return table.concat(bytes, '')
+		return table.concat(bytes, '') -- mayb i shoudl just read table data lmao
 	else
 		return file:read()
 	end

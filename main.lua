@@ -17,7 +17,7 @@ function love.load(arguments)
 	shaders = true
 	complex = flags.complex
 	debugMode = (table.find(arguments, '-debug') or flags.debugMode)
-	tickPerSecond = (flags.maxFramerate > 0 and (1 / flags.maxFramerate) or -1)
+	secondsPerTick = (flags.maxFramerate > 0 and (1 / flags.maxFramerate) or -1)
 	math.randomseed(os.clock())
 	reloadCursors()
 	
@@ -29,8 +29,8 @@ function love.load(arguments)
 	Resources.reload()
 	Cache.createDefaults()
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
-	state = game:addElement(Cache.module('pvz.lawn.states.ReanimatedMusicVideo'):new())
-	-- state = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(7))
+	-- state = game:addElement(Cache.module('pvz.lawn.states.ReanimatedMusicVideo'):new())
+	state = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(1))
 	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
 	debugInfo:setLayerColor('Main')
 	
@@ -47,6 +47,7 @@ function love.mousepressed(mouseX, mouseY, button, isTouch, presses)
 	local mouseX, mouseY = windowToGame(mouseX, mouseY)
 	updateHover(mouseX, mouseY)
 	game:mousePressedAnywhere(mouseX, mouseY, button, isTouch, presses)
+	
 	if hoveringElement then
 		hoveringElement:mousePressed(mouseX, mouseY, button, isTouch, presses)
 		
@@ -126,31 +127,40 @@ function love.run()
 			end
 		end
 		
-		accumulator = (accumulator + love.timer.step())
-		
-		if accumulator >= (flags.useFrameskip and Constants.tickPerSecond or tickPerSecond) then
-			if love.update then
-				if flags.useFrameskip then
-					for i = 1, math.floor(math.min(flags.maxFrameskip, accumulator)) do
-						game:update(1 / Constants.tickPerSecond)
+		local redraw = false
+		if flags.useFrameskip then
+			accumulator = (accumulator + love.timer.step() * Constants.tickPerSecond)
+			
+			if accumulator >= 1 then
+				if love.update then 
+					for i = 1, math.floor(math.min(accumulator, flags.maxFrameskip)) do
+						love.update(1 / Constants.tickPerSecond)
 					end
-					
-					accumulator = (accumulator % 1)
-				else
-					love.update(math.min(accumulator, flags.maxFrameskip / Constants.tickPerSecond))
-					
-					accumulator = 0
 				end
+				
+				redraw = true
+				accumulator = (accumulator % 1)
 			end
-
-			if love.graphics and love.graphics.isActive() then
-				love.graphics.origin()
-				love.graphics.clear(love.graphics.getBackgroundColor())
-
-				if love.draw then love.draw() end
-
-				love.graphics.present()
+		else
+			accumulator = (accumulator + love.timer.step())
+			
+			if accumulator >= secondsPerTick then
+				if love.update then
+					love.update(math.min(accumulator, flags.maxFrameskip / Constants.tickPerSecond))
+				end
+				
+				redraw = true
+				accumulator = 0
 			end
+		end
+		
+		if redraw and love.graphics and love.graphics.isActive() then
+			love.graphics.origin()
+			love.graphics.clear(love.graphics.getBackgroundColor())
+
+			if love.draw then love.draw() end
+
+			love.graphics.present()
 		end
 		
 		love.timer.sleep(.0001)
@@ -216,13 +226,13 @@ function gameToWindow(x, y)
 	return (math.round(x + (winW / ratio - gameWidth) * .5) * ratio), (math.round(y + (winH / ratio - gameHeight) * .5) * ratio)
 end
 function rectToWindow(x, y, w, h)
+	local ratio = getAspectRatio()
 	local x, y = gameToWindow(x or 0, y or 0)
-	local w, h = gameToWindow(w or 0, h or 0)
-	return x, y, math.max(w, 0), math.max(h, 0)
+	return x, y, math.max(w * ratio, 0), math.max(h * ratio, 0)
 end
 
 function drawDebug()
-	if gcTimer < 0 then
+	if gcTimer <= 0 then
 		gcTimer = (gcTimer + 1 / 15)
 		gc = collectgarbage('count')
 		stats = love.graphics.getStats()

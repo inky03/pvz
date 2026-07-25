@@ -66,8 +66,9 @@ function Reanimation:attach(layer, object, basePose, offset)
 	return self.animation:attach(layer, object, basePose, offset)
 end
 function Reanimation:findAttachment(needle)
-	for _, layer in ipairs(self.animation.current.layers) do
-		local attachment = layer:findAttachment(needle)
+	local layers = self.animation.current.layers
+	for i = 1, #layers do
+		local attachment = layers[i]:findAttachment(needle)
 		if attachment then return attachment end
 	end
 	return nil
@@ -161,8 +162,9 @@ end
 Reanimation.transformStack = {}
 
 function Reanimation:render(x, y, transforms, renderGroup)
-	for i, transform in ipairs(transforms or self.transforms) do
-		table.insert(Reanimation.transformStack, i, transform)
+	local transforms = (transforms or self.transforms)
+	for i = 1, #transforms do
+		table.insert(Reanimation.transformStack, i, transforms[i])
 	end
 	
 	self:drawReanim(renderGroup or 1, self.animation.current.layers, self.images, x, y, self.hiddenLayers)
@@ -241,6 +243,7 @@ function Reanimation:drawReanim(renderGroup, layers, textures, x, y, hiddenLayer
 	end
 end
 
+local dcos, dsin = math.dcos, math.dsin
 function Reanimation.transformVertex(vert, frame, scaleCoords)
 	if frame == nil then return end
 	
@@ -256,8 +259,8 @@ function Reanimation.transformVertex(vert, frame, scaleCoords)
 	vert[1] = ((vert[1] - frame.xOrigin) * xScale)
 	vert[2] = ((vert[2] - frame.yOrigin) * yScale)
 	
-	local rX = (vert[1] * math.dcos(frame.yShear) - vert[2] * math.dsin(frame.xShear))
-	local rY = (vert[1] * math.dsin(frame.yShear) + vert[2] * math.dcos(frame.xShear))
+	local rX = (vert[1] * dcos(frame.yShear) - vert[2] * dsin(frame.xShear))
+	local rY = (vert[1] * dsin(frame.yShear) + vert[2] * dcos(frame.xShear))
 	
 	vert[1] = (frame.x * (frame.scaleCoords and xScale or 1) + rX + frame.xOrigin - frame.xOffset - frame._internalXOffset)
 	vert[2] = (frame.y * (frame.scaleCoords and yScale or 1) + rY + frame.yOrigin - frame.yOffset - frame._internalYOffset)

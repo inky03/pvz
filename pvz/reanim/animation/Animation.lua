@@ -20,6 +20,7 @@ function Animation:init(controller, reanim, name)
 	self.paused = false
 	self.finished = false
 	self.justFinished = false
+	self.parallel = false
 	self.fps = reanim.fps
 	
 	lambda.foreach(reanim.layers, function(layer)
@@ -66,11 +67,11 @@ end
 
 function Animation:updateLayers(cur, next, lerp)
 	for i = 1, #self.layers do
-		local reanimLayer = self.reanim.layers[i]
+		local layerFrames = self.reanim.layers[i].frames
 		
 		self.layers[i]:lerp(
-			reanimLayer.frames[math.clamp(cur, self.first, self.last)],
-			reanimLayer.frames[math.clamp(next, self.first, self.last)],
+			layerFrames[math.clamp(cur, self.first, self.last)],
+			layerFrames[math.clamp(next, self.first, self.last)],
 			lerp
 		)
 	end
