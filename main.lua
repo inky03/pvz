@@ -146,7 +146,7 @@ function love.run()
 			
 			if accumulator >= secondsPerTick then
 				if love.update then
-					love.update(math.min(accumulator, flags.maxFrameskip / Constants.tickPerSecond) * 2)
+					love.update(math.min(accumulator, flags.maxFrameskip / Constants.tickPerSecond))
 				end
 				
 				redraw = true
