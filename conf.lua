@@ -20,6 +20,11 @@ function love.conf(t)
 	t.window.identity = 'pvz-love'
 	t.window.title = 'Plants Vs. Zombies'
 	
+	local major = love.getVersion()
+	if major >= 12 then
+		t.graphics.renderers = {'vulkan'}
+	end
+	
 	-- project flags
 	flags = {
 		complex = true;

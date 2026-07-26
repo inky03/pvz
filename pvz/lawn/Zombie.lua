@@ -2,9 +2,6 @@ local Zombie = Unit:extend('Zombie')
 
 Zombie.reanimName = 'Zombie'
 
-Zombie.maxHelmHp = 0
-Zombie.maxShieldHp = 0
-
 Zombie.showOnStreet = true
 
 -- wave definition
@@ -23,9 +20,6 @@ function Zombie:init(x, y, challenge)
 	
 	self.groanCounter = random.int(300, 400)
 	self.variant = random.bool(100 / 5)
-	
-	self.helmHp, self.shieldHp = self.maxHelmHp, self.maxShieldHp
-	self.helmDamagePhase, self.shieldDamagePhase = 0, 0
 	
 	self.animation.speed = self.speed
 	
@@ -74,6 +68,7 @@ function Zombie:update(dt)
 	
 	if self.state ~= 'dead' then
 		self.collision = self:queryCollision(self.damageGroup, self.damageFilter, self.x - self.hitbox.w * .5)
+		
 		if self.collision and self.state == 'normal' then
 			self:setState('eating')
 		elseif not self.collision and self.state == 'eating' then
@@ -86,12 +81,6 @@ function Zombie:update(dt)
 	end
 end
 
-function Zombie:setHelmDamagePhase(phase)
-	self.helmDamagePhase = phase
-end
-function Zombie:setShieldDamagePhase(phase)
-	self.shieldDamagePhase = phase
-end
 function Zombie:setState(state)
 	Unit.setState(self, state)
 	
@@ -109,16 +98,6 @@ function Zombie:onDeath()
 	self.flags.ignoreCollisions = true
 end
 
-function Zombie:hurt(hp, glow)
-	if self.shieldHp > 0 then
-		self.shieldHp = math.max(self.shieldHp - hp, 0)
-	elseif self.helmHp > 0 then
-		self.helmHp = math.max(self.helmHp - hp, 0)
-		self.damageGlow = math.max(self.damageGlow, glow or 1)
-	else
-		Unit.hurt(self, hp, glow)
-	end
-end
 function Zombie:groan()
 	if self:canGroan() then
 		if self.variant then
@@ -127,6 +106,7 @@ function Zombie:groan()
 			Sound.playRandom({ 'groan' ; 'groan2' ; 'groan3' ; 'groan4' ; 'groan5' ; 'groan6' })
 		end
 	end
+	
 	self.groanCounter = (self.groanCounter + random.int(1000, 1500))
 end
 function Zombie:chomp()

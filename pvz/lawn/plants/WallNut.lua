@@ -1,10 +1,12 @@
 local WallNut = Plant:extend('WallNut')
 
+local DamageVisualModifier = Cache.module(Cache.modifiers('DamageVisualModifier'))
+
 WallNut.defaultBlinkAnim = 'blink_twice'
 WallNut.reanimName = 'Wallnut'
 WallNut.packetRecharge = 3000
 WallNut.packetCost = 50
-WallNut.maxHp = 4000
+WallNut.maxHealth = 4000
 WallNut.id = 3
 
 function WallNut:init(x, y, challenge)
@@ -20,26 +22,11 @@ function WallNut:init(x, y, challenge)
 	self.blinkCountdown = random.int(1000, 2000)
 	self.blinkReanim.animation:add('twitch', 'blink_twitch', false)
 	self.blinkReanim.animation:add('blinkThrice', 'blink_thrice', false)
-end
-
-function WallNut:hurt(hp, glow)
-	Plant.hurt(self, hp, glow)
 	
-	if self.damagePhase == 0 and self.hp <= (self.maxHp - 1333) then
-		self:setDamagePhase(1)
-	end if self.damagePhase == 1 and self.hp <= (self.maxHp - 2667) then
-		self:setDamagePhase(2)
-	end
-end
-
-function WallNut:setDamagePhase(phase)
-	Plant.setDamagePhase(self, phase)
-	
-	if phase == 1 then
-		self:replaceImage('Wallnut_body', Reanim.getResource('Wallnut_cracked1'))
-	elseif phase == 2 then
-		self:replaceImage('Wallnut_body', Reanim.getResource('Wallnut_cracked2'))
-	end
+	local mod = self:applyModifier(DamageVisualModifier, false, {
+		{ health = (self.maxHealth * 2 / 3); trigger = function(parent) parent:replaceImage('Wallnut_body', Reanim.getResource('Wallnut_cracked1')) end };
+		{ health = (self.maxHealth / 3); trigger = function(parent) parent:replaceImage('Wallnut_body', Reanim.getResource('Wallnut_cracked2')) end };
+	})
 end
 
 function WallNut:blink()

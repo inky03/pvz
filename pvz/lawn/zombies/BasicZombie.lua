@@ -1,6 +1,8 @@
 local BasicZombie = Zombie:extend('BasicZombie')
 
-BasicZombie.maxHp = 270
+local DamageVisualModifier = Cache.module(Cache.modifiers('DamageVisualModifier'))
+
+BasicZombie.maxHealth = 270
 
 BasicZombie.pickWeight = 4000
 
@@ -51,36 +53,33 @@ function BasicZombie:init(x, y, challenge)
 	end)
 	
 	self.shadowOffset = {x = 10; y = 60}
-end
-
-function BasicZombie:hurt(hp, glow)
-	Zombie.hurt(self, hp, glow)
 	
-	if self.damagePhase == 0 and self.hp <= (self.maxHp - 90) then
-		self:setDamagePhase(1)
-	end if self.damagePhase == 1 and self.hp <= (self.maxHp - 181) then
-		self:setDamagePhase(2)
-	end
-end
-
-function BasicZombie:setDamagePhase(phase)
-	Zombie.setDamagePhase(self, phase)
-	
-	if phase == 1 then
-		Sound.play('limbs_pop', 10)
-		self:toggleLayer('Zombie_outerarm_hand', false)
-		self:toggleLayer('Zombie_outerarm_lower', false)
-		self:replaceImage('Zombie_outerarm_upper', Reanim.getResource('Zombie_outerarm_upper2'))
-		self.lawn:spawnParticle('ZombieArm', self.x + self.w * .5, self.y + self.h * .5)
-	elseif phase == 2 then
-		Sound.play('limbs_pop', 10)
-		self:setState('dead')
-		self:toggleLayer('hair', false)
-		self:toggleLayer('head1', false)
-		self:toggleLayer('head2', false)
-		self:toggleLayer('tongue', false)
-		self.lawn:spawnParticle('ZombieHead', self.x + 24, self.y - 16)
-	end
+	self:applyModifier(DamageVisualModifier, false, {
+		{
+			health = (self.maxHealth / 2);
+			trigger = function(parent)
+				Sound.play('limbs_pop', 10)
+				
+				parent:toggleLayer('Zombie_outerarm_hand', false)
+				parent:toggleLayer('Zombie_outerarm_lower', false)
+				parent:replaceImage('Zombie_outerarm_upper', Reanim.getResource('Zombie_outerarm_upper2'))
+				parent.lawn:spawnParticle('ZombieArm', self.x + self.w * .5, self.y + self.h * .5)
+			end
+		};
+		{
+			health = 0;
+			trigger = function(parent)
+				Sound.play('limbs_pop', 10)
+				
+				parent:setState('dead')
+				parent:toggleLayer('hair', false)
+				parent:toggleLayer('head1', false)
+				parent:toggleLayer('head2', false)
+				parent:toggleLayer('tongue', false)
+				parent.lawn:spawnParticle('ZombieHead', self.x + 24, self.y - 16)
+			end
+		};
+	})
 end
 
 return BasicZombie

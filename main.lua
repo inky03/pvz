@@ -30,7 +30,7 @@ function love.load(arguments)
 	Cache.createDefaults()
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
 	-- state = game:addElement(Cache.module('pvz.lawn.states.ReanimatedMusicVideo'):new())
-	state = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(1))
+	state = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(9))
 	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
 	debugInfo:setLayerColor('Main')
 	
@@ -146,7 +146,7 @@ function love.run()
 			
 			if accumulator >= secondsPerTick then
 				if love.update then
-					love.update(math.min(accumulator, flags.maxFrameskip / Constants.tickPerSecond))
+					love.update(math.min(accumulator, flags.maxFrameskip / Constants.tickPerSecond) * 2)
 				end
 				
 				redraw = true

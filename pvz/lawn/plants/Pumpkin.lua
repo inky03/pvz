@@ -6,7 +6,7 @@ Pumpkin.defaultBlinkAnim = ''
 Pumpkin.reanimName = 'Pumpkin'
 Pumpkin.packetRecharge = 3000
 Pumpkin.packetCost = 125
-Pumpkin.maxHp = 4000
+Pumpkin.maxHealth = 4000
 Pumpkin.id = 30
 
 function Pumpkin:init(x, y, challenge)
@@ -17,6 +17,11 @@ function Pumpkin:init(x, y, challenge)
 	self.shadowOffset.y = 60
 	self.animation:add('idle', 'idle')
 	self.animation:play('idle', true)
+	
+	local mod = self:applyModifier(DamageVisualModifier, false, {
+		{ health = (self.maxHealth * 2 / 3); trigger = function(parent) parent:replaceImage('Pumpkin_front', Reanim.getResource('Pumpkin_damage1')) end };
+		{ health = (self.maxHealth / 3); trigger = function(parent) parent:replaceImage('Pumpkin_front', Reanim.getResource('Pumpkin_damage3')) end };
+	})
 end
 
 function Pumpkin:drawBack(x, y)
@@ -32,25 +37,6 @@ end
 
 function Pumpkin:canPlantOnTop(plant)
 	return (plant.class ~= self.class and not plant.canCarry)
-end
-
-function Pumpkin:hurt(hp, glow)
-	Plant.hurt(self, hp, glow)
-	
-	if self.damagePhase == 0 and self.hp <= (self.maxHp * 2 / 3) then
-		self:setDamagePhase(1)
-	end if self.damagePhase == 1 and self.hp <= (self.maxHp / 3) then
-		self:setDamagePhase(2)
-	end
-end
-function Pumpkin:setDamagePhase(phase)
-	Plant.setDamagePhase(self, phase)
-	
-	if phase == 1 then
-		self:replaceImage('Pumpkin_front', Reanim.getResource('Pumpkin_damage1'))
-	elseif phase == 2 then
-		self:replaceImage('Pumpkin_front', Reanim.getResource('Pumpkin_damage3'))
-	end
 end
 
 return Pumpkin

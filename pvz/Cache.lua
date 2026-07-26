@@ -2,6 +2,8 @@ Resources = require 'pvz.data.Resources'
 Deflate = require 'lib.deflate.deflatelua'
 Gif = require 'lib.gifload'
 
+local major = love.getVersion()
+
 local Cache = {
 	cached = {
 		images = {}; -- file type
@@ -14,7 +16,9 @@ local Cache = {
 		
 		levels = {}; -- module
 		entities = {};
-	}
+	};
+	
+	openFile = (major >= 12 and love.filesystem.openFile or love.filesystem.newFile)
 }
 
 local cached = Cache.cached
@@ -269,7 +273,7 @@ function Cache.projectiles(path)
 end
 
 function Cache.decompressFile(path)
-	local file = love.filesystem.newFile(path, 'r')
+	local file = Cache.openFile(path, 'r')
 	local val = file:read(4)
 	local int = love.data.unpack('<i4', val)
 	
@@ -285,8 +289,9 @@ function Cache.decompressFile(path)
 		return file:read()
 	end
 end
+
 function Cache.loadGifFile(path, frames)
-	local file = love.filesystem.newFile(path, 'r')
+	local file = Cache.openFile(path, 'r')
 	local gif = Gif()
 	
 	while true do

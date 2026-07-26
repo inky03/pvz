@@ -1,5 +1,7 @@
 local PoleVaulterZombie = Zombie:extend('PoleVaulterZombie')
 
+local DamageVisualModifier = Cache.module(Cache.modifiers('DamageVisualModifier'))
+
 PoleVaulterZombie.reanimName = 'Zombie_polevaulter'
 
 PoleVaulterZombie.maxHp = 500
@@ -53,40 +55,38 @@ function PoleVaulterZombie:init(x, y, challenge)
 	
 	self.yOffset = 50
 	self.shadowOffset = {x = 20; y = 60}
-end
-
-function PoleVaulterZombie:hurt(hp, glow)
-	Zombie.hurt(self, hp, glow)
 	
-	if self.damagePhase == 0 and self.hp <= (self.maxHp - 170) then
-		self:setDamagePhase(1)
-	end if self.damagePhase == 1 and self.hp <= (self.maxHp - 340) then
-		self:setDamagePhase(2)
-	end
-end
-
-function PoleVaulterZombie:setDamagePhase(phase)
-	Zombie.setDamagePhase(self, phase)
-	
-	if phase == 1 then
-		Sound.play('limbs_pop', 10)
-		self:toggleLayer('Zombie_outerarm_hand', false)
-		self:toggleLayer('Zombie_polevaulter_outerarm_lower', false)
-		self:replaceImage('Zombie_polevaulter_outerarm_upper', Reanim.getResource('Zombie_polevaulter_outerarm_upper2'))
-	elseif phase == 2 then
-		Sound.play('limbs_pop', 10)
-		self:setState('dead')
-		self:toggleLayer('hair', false)
-		self:toggleLayer('head1', false)
-		self:toggleLayer('head2', false)
-		if not self.poleUsed then
-			self:toggleLayer('Zombie_polevaulter_pole', false)
-			self:toggleLayer('Zombie_polevaulter_pole2', false)
-			self:toggleLayer('Zombie_polevaulter_innerhand', false)
-			self:toggleLayer('Zombie_polevaulter_innerarm_lower', false)
-			self:toggleLayer('Zombie_polevaulter_innerarm_upper', false)
-		end
-	end
+	self:applyModifier(DamageVisualModifier, false, {
+		{
+			health = (self.maxHealth * 2 / 3);
+			trigger = function(parent)
+				Sound.play('limbs_pop', 10)
+				
+				parent:toggleLayer('Zombie_outerarm_hand', false)
+				parent:toggleLayer('Zombie_polevaulter_outerarm_lower', false)
+				parent:replaceImage('Zombie_polevaulter_outerarm_upper', Reanim.getResource('Zombie_polevaulter_outerarm_upper2'))
+			end
+		};
+		{
+			health = (self.maxHealth / 3);
+			trigger = function(parent)
+				Sound.play('limbs_pop', 10)
+				
+				parent:setState('dead')
+				parent:toggleLayer('hair', false)
+				parent:toggleLayer('head1', false)
+				parent:toggleLayer('head2', false)
+				
+				if not self.poleUsed then
+					parent:toggleLayer('Zombie_polevaulter_pole', false)
+					parent:toggleLayer('Zombie_polevaulter_pole2', false)
+					parent:toggleLayer('Zombie_polevaulter_innerhand', false)
+					parent:toggleLayer('Zombie_polevaulter_innerarm_lower', false)
+					parent:toggleLayer('Zombie_polevaulter_innerarm_upper', false)
+				end
+			end
+		};
+	})
 end
 
 function PoleVaulterZombie:setState(state)

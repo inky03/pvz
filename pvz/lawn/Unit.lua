@@ -8,7 +8,7 @@ Unit.packetRecharge = 750
 Unit.packetCost = 100
 Unit.id = -1
 
-Unit.maxHp = 300
+Unit.maxHealth = 300
 
 Unit.allowedSurfaces = {'ground'}
 
@@ -20,13 +20,11 @@ function Unit:init(x, y, challenge)
 	self.active = true
 	
 	self.glow = 0
-	self.frost = 0
 	self.hard = false
 	self.dead = false
 	self.canDie = true
 	self.damageGlow = 0
-	self.damagePhase = 0
-	self.hp = self.maxHp
+	self.health = self.maxHealth
 	self.selected = false
 	self.state = 'normal'
 	self.speedMultiplier = 1
@@ -38,6 +36,7 @@ function Unit:init(x, y, challenge)
 	self.shader = Unit.pvzShader
 	
 	self.flags = {}
+	self.modifiers = {}
 	self:setSpeed(random.number(.75, 1))
 	
 	self.damage = 20
@@ -48,6 +47,22 @@ function Unit:init(x, y, challenge)
 	self.shadowOffset = {x = -3; y = 50}
 	
 	self.debugInfo = Font:new('Pico12', 9, 0, 0, self.w)
+	
+	self:setupEvent('update', {'dt'})
+	
+	self:setupEvent('draw', {'x', 'y', 'transforms'})
+	self:setupEvent('drawBack', {'x', 'y'})
+	self:setupEvent('drawShadow', {'x', 'y'})
+	self:setupEvent('debugDraw', {'x', 'y'})
+	
+	self:setupEvent('hurt', {'damage', 'glow'}, {
+		cancelledDamage = false;
+		cancelledGlow = false;
+		cancelDamage = function(ev) ev.cancelledDamage = true end;
+		cancelGlow = function(ev) ev.cancelledGlow = true end;
+	})
+	
+	self:setupEvent('die', {})
 end
 
 function Unit:setHitbox(x, y, w, h, hurtX, hurtY, hurtW, hurtH)
@@ -62,15 +77,9 @@ end
 function Unit:update(dt)
 	if self.inactive or self.hover then return end
 	
-	Reanimation.update(self, dt * self.speedMultiplier)
+	if self:dispatchEvent('update', dt).cancelled then return end
 	
-	if self.frost > 0 then
-		self.frost = (self.frost - dt * self.speed)
-		if self.frost < 0 then
-			self.frost = 0
-			self.speedMultiplier = 1
-		end
-	end
+	Reanimation.update(self, dt * self:getMultiplier('speed', self.speedMultiplier))
 	
 	self.damageGlow = math.max(self.damageGlow - dt * 6, 0)
 	
@@ -82,6 +91,10 @@ function Unit:updateBoardPosition()
 	self.boardX, self.boardY = self.board:getBoardPosition(self.x, self.y)
 end
 function Unit:destroy()
+	for i = #self.modifiers, 1, -1 do
+		self.modifiers[i]:destroy()
+	end
+	
 	if self.board then
 		self.board:removeUnit(self)
 	end
@@ -143,24 +156,33 @@ function Unit:queryCollision(kind, filter, baseX, baseY)
 end
 function Unit:hit(collision, multiplier)
 	if not collision then return end
+	
 	collision:hitBy(self, multiplier)
 end
 function Unit:hitBy(unit, multiplier)
 	if not unit then return end
+	
 	local multiplier = (multiplier or 1)
+	
 	self:hurt(unit.damage * multiplier, multiplier)
 end
-function Unit:hurt(hp, glow)
-	local multiplier = (multiplier or 1)
-	self.hp = math.max(self.hp - hp * multiplier, 0)
-	self.damageGlow = math.max(self.damageGlow, glow or 1)
+function Unit:hurt(damage, glow)
+	local event = self:dispatchEvent('hurt', damage, glow)
 	
-	if self.hp <= 0 then
+	if event.cancelled then return end
+	
+	if not event.cancelledDamage then self.health = math.max(self.health - event.damage, 0) end
+	if not event.cancelledGlow then self.damageGlow = math.max(self.damageGlow, event.glow or 1) end
+	
+	if self.health <= 0 then
 		self:die()
 	end
 end
 function Unit:die()
 	if not self.canDie or self.dead then return end
+	
+	if self:dispatchEvent('die').cancelled then return end
+	
 	self.dead = true
 	self:onDeath()
 end
@@ -169,9 +191,6 @@ function Unit:onDeath()
 	self:destroy()
 end
 
-function Unit:setDamagePhase(phase)
-	self.damagePhase = phase
-end
 function Unit:setState(state)
 	self.state = state
 end
@@ -183,30 +202,40 @@ end
 function Unit:drawShadow(x, y)
 	if self.flags.ignoreCollisions then return end
 	
+	if self:dispatchEvent('drawShadow', x, y).cancelled then return end
+	
 	love.graphics.draw(self.shadow, x + self.shadowOffset.x, y + self.shadowOffset.y)
 end
-function Unit:drawBack(x, y) end
+function Unit:drawBack(x, y)
+	if self:dispatchEvent('drawBack', x, y).cancelled then return end
+end
 function Unit:draw(x, y, transforms)
-	Unit.pvzShader:send('frost', (self.frost > 0 and 1 or 0))
+	Unit.pvzShader:send('frost', 0)
 	Unit.pvzShader:send('glow', self.selected and 1 or self.glow + self.damageGlow)
 	
-	self:drawSprite(x - self.xOffset, y - self.yOffset)
+	local event = self:dispatchEvent('draw', x, y, transforms)
+	
+	if event.cancelled then return end
+	
+	self:drawSprite(event.x - self.xOffset, event.y - self.yOffset, event.transforms)
 end
 function Unit:drawSprite(x, y)
 	Reanimation.draw(self, x, y, transforms)
 end
 function Unit:debugDraw(x, y)
+	local x, y = (x or 0), (y or 0)
+	
+	if self:dispatchEvent('debugDraw', x, y).cancelled then return end
+	
 	if self.flags.ignoreCollisions then return end
 	
-	Reanimation.debugDraw(self, x, y)
-	
-	x, y = (x or 0), (y or 0)
+	Reanimation.debugDraw(self, event.x, event.y)
 	
 	love.graphics.setColor(0, 1, 0)
-	love.graphics.rectangle('line', x + self.hurtbox.x + 1, y + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
+	love.graphics.rectangle('line', event.x + self.hurtbox.x + 1, event.y + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
 	love.graphics.setColor(1, 1, 1)
 	self.debugInfo:setText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)))
-	self.debugInfo:draw(math.floor(x), math.floor(y))
+	self.debugInfo:draw(math.floor(event.x), math.floor(event.y))
 end
 function Unit:drawSeedPacket()
 	self.xOffset, self.yOffset = 0, 0
@@ -214,11 +243,95 @@ function Unit:drawSeedPacket()
 	self:render(4.75, 8.75)
 end
 
+function Unit:findModifier(class, filter)
+	for _, modifier in ipairs(self.modifiers) do
+		if modifier.class == class and (not filter or filter(modifier)) then
+			return modifier
+		end
+	end
+	
+	return nil
+end
+
+function Unit:applyModifier(class, unique, ...)
+	local mod
+	
+	if not unique then
+		mod = self:findModifier(class)
+		
+		if mod then
+			mod:apply(false, ...)
+			
+			return mod
+		end
+	end
+	
+	mod = class:new(self)
+	mod:apply(true, ...)
+	
+	table.insert(self.modifiers, mod)
+	
+	return mod
+end
+
+function Unit:setupEvent(event, params, variables)
+	if not self.__events then self.__events = {} end
+	
+	local newEvent = {__f = params, __v = variables or {}}
+	
+	newEvent.cancel = function() newEvent.cancelled = true end
+	newEvent.stopPropagation = function() newEvent.propagating = false end
+	
+	self.__events[event] = newEvent
+	
+	return newEvent
+end
+
+function Unit:dispatchEvent(event, ...)
+	local data = self.__events[event]
+	
+	data.propagating = true
+	data.cancelled = false
+	
+	for i = 1, select('#', ...) do
+		local v = select(i, ...)
+		
+		data[data.__f[i]] = v
+	end
+	
+	for k, v in pairs(data.__v) do
+		data[k] = v
+	end
+	
+	for i = #self.modifiers, 1, -1 do
+		local mod = self.modifiers[i]
+		local f = mod[event]
+		
+		if f then f(mod, data) end
+		
+		if not data.propagating then break end
+	end
+	
+	return data
+end
+
+function Unit:getMultiplier(tag, base)
+	local value = (base or 1)
+	
+	for i = #self.modifiers, 1, -1 do
+		local mult = self.modifiers[i].multipliers[tag]
+		
+		if mult then value = (value * mult) end
+	end
+	
+	return value
+end
+
 function Unit.__tostring(self)
 	if self.class then
-		return ('%s(hp:%d, maxHp:%d)'):format(self.class.name, math.round(self.hp), math.round(self.maxHp))
+		return ('%s(health:%d, maxHealth:%d)'):format(self.class.name, math.round(self.health), math.round(self.maxHealth))
 	else
-		return ('%s(maxHp:%d)'):format(self.name, math.round(self.maxHp))
+		return ('%s(maxHealth:%d)'):format(self.name, math.round(self.maxHealth))
 	end
 end
 
