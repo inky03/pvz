@@ -6,6 +6,8 @@ BasicZombie.maxHealth = 270
 
 BasicZombie.pickWeight = 4000
 
+BasicZombie.charredReanimName = 'Zombie_charred'
+
 function BasicZombie:init(x, y, challenge)
 	Zombie.init(self, x, y, challenge)
 	
@@ -60,10 +62,11 @@ function BasicZombie:init(x, y, challenge)
 			trigger = function(parent)
 				Sound.play('limbs_pop', 10)
 				
+				parent.lawn:spawnParticle('ZombieArm', self.x + self.w * .5, self.y + self.h * .5)
+				
 				parent:toggleLayer('Zombie_outerarm_hand', false)
 				parent:toggleLayer('Zombie_outerarm_lower', false)
 				parent:replaceImage('Zombie_outerarm_upper', Reanim.getResource('Zombie_outerarm_upper2'))
-				parent.lawn:spawnParticle('ZombieArm', self.x + self.w * .5, self.y + self.h * .5)
 			end
 		};
 		{
@@ -71,12 +74,13 @@ function BasicZombie:init(x, y, challenge)
 			trigger = function(parent)
 				Sound.play('limbs_pop', 10)
 				
+				parent.lawn:spawnParticle('ZombieHead', self.x + 24, self.y - 16)
+				
 				parent:setState('dead')
 				parent:toggleLayer('hair', false)
 				parent:toggleLayer('head1', false)
 				parent:toggleLayer('head2', false)
 				parent:toggleLayer('tongue', false)
-				parent.lawn:spawnParticle('ZombieHead', self.x + 24, self.y - 16)
 			end
 		};
 	})

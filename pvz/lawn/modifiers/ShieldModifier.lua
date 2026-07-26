@@ -2,18 +2,13 @@ local ShieldModifier = Modifier:extend('ShieldModifier')
 
 local DamageVisualModifier = Cache.module(Cache.modifiers('DamageVisualModifier'))
 
-function ShieldModifier:init(parent)
-	Modifier.init(self, parent)
-	
-	self.damageVisual = DamageVisualModifier:new(self)
-end
-
 function ShieldModifier:apply(new, health, damagePhases, onDamage)
 	self.health = health
 	self.onDamage = onDamage
 	
-	self.damageVisual:apply(true, damagePhases)
-	self.damageVisual:test(self.health)
+	if new then
+		self.damageVisual = self:applyModifier(DamageVisualModifier, false, damagePhases)
+	end
 end
 
 function ShieldModifier:hurt(event)

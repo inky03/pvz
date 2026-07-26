@@ -46,7 +46,7 @@ function Zombie:init(x, y, challenge)
 end
 
 function Zombie:update(dt)
-	Unit.update(self, dt)
+	if Unit.update(self, dt) == false then return false end
 	
 	local delta = (dt * self.speed * self.speedMultiplier)
 	

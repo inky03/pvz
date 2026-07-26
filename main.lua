@@ -11,6 +11,9 @@ local gcTimer = 0
 local fpsCount = 0
 local drawtime = {}
 
+local major, minor, rev = love.getVersion()
+local rendererInfo = {love.graphics.getRendererInfo()}
+
 function love.load(arguments)
 	require 'import' trace('PVZ')
 	
@@ -31,10 +34,10 @@ function love.load(arguments)
 	game = UIContainer:new(0, 0, gameWidth, gameHeight)
 	-- state = game:addElement(Cache.module('pvz.lawn.states.ReanimatedMusicVideo'):new())
 	state = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(9))
-	debugInfo = Font:new('Pico12', 9, 0, 0, 120, 60)
+	debugInfo = Font:new('Pico12', 9, 0, 0, 400, 60)
 	debugInfo:setLayerColor('Main')
 	
-	debugCanvas = love.graphics.newCanvas(220, 200)
+	debugCanvas = love.graphics.newCanvas(400, 200)
 	
 	--[[
 	grasswalk = love.audio.newSource('resources/love/music/grasswalk.mp3', 'stream')
@@ -249,7 +252,7 @@ function drawDebug()
 	
 	love.graphics.setCanvas(debugCanvas)
 	
-	local text = ('%d fps\n%d mb\n%d objects\n%d drawcalls'):format(fps, ((stats.texturememory / 1024) + gc) / 1024, objs, stats.drawcalls)
+	local text = ('LOVE %d.%d.%d\n%s\n%s, %d fps, %d mb, %d object, %d draw'):format(major, minor, rev, rendererInfo[4], rendererInfo[1], fps, ((stats.texturememory / 1024) + gc) / 1024, objs, stats.drawcalls)
 	love.graphics.setColor(1, 1, 1)
 	debugInfo:setText(text)
 	debugInfo:draw(5, 5)

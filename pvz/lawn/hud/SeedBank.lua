@@ -18,15 +18,17 @@ function SeedBank:init(lawn, x, y, sun)
 	self.moneyText:setAlignment('center')
 	self:addElement(self.moneyText)
 	
-	self:addSeed(Cache.plants('SunFlower'))
 	self:addSeed(Cache.plants('PeaShooter'))
-	self:addSeed(Cache.plants('Repeater'))
-	self:addSeed(Cache.plants('GatlingPea'))
-	self:addSeed(Cache.plants('SnowPea'))
+	self:addSeed(Cache.plants('SunFlower'))
+	self:addSeed(Cache.plants('CherryBomb'))
 	self:addSeed(Cache.plants('WallNut'))
+	self:addSeed(Cache.plants('SnowPea'))
+	self:addSeed(Cache.plants('Repeater'))
+	
 	-- self:addSeed(Cache.plants('LilyPad'))
-	-- self:addSeed(Cache.plants('FlowerPot'))
 	-- self:addSeed(Cache.plants('Pumpkin'))
+	-- self:addSeed(Cache.plants('FlowerPot'))
+	-- self:addSeed(Cache.plants('FlowerPotWater'))
 end
 
 function SeedBank:setMoney(money)

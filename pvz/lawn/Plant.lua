@@ -79,10 +79,10 @@ function Plant:attachBlink(target, layer)
 end
 
 function Plant:update(dt)
-	Unit.update(self, dt)
+	if Unit.update(self, dt) == false then return false end
 	
 	if self.blinkReanim then
-		self.blinkCountdown = (self.blinkCountdown - dt * self.speed * self.speedMultiplier * Constants.tickPerSecond)
+		self.blinkCountdown = (self.blinkCountdown - dt * self.speed * self:getMultiplier('speed', self.speedMultiplier) * Constants.tickPerSecond)
 		if self.blinkCountdown < 0 then self:blink() end
 	end
 	
@@ -92,7 +92,7 @@ function Plant:update(dt)
 end
 
 function Plant:draw(x, y)
-	Unit.draw(self, x, y)
+	if Unit.draw(self, x, y) == false then return false end
 	
 	self:drawCarrying(x, y)
 end

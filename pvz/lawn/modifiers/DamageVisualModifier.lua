@@ -3,6 +3,7 @@ local DamageModifier = Modifier:extend('DamageModifier')
 function DamageModifier:init(parent)
 	Modifier.init(self, parent)
 	
+	self.paused = false
 	self.damagePhase = 0
 end
 

@@ -1,4 +1,6 @@
-local Unit = Reanimation:extend('Unit')
+ModifierMixin = require 'pvz.lawn.ModifierMixin'
+
+local Unit = Reanimation:extend('Unit'):with(ModifierMixin)
 
 Unit.pvzShader = Cache.shader('pvz')
 
@@ -62,6 +64,9 @@ function Unit:init(x, y, challenge)
 		cancelGlow = function(ev) ev.cancelledGlow = true end;
 	})
 	
+	self:setupEvent('hit', {'collision', 'multiplier'})
+	self:setupEvent('hitBy', {'collision', 'multiplier'})
+	
 	self:setupEvent('die', {})
 end
 
@@ -75,11 +80,11 @@ function Unit:setHitbox(x, y, w, h, hurtX, hurtY, hurtW, hurtH)
 end
 
 function Unit:update(dt)
-	if self.inactive or self.hover then return end
+	if self.inactive or self.hover then return false end
 	
-	if self:dispatchEvent('update', dt).cancelled then return end
+	if self:dispatchEvent('update', dt).cancelled then return false end
 	
-	Reanimation.update(self, dt * self:getMultiplier('speed', self.speedMultiplier))
+	Reanimation.update(self, dt * self.speed * self:getMultiplier('speed', self.speedMultiplier))
 	
 	self.damageGlow = math.max(self.damageGlow - dt * 6, 0)
 	
@@ -141,7 +146,8 @@ function Unit:queryCollision(kind, filter, baseX, baseY)
 	local units = self.board.units
 	for i = #units, 1, -1 do
 		local unit = units[i]:proxy()
-		if (not kind or unit:instanceOf(kind)) and unit:hurtboxOnScreen() and self:collidesWith(unit) and (not filter or filter(unit)) then
+		
+		if unit:instanceOf(kind) and unit:hurtboxOnScreen() and self:collidesWith(unit) and (not filter or filter(unit)) then
 			local xA, yA = self:getHitboxCenter(baseX, baseY)
 			local xB, yB = unit:getHurtboxCenter()
 			local dist = math.eucldistance(xA, yA, xB, yB)
@@ -154,22 +160,69 @@ function Unit:queryCollision(kind, filter, baseX, baseY)
 	
 	return closest
 end
+function Unit:queryCollisionMultiple(kind, filter, recursive)
+	if self.flags.canCollide == false or not self:hitboxOnScreen() or not kind then return end -- always be kind!
+	
+	local collisions
+	
+	local units = self.board.units
+	
+	if not recursive then
+		for i = #units, 1, -1 do
+			local unit = units[i]:proxy()
+			
+			if unit:instanceOf(kind) and unit:hurtboxOnScreen() and self:collidesWith(unit) and (not filter or filter(unit)) then
+				collisions = (collisions or {})
+				
+				table.insert(collisions, unit)
+			end
+		end
+	else
+		local recursed = {}
+		
+		local function recurseUnit(unit)
+			if unit:instanceOf(kind) and unit:hurtboxOnScreen() and self:collidesWith(unit) and (not filter or filter(unit)) then
+				collisions = (collisions or {})
+				
+				table.insert(collisions, unit)
+			end
+			
+			if recursed[unit] then return end
+			recursed[unit] = true
+			
+			local proxy = unit:proxy()
+			if unit ~= proxy then recurseUnit(proxy) end
+		end
+		
+		for i = #units, 1, -1 do
+			recurseUnit(units[i])
+		end
+	end
+	
+	return collisions
+end
 function Unit:hit(collision, multiplier)
 	if not collision then return end
 	
+	if self:dispatchEvent('hit', collision, multiplier).cancelled then return false end
+	
 	collision:hitBy(self, multiplier)
 end
-function Unit:hitBy(unit, multiplier)
-	if not unit then return end
+function Unit:hitBy(collision, multiplier)
+	if not collision then return end
+	
+	if self:dispatchEvent('hitBy', collision, multiplier).cancelled then return false end
 	
 	local multiplier = (multiplier or 1)
 	
-	self:hurt(unit.damage * multiplier, multiplier)
+	self:hurt(collision.damage * multiplier, multiplier)
 end
 function Unit:hurt(damage, glow)
+	if self.dead then return end
+	
 	local event = self:dispatchEvent('hurt', damage, glow)
 	
-	if event.cancelled then return end
+	if event.cancelled then return false end
 	
 	if not event.cancelledDamage then self.health = math.max(self.health - event.damage, 0) end
 	if not event.cancelledGlow then self.damageGlow = math.max(self.damageGlow, event.glow or 1) end
@@ -179,9 +232,9 @@ function Unit:hurt(damage, glow)
 	end
 end
 function Unit:die()
-	if not self.canDie or self.dead then return end
+	if not self.canDie or self.dead then return false end
 	
-	if self:dispatchEvent('die').cancelled then return end
+	if self:dispatchEvent('die').cancelled then return false end
 	
 	self.dead = true
 	self:onDeath()
@@ -200,14 +253,14 @@ function Unit:setSpeed(speed)
 end
 
 function Unit:drawShadow(x, y)
-	if self.flags.ignoreCollisions then return end
+	if self.flags.ignoreCollisions then return false end
 	
-	if self:dispatchEvent('drawShadow', x, y).cancelled then return end
+	if self:dispatchEvent('drawShadow', x, y).cancelled then return false end
 	
 	love.graphics.draw(self.shadow, x + self.shadowOffset.x, y + self.shadowOffset.y)
 end
 function Unit:drawBack(x, y)
-	if self:dispatchEvent('drawBack', x, y).cancelled then return end
+	if self:dispatchEvent('drawBack', x, y).cancelled then return false end
 end
 function Unit:draw(x, y, transforms)
 	Unit.pvzShader:send('frost', 0)
@@ -215,19 +268,19 @@ function Unit:draw(x, y, transforms)
 	
 	local event = self:dispatchEvent('draw', x, y, transforms)
 	
-	if event.cancelled then return end
+	if event.cancelled then return false end
 	
 	self:drawSprite(event.x - self.xOffset, event.y - self.yOffset, event.transforms)
 end
-function Unit:drawSprite(x, y)
+function Unit:drawSprite(x, y, transforms)
 	Reanimation.draw(self, x, y, transforms)
 end
 function Unit:debugDraw(x, y)
 	local x, y = (x or 0), (y or 0)
 	
-	if self:dispatchEvent('debugDraw', x, y).cancelled then return end
+	if self:dispatchEvent('debugDraw', x, y).cancelled then return false end
 	
-	if self.flags.ignoreCollisions then return end
+	if self.flags.ignoreCollisions then return false end
 	
 	Reanimation.debugDraw(self, event.x, event.y)
 	
@@ -241,78 +294,6 @@ function Unit:drawSeedPacket()
 	self.xOffset, self.yOffset = 0, 0
 	self.transform:setScale(.5, .5)
 	self:render(4.75, 8.75)
-end
-
-function Unit:findModifier(class, filter)
-	for _, modifier in ipairs(self.modifiers) do
-		if modifier.class == class and (not filter or filter(modifier)) then
-			return modifier
-		end
-	end
-	
-	return nil
-end
-
-function Unit:applyModifier(class, unique, ...)
-	local mod
-	
-	if not unique then
-		mod = self:findModifier(class)
-		
-		if mod then
-			mod:apply(false, ...)
-			
-			return mod
-		end
-	end
-	
-	mod = class:new(self)
-	mod:apply(true, ...)
-	
-	table.insert(self.modifiers, mod)
-	
-	return mod
-end
-
-function Unit:setupEvent(event, params, variables)
-	if not self.__events then self.__events = {} end
-	
-	local newEvent = {__f = params, __v = variables or {}}
-	
-	newEvent.cancel = function() newEvent.cancelled = true end
-	newEvent.stopPropagation = function() newEvent.propagating = false end
-	
-	self.__events[event] = newEvent
-	
-	return newEvent
-end
-
-function Unit:dispatchEvent(event, ...)
-	local data = self.__events[event]
-	
-	data.propagating = true
-	data.cancelled = false
-	
-	for i = 1, select('#', ...) do
-		local v = select(i, ...)
-		
-		data[data.__f[i]] = v
-	end
-	
-	for k, v in pairs(data.__v) do
-		data[k] = v
-	end
-	
-	for i = #self.modifiers, 1, -1 do
-		local mod = self.modifiers[i]
-		local f = mod[event]
-		
-		if f then f(mod, data) end
-		
-		if not data.propagating then break end
-	end
-	
-	return data
 end
 
 function Unit:getMultiplier(tag, base)

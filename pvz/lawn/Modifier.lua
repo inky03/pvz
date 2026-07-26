@@ -1,4 +1,4 @@
-local Modifier = class('Modifier')
+local Modifier = class('Modifier'):with(ModifierMixin)
 
 function Modifier:init(parent)
 	self.parent = parent

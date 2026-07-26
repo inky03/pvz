@@ -116,6 +116,8 @@ function Challenge:queueCutscenes(challenge)
 end
 
 function Challenge:startChallenge()
+	if self.challengeStarted then return end
+	
 	self.challengeStarted = true
 	self.challengeText:revive()
 	self.pauseButton:revive()
@@ -396,7 +398,7 @@ function Challenge:getCurrentWaveHealth()
 	if self.currentWaveZombies then
 		for _, zombie in ipairs(self.currentWaveZombies) do
 			if zombie.state ~= 'dead' then
-				waveHealth = (waveHealth + math.max(zombie.hp, 0))
+				waveHealth = (waveHealth + math.max(zombie.health, 0))
 			end
 		end
 	end
@@ -607,7 +609,7 @@ function Challenge:getMaxWaveHealth(wave)
 	local waveHealth = 0
 	if self.waveZombies[wave] then
 		for _, zombie in ipairs(self.waveZombies[wave]) do
-			waveHealth = (waveHealth + zombie.maxHp)
+			waveHealth = (waveHealth + zombie.maxHealth)
 		end
 	end
 	return waveHealth
