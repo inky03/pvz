@@ -34,7 +34,7 @@ you might now test the project as any other love2d project. if everything is don
 - [30log](https://github.com/Yonaba/30log) (oop library)
 - [lua-compress-deflatelua](https://github.com/davidm/lua-compress-deflatelua) (pure lua zlib decompression)
 	- [digest.crc32lua](https://github.com/davidm/lua-digest-crc32lua) (dependency)
-- [lump] (https://github.com/sixFingers/lump) 
+- [lump](https://github.com/sixFingers/lump) 
 	- used function `fromFlashToLove` from this little library. coudnt get a love2d Transform to work accurately (i might just be incompetent though )...
 - PopStudio (pc compiled / binary reanim format base)
 - the reanim viewer i made in gamemaker 2 years before this
