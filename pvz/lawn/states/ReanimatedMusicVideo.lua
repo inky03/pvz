@@ -317,7 +317,10 @@ function ReanimatedMusicVideo:init()
 	self.nightPool = NightPool:new()
 	self.nightPool.size.x = 14 -- well this is cheating
 	self.fog = self:addElement(FogEffect:new(self.nightPool, self.nightPool.size.x))
-	self.discoTexture = Resources.fetch('IMAGE_REANIM_CREDITS_DISCOLIGHTS', 'Image')
+	
+	self.discoVert = {{0, 0; 0, 0}; {0, 0; 0, 0}; {0, 0; 0, 0}; {0, 0; 0, 0}}
+	self.discoMesh = love.graphics.newMesh(4, 'strip', 'stream')
+	self.discoMesh:setTexture(Resources.fetch('IMAGE_REANIM_CREDITS_DISCOLIGHTS', 'Image'))
 	
 	self.blinkReanim = Reanimation:new('Sunflower')
 	self.blinkReanim.animation:add('blink', 'blink', false)
@@ -677,27 +680,26 @@ function ReanimatedMusicVideo:draw(x, y)
 end
 
 function ReanimatedMusicVideo:drawDisco(x, y, time)
-	local mesh = Reanimation.triangle
-	local vert = {
-		{ math.cos(time) * 600, math.sin(time) * 200; 0, 0 };
-		{ math.cos(time + math.pi / 2) * 600, math.sin(time + math.pi / 2) * 200; 1, 0 };
-		{ math.cos(time + math.pi / 2 * 3) * 600, math.sin(time + math.pi / 2 * 3) * 200; 0, 1 };
-		{ math.cos(time + math.pi) * 600, math.sin(time + math.pi) * 200; 1, 1 };
-	}
-	mesh.mesh:setVertices(vert)
-	mesh.mesh:setTexture(self.discoTexture)
+	self.discoVert[1] = { math.cos(time) * 600, math.sin(time) * 200; 0, 0 }
+	self.discoVert[2] = { math.cos(time + math.pi / 2) * 600, math.sin(time + math.pi / 2) * 200; 1, 0 }
+	self.discoVert[3] = { math.cos(time + math.pi / 2 * 3) * 600, math.sin(time + math.pi / 2 * 3) * 200; 0, 1 }
+	self.discoVert[4] = { math.cos(time + math.pi) * 600, math.sin(time + math.pi) * 200; 1, 1 }
+	
+	self.discoMesh:setVertices(self.discoVert)
 	
 	love.graphics.setColor(1, 1, 1, .5)
-	love.graphics.draw(mesh.mesh, x, y)
+	love.graphics.draw(self.discoMesh, x, y)
 	
 	if debugMode or self.debug then
-		mesh.mesh:setTexture()
+		self.discoMesh:setTexture()
 		love.graphics.setColor(1, 0, 1)
 		love.graphics.line(x + vert[1][1], y + vert[1][2], x + vert[2][1], y + vert[2][2])
 		love.graphics.line(x + vert[2][1], y + vert[2][2], x + vert[4][1], y + vert[4][2])
 		love.graphics.line(x + vert[4][1], y + vert[4][2], x + vert[3][1], y + vert[3][2])
 		love.graphics.line(x + vert[3][1], y + vert[3][2], x + vert[1][1], y + vert[1][2])
 	end
+	
+	love.graphics.setColor(1, 1, 1)
 end
 
 return ReanimatedMusicVideo

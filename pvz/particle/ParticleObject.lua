@@ -1,5 +1,7 @@
 local ParticleObject = UIContainer:extend('ParticleObject')
 
+ParticleObject.quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
+
 function ParticleObject:init(fields, emitter)
 	self.fields = fields
 	self.emitter = emitter
@@ -200,71 +202,34 @@ function ParticleObject:render(x, y)
 		self:reloadTexture()
 	end
 	
-	self.textureCoord.x = (math.floor(self.frame - 1) % self.columns * self.textureCoord.w)
-	self.textureCoord.y = (math.floor((self.frame - 1) / self.columns) * self.textureCoord.h)
+	love.graphics.push()
+	love.graphics.translate(fullscreen and 0 or x, fullscreen and 0 or y)
 	
-	local stack = Reanimation.transformStack
-	for i, transform in ipairs(transforms or self.transforms) do
-		table.insert(stack, i, transform)
-	end
+	local pop = Reanimation.applyTransform(self.transforms)
 	
-	local active = true
-	local alpha = 1
+	local blend = love.graphics.getBlendMode()
+	local r, g, b, a = love.graphics.getColor()
+	local bright = self:evaluateParticleTrack('particleBrightness')
 	
-	local function transform(frame)
-		if type(frame) == 'table' and not class.isInstance(frame) then
-			for _, frame in ipairs(frame) do
-				transform(frame)
-			end
-			return
-		end
-		
-		active = (active and frame.active)
-		alpha = (alpha * frame.alpha)
-	end
-	transform(stack)
+	love.graphics.setColor(
+		r * self:evaluateParticleTrack('particleRed') * bright * self.emitter.systemRed,
+		g * self:evaluateParticleTrack('particleGreen') * bright * self.emitter.systemGreen,
+		b * self:evaluateParticleTrack('particleBlue') * bright * self.emitter.systemBlue,
+		a * self:evaluateParticleTrack('particleAlpha') * self.emitter.systemAlpha
+	)
 	
-	if active and alpha > 0 then
-		local mesh = Particle.triangle
-		local vert = mesh.vert
-		
-		for i, corner in ipairs(vert) do
-			local xCorner = (i % 2 == 1 and 0 or 1)
-			local yCorner = (i <= 2 and 0 or 1)
-			
-			corner[1] = (xCorner * (fullscreen and gameWidth or self.textureCoord.w))
-			corner[2] = (yCorner * (fullscreen and gameHeight or self.textureCoord.h))
-			
-			corner[3] = ((self.textureCoord.x + xCorner * self.textureCoord.w) / self.texture:getPixelWidth())
-			corner[4] = ((self.textureCoord.y + yCorner * self.textureCoord.h) / self.texture:getPixelHeight())
-			
-			if not fullscreen then
-				Reanimation.transformVertex(corner, frame, false)
-				for i = 1, #stack do Reanimation.transformVertex(corner, stack[i], true) end
-			end
-		end
-		
-		local bright = self:evaluateParticleTrack('particleBrightness')
-		love.graphics.setColor(
-			self:evaluateParticleTrack('particleRed') * bright * self.emitter.systemRed,
-			self:evaluateParticleTrack('particleGreen') * bright * self.emitter.systemGreen,
-			self:evaluateParticleTrack('particleBlue') * bright * self.emitter.systemBlue,
-			self:evaluateParticleTrack('particleAlpha') * self.emitter.systemAlpha
-		)
-		
-		if additive then love.graphics.setBlendMode('add') end
-		
-		mesh.mesh:setVertices(vert)
-		mesh.mesh:setTexture(self.texture)
-		love.graphics.draw(mesh.mesh, fullscreen and 0 or x, fullscreen and 0 or y)
-		
-		love.graphics.setBlendMode('alpha')
-		love.graphics.setColor(1, 1, 1)
-	end
+	if additive then love.graphics.setBlendMode('add') end
 	
-	for i = 1, (transforms and #transforms or #self.transforms) do
-		table.remove(stack, 1)
-	end
+	ParticleObject.quad:setViewport(self.textureCoord.x, self.textureCoord.y, self.textureCoord.w, self.textureCoord.h, self.texture:getPixelDimensions())
+	
+	love.graphics.draw(self.texture, ParticleObject.quad)
+	
+	love.graphics.setColor(r, g, b, a)
+	love.graphics.setBlendMode(blend)
+	
+	for i = 1, pop do love.graphics.pop() end
+	
+	love.graphics.pop()
 end
 function ParticleObject:debugDraw(x, y)
 	if self.floorY then

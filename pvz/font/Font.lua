@@ -244,82 +244,47 @@ function Font:draw(x, y, transforms)
 	UIContainer.draw(self, x, y)
 end
 function Font:render(x, y, transforms)
+	local pop = Reanimation.applyTransform(transforms or self.transforms)
+	
 	if self.useCanvas then
 		if self._dirty then self:renderToCanvas() self._dirty = false end
-		self:renderCanvas(x, y, transforms)
+		
+		self:renderCanvas(x, y)
 	else
 		self:renderText(x, y)
 	end
+	
+	for _ = 1, pop do love.graphics.pop() end
 end
 function Font:renderCanvas(x, y, transforms)
-	for i, transform in ipairs(transforms or self.transforms) do
-		table.insert(Reanimation.transformStack, i, transform)
+	love.graphics.push('all')
+	
+	love.graphics.draw(self.canvas, x, y)
+	
+	if debugMode or self.debug then
+		local canvasWidth, canvasHeight = self.canvas:getPixelDimensions()
+		
+		love.graphics.setColor(1, 0, 1)
+		love.graphics.line(x, y, x + canvasWidth, y)
+		love.graphics.line(x + canvasWidth, y, x + canvasWidth, y + canvasHeight)
+		love.graphics.line(x + canvasWidth, y + canvasHeight, x, y + canvasHeight)
+		love.graphics.line(x, y + canvasHeight, x, y)
 	end
 	
-	local stack = Reanimation.transformStack
-	local red, green, blue, alpha = 1, 1, 1, 1
-	local active = true
-	
-	local function transform(frame)
-		if type(frame) == 'table' and not class.isInstance(frame) then
-			for _, frame in ipairs(frame) do
-				transform(frame)
-			end
-			return
-		end
-		
-		active = (active and frame.active)
-		
-		if active then
-			red, green, blue, alpha = (red * frame.red), (green * frame.green), (blue * frame.blue), (alpha * frame.alpha)
-		end
-	end
-	transform(stack)
-	
-	if active and alpha > 0 then
-		local mesh = Reanimation.triangle
-		local vert = mesh.vert
-		
-		for i, corner in ipairs(vert) do
-			corner[1] = (i % 2 == 1 and 0 or self.canvas:getWidth())
-			corner[2] = (i <= 2 and 0 or self.canvas:getHeight())
-			
-			Reanimation.transformVertex(corner, frame, false)
-			for i = 1, #stack do Reanimation.transformVertex(corner, stack[i], true) end
-		end
-		mesh.mesh:setVertices(vert)
-		mesh.mesh:setTexture(self.canvas)
-		
-		love.graphics.setBlendMode('alpha', 'premultiplied')
-		love.graphics.setColor(red * alpha, green * alpha, blue * alpha, alpha)
-		love.graphics.draw(mesh.mesh, x, y)
-		love.graphics.setBlendMode('alpha')
-		
-		if debugMode or self.debug then
-			mesh.mesh:setTexture()
-			love.graphics.setColor(1, 0, 1)
-			love.graphics.line(x + vert[1][1], y + vert[1][2], x + vert[2][1], y + vert[2][2])
-			love.graphics.line(x + vert[2][1], y + vert[2][2], x + vert[4][1], y + vert[4][2])
-			love.graphics.line(x + vert[4][1], y + vert[4][2], x + vert[3][1], y + vert[3][2])
-			love.graphics.line(x + vert[3][1], y + vert[3][2], x + vert[1][1], y + vert[1][2])
-		end
-	end
-	
-	for i = 1, (transforms and #transforms or #self.transforms) do
-		table.remove(Reanimation.transformStack, 1)
-	end
+	love.graphics.pop()
 end
 function Font:renderToCanvas()
 	self:recalculate()
 	
-	local prevCanvas = love.graphics.getCanvas()
+	love.graphics.push('all')
+	
 	love.graphics.setCanvas(self.canvas)
-	love.graphics.clear()
-	love.graphics.push()
 	love.graphics.origin()
+	love.graphics.clear()
+	
 	self:renderText(self.canvasPadding, self.canvasPadding)
+	
 	love.graphics.pop()
-	love.graphics.setCanvas(prevCanvas)
 end
 
 function Font:renderText(x, y)

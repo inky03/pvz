@@ -1,7 +1,8 @@
 -- math
 
-math.todeg = math.deg(1);
-math.torad = math.rad(1);
+math.todeg = math.deg(1)
+math.torad = math.rad(1)
+math.tau = (math.pi * 2)
 
 function math.clamp(n, min, max) return (n > max and max or (n < min and min or n)) end
 function math.round(n) return (n > 0 and math.floor(n + .5) or math.ceil(n - .5)) end

@@ -119,6 +119,8 @@ function SeedPacket:draw(x, y)
 		if challengeStarted then
 			love.graphics.rectangle('fill', x, y, self.w, self.h * (self.picking and 1 or 1 - self.recharged / self.maxRecharge))
 		end
+		
+		love.graphics.setColor(1, 1, 1)
 	end
 	
 	UIContainer.draw(self, x, y)

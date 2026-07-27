@@ -3,9 +3,6 @@ AnimationController = require 'pvz.reanim.animation.AnimationController'
 
 local Reanimation = UIContainer:extend('Reanimation')
 
-Reanimation.triangle = {vert = {{0, 0; 0, 0}; {50, 0; 1, 0}; {0, 50; 0, 1}; {50, 50; 1, 1}}}
-Reanimation.triangle.mesh = love.graphics.newMesh(Reanimation.triangle.vert, 'strip', 'dynamic')
-
 function Reanimation:init(kind, x, y)
 	UIContainer.init(self, x, y, 80, 80)
 	
@@ -163,107 +160,96 @@ Reanimation.transformStack = {}
 
 function Reanimation:render(x, y, transforms, renderGroup)
 	local transforms = (transforms or self.transforms)
-	for i = 1, #transforms do
-		table.insert(Reanimation.transformStack, i, transforms[i])
-	end
 	
-	self:drawReanim(renderGroup or 1, self.animation.current.layers, self.images, x, y, self.hiddenLayers)
+	love.graphics.push()
+	love.graphics.translate(x, y)
+	
+	local pop = Reanimation.applyTransform(transforms)
+	
+	Reanimation.drawReanim(renderGroup or 1, self.animation.current.layers, self.images, self.hiddenLayers)
+	
+	for _ = 1, pop do love.graphics.pop() end
 	
 	love.graphics.setColor(1, 1, 1, 1)
-	
-	for i = 1, (transforms and #transforms or #self.transforms) do
-		table.remove(Reanimation.transformStack, 1)
-	end
+	love.graphics.pop()
 end
 
-function Reanimation:drawReanim(renderGroup, layers, textures, x, y, hiddenLayers)
-	x, y = (x or 0), (y or 0)
-	
-	local mesh = Reanimation.triangle
-	local vert = mesh.vert
-	
-	local function renderFrame(frame)
-		local stack = Reanimation.transformStack
-		local image = textures[frame.image]
-		local red, green, blue, alpha = frame.red, frame.green, frame.blue, frame.alpha
-		local active = true
-		
-		local function transform(frame)
-			if type(frame) == 'table' and not class.isInstance(frame) then
-				for _, frame in ipairs(frame) do
-					transform(frame)
-				end
-				return
-			end
-			
-			active = (active and frame.active)
-			
-			if active then
-				red, green, blue, alpha = (red * frame.red), (green * frame.green), (blue * frame.blue), (alpha * frame.alpha)
-			end
-		end
-		transform(stack)
-		
-		if active and alpha > 0 then
-			if image then
-				for i = 1, #vert do
-					local corner = vert[i]
-					corner[1] = ((i % 2 == 1 and 0 or image:getPixelWidth()) * frame.xScale)
-					corner[2] = ((i <= 2 and 0 or image:getPixelHeight()) * frame.yScale)
-					
-					Reanimation.transformVertex(corner, frame, false)
-					for i = 1, #stack do Reanimation.transformVertex(corner, stack[i], true) end
-				end
-				mesh.mesh:setVertices(vert)
-				mesh.mesh:setTexture(image)
-				
-				love.graphics.setColor(red, green, blue, alpha)
-				love.graphics.draw(mesh.mesh, x, y)
-			end
-			
-			if #frame.attachments > 0 then
-				for i = 1, #frame.attachments do
-					local attachment = frame.attachments[i]
-					local object = attachment.object
-					if object.visible then
-						object:render(x, y, {attachment.transform, object.transforms, frame})
-					end
-				end
-			end
-			local attachment = frame.attachment
-			if attachment then attachment:render(x, y, {attachment.transform, frame}) end
-		end
-	end
-	
+function Reanimation.drawReanim(renderGroup, layers, textures, hiddenLayers)
 	for i = 1, #layers do
 		local layer = layers[i]
+		
 		if layer.renderGroup == renderGroup and layer.active and not (hiddenLayers and hiddenLayers[layer.layerName]) then
-			renderFrame(layer)
+			Reanimation.drawLimb(layer, textures)
 		end
 	end
+end
+function Reanimation.drawLimb(limb, textures)
+	if not limb.active or limb.alpha <= 0 then return end
+	
+	local image = textures[limb.image]
+	local pop = Reanimation.applyTransform(limb)
+	
+	if image then love.graphics.draw(image) end
+	
+	if #limb.attachments > 0 then
+		for i = 1, #limb.attachments do
+			local attachment = limb.attachments[i]
+			local object = attachment.object
+			
+			if object.visible then
+				object:render(0, 0, {attachment.transform, object.transforms})
+			end
+		end
+	end
+	
+	if limb.attachment then limb.attachment:render(0, 0) end
+	
+	for _ = 1, pop do love.graphics.pop() end
+end
+
+function Reanimation.flashScaleAndShear(xScale, yScale, xShear, yShear)
+	local m00, m01, m10, m11 =
+		(math.dcos(yShear) * xScale), (-math.dsin(xShear) * yScale),
+		(math.dsin(yShear) * xScale), (math.dcos(xShear) * yScale)
+	
+	-- https://math.stackexchange.com/questions/861674/decompose-a-2d-arbitrary-transform-into-only-scaling-and-rotation
+	
+	local e, f, g, h = ((m00 + m11) * .5), ((m00 - m11) * .5), ((m10 + m01) * .5), ((m10 - m01) * .5)
+	local q, r = math.sqrt(e * e + h * h), math.sqrt(f * f + g * g)
+	local a1, a2 = math.atan2(g, f), math.atan2(h, e)
+	
+	return (q + r), (q - r), ((a2 - a1) * .5), ((a2 + a1) * .5)
 end
 
 local dcos, dsin = math.dcos, math.dsin
-function Reanimation.transformVertex(vert, frame, scaleCoords)
-	if frame == nil then return end
+function Reanimation.applyTransform(frame)
+	local r, g, b, a = love.graphics.getColor()
 	
 	if type(frame) == 'table' and not class.isInstance(frame) then
+		local pop = 0
+		
 		for i = 1, #frame do
-			Reanimation.transformVertex(vert, frame[i], scaleCoords)
+			pop = (pop + Reanimation.applyTransform(frame[i]))
 		end
-		return
+		
+		return pop
 	end
 	
-	local xScale, yScale = (scaleCoords and frame.xScale or 1), (scaleCoords and frame.yScale or 1)
+	local xScale, yScale, xShear, yShear = Reanimation.flashScaleAndShear(frame.xScale, frame.yScale, frame.xShear, frame.yShear)
 	
-	vert[1] = ((vert[1] - frame.xOrigin) * xScale)
-	vert[2] = ((vert[2] - frame.yOrigin) * yScale)
+	love.graphics.push('all')
+	love.graphics.setColor(r * frame.red, g * frame.green, b * frame.blue, a * frame.alpha)
+	love.graphics.translate(-frame.xOffset - frame._internalXOffset, -frame.yOffset - frame._internalYOffset)
 	
-	local rX = (vert[1] * dcos(frame.yShear) - vert[2] * dsin(frame.xShear))
-	local rY = (vert[1] * dsin(frame.yShear) + vert[2] * dcos(frame.xShear))
+	love.graphics.push()
+	love.graphics.translate(frame.xOrigin, frame.yOrigin)
+	love.graphics.translate(frame.x, frame.y)
+	love.graphics.rotate(yShear)
+    love.graphics.scale(xScale, yScale)
+    love.graphics.rotate(xShear)
+	love.graphics.translate(-frame.xOrigin, -frame.yOrigin)
 	
-	vert[1] = (frame.x * (frame.scaleCoords and xScale or 1) + rX + frame.xOrigin - frame.xOffset - frame._internalXOffset)
-	vert[2] = (frame.y * (frame.scaleCoords and yScale or 1) + rY + frame.yOrigin - frame.yOffset - frame._internalYOffset)
+	return 2
 end
 
 function Reanimation:getName()
