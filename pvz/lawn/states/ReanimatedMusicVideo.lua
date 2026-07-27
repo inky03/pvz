@@ -343,6 +343,7 @@ function ReanimatedMusicVideo:init()
 		self:newPhase(self.creditsPhase)
 	end)
 	self:newPhase(1)
+	self:jump(16)
 	
 	self.brain = self:addElement(CreditBrain:new())
 	self.brain.renderGroup = 4

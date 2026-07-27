@@ -35,7 +35,6 @@ function ParticleObject:init(fields, emitter)
 	self.interp = table.populate(#Particles.definitions, function() return random.number() end)
 	
 	self.transform = ReanimFrame:new()
-	self.transform.scaleCoords = true
 	self.transforms = {self.transform}
 	
 	self.images = self.emitter.system.images

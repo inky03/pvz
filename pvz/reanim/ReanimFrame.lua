@@ -13,7 +13,6 @@ ReanimFrame.active = true
 ReanimFrame.font = nil
 ReanimFrame.text = ''
 
-ReanimFrame.scaleCoords = false
 ReanimFrame.layerName = ''
 ReanimFrame.xOffset = 0
 ReanimFrame.yOffset = 0
@@ -28,6 +27,8 @@ ReanimFrame.lerpFields = {
 	'xScale'; 'yScale';
 	'x'; 'y';
 }
+
+ReanimFrame._tempTransform = love.math.newTransform()
 
 function ReanimFrame:init(frameOrX, y, xShear, yShear, xScale, yScale)
 	if class.isInstance(frameOrX) then
@@ -52,7 +53,7 @@ function ReanimFrame:copy(frame)
 	self.image = frame.image
 	self.active = frame.active
 	self.layerName = frame.layerName
-	self:setShear(frame.xShear, frame.yShear)
+	self.xShear, self.yShear = frame.xShear, frame.yShear
 	for i = 1, #self.lerpFields do
 		local f = self.lerpFields[i]
 		self[f] = frame[f]
@@ -95,6 +96,71 @@ function ReanimFrame:__tostring()
 	)
 end
 
+function ReanimFrame:negate()
+	local loveTransform = self:toLoveTransformWithoutOffset()
+	
+	self:setShear(-self.xShear, -self.yShear)
+	self:setScale(1 / self.xScale, 1 / self.yScale)
+	self:setPosition(loveTransform:inverseTransformPoint(0, 0))
+	
+	return self
+end
+
+function ReanimFrame.flashTransformToLove(xScale, yScale, xShear, yShear)
+	-- https://math.stackexchange.com/questions/861674/decompose-a-2d-arbitrary-transform-into-only-scaling-and-rotation
+	
+	local m00, m01, m10, m11 =
+		(math.dcos(yShear) * xScale), (-math.dsin(xShear) * yScale),
+		(math.dsin(yShear) * xScale), (math.dcos(xShear) * yScale)
+	
+	local e, f, g, h = ((m00 + m11) * .5), ((m00 - m11) * .5), ((m10 + m01) * .5), ((m10 - m01) * .5)
+	local q, r = math.sqrt(e * e + h * h), math.sqrt(f * f + g * g)
+	local a1, a2 = math.atan2(g, f), math.atan2(h, e)
+	
+	return (q + r), (q - r), ((a2 - a1) * .5), ((a2 + a1) * .5)
+end
+
+function ReanimFrame.toLoveTransform(frame, transform)
+	local xScale, yScale, xShear, yShear = ReanimFrame.flashTransformToLove(frame.xScale, frame.yScale, frame.xShear, frame.yShear)
+	local transform = (transform or ReanimFrame._tempTransform)
+	
+	transform:reset()
+	transform:translate(frame.x + frame.xOrigin - frame.xOffset - frame._internalXOffset, frame.y + frame.yOrigin - frame.yOffset - frame._internalYOffset)
+	transform:rotate(yShear)
+	transform:scale(xScale, yScale)
+	transform:rotate(xShear)
+	transform:translate(-frame.xOrigin, -frame.yOrigin)
+	
+	return transform
+end
+function ReanimFrame.toLoveTransformWithoutOffset(frame, transform)
+	local xScale, yScale, xShear, yShear = ReanimFrame.flashTransformToLove(frame.xScale, frame.yScale, frame.xShear, frame.yShear)
+	local transform = (transform or ReanimFrame._tempTransform)
+	
+	transform:reset()
+	transform:translate(frame.x + frame.xOrigin, frame.y + frame.yOrigin)
+	transform:rotate(yShear)
+	transform:scale(xScale, yScale)
+	transform:rotate(xShear)
+	transform:translate(-frame.xOrigin, -frame.yOrigin)
+	
+	return transform
+end
+--[[function ReanimFrame.fromLoveTransform(transform)
+	WELL idk how to get shear maybe later
+	
+	local
+		m00, m01, m02, m03,
+		m10, m11, m12, m13,
+		m20, m21, m22, m23,
+		m30, m31, m32, m33
+	= transform:getMatrix()
+	
+	local xScale, yScale = math.sqrt(m00 * m00 + m10 * m10), math.sqrt(m01 * m01 + m11 * m11)
+	
+	return ReanimFrame:new(m03, m13, xShear, yShear, xScale, yScale)
+end]]
+
 function ReanimFrame:setPosition(x, y)
 	self.x, self.y = (x or 0), (y or 0)
 	return self
@@ -118,6 +184,25 @@ end
 function ReanimFrame:setColor(r, g, b, a)
 	self.red, self.green, self.blue, self.alpha = (r or 1), (g or 1), (b or 1), (a or 1)
 	return self
+end
+
+function ReanimFrame:getPosition()
+	return self.x, self.y
+end
+function ReanimFrame:getScale()
+	return self.xScale, self.yScale
+end
+function ReanimFrame:getShear()
+	return self.xShear, self.yShear
+end
+function ReanimFrame:getOrigin()
+	return self.xOrigin, self.yOrigin
+end
+function ReanimFrame:getOffset()
+	return self.xOffset, self.yOffset
+end
+function ReanimFrame:getColor()
+	return self.red, self.green, self.blue, self.alpha
 end
 
 return ReanimFrame

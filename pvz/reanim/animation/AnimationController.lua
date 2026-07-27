@@ -92,9 +92,7 @@ function AnimationController:update(dt, noDiff)
 end
 function AnimationController:updateFrame(dt)
 	for i = 1, #self.current.layers do
-		local layer = self.current.layers[i]
-		
-		layer:lerp(
+		local layer = self.current.layers[i]:lerp(
 			self._ghost.layers[i],
 			self._cur.layers[i],
 			self.crossFade
@@ -131,10 +129,7 @@ function AnimationController:attach(layer, object, basePose)
 				base:reset()
 				base:updateFrame(0)
 				
-				local baseFrame = base:getLayer(layer)
-				transform:setShear(-baseFrame.xShear, -baseFrame.yShear)
-				transform:setScale(1 / baseFrame.xScale, 1 / baseFrame.yScale)
-				transform:setPosition(-baseFrame.x / baseFrame.xScale, -baseFrame.y / baseFrame.yScale)
+				transform:copy(base:getLayer(layer)):negate()
 			else
 				print(('%s: Track %s doesn\'t exist'):format(self.reanim.name, basePose))
 				return

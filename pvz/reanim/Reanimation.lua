@@ -12,7 +12,6 @@ function Reanimation:init(kind, x, y)
 	self.hiddenLayers = {}
 	
 	self.transform = ReanimFrame:new()
-	self.transform.scaleCoords = true
 	self.transforms = {self.transform}
 	
 	self.animation = AnimationController:new()
@@ -207,20 +206,6 @@ function Reanimation.drawLimb(limb, textures)
 	for _ = 1, pop do love.graphics.pop() end
 end
 
-function Reanimation.flashScaleAndShear(xScale, yScale, xShear, yShear)
-	local m00, m01, m10, m11 =
-		(math.dcos(yShear) * xScale), (-math.dsin(xShear) * yScale),
-		(math.dsin(yShear) * xScale), (math.dcos(xShear) * yScale)
-	
-	-- https://math.stackexchange.com/questions/861674/decompose-a-2d-arbitrary-transform-into-only-scaling-and-rotation
-	
-	local e, f, g, h = ((m00 + m11) * .5), ((m00 - m11) * .5), ((m10 + m01) * .5), ((m10 - m01) * .5)
-	local q, r = math.sqrt(e * e + h * h), math.sqrt(f * f + g * g)
-	local a1, a2 = math.atan2(g, f), math.atan2(h, e)
-	
-	return (q + r), (q - r), ((a2 - a1) * .5), ((a2 + a1) * .5)
-end
-
 local dcos, dsin = math.dcos, math.dsin
 function Reanimation.applyTransform(frame)
 	local r, g, b, a = love.graphics.getColor()
@@ -235,21 +220,11 @@ function Reanimation.applyTransform(frame)
 		return pop
 	end
 	
-	local xScale, yScale, xShear, yShear = Reanimation.flashScaleAndShear(frame.xScale, frame.yScale, frame.xShear, frame.yShear)
-	
 	love.graphics.push('all')
 	love.graphics.setColor(r * frame.red, g * frame.green, b * frame.blue, a * frame.alpha)
-	love.graphics.translate(-frame.xOffset - frame._internalXOffset, -frame.yOffset - frame._internalYOffset)
+	love.graphics.applyTransform(frame:toLoveTransform())
 	
-	love.graphics.push()
-	love.graphics.translate(frame.xOrigin, frame.yOrigin)
-	love.graphics.translate(frame.x, frame.y)
-	love.graphics.rotate(yShear)
-    love.graphics.scale(xScale, yScale)
-    love.graphics.rotate(xShear)
-	love.graphics.translate(-frame.xOrigin, -frame.yOrigin)
-	
-	return 2
+	return 1
 end
 
 function Reanimation:getName()

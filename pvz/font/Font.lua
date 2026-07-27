@@ -11,7 +11,6 @@ function Font:init(kind, size, x, y, w, h, extra)
 	self.transform = ReanimFrame:new()
 	self.transform._internalXOffset = self.canvasPadding
 	self.transform._internalYOffset = self.canvasPadding
-	self.transform.scaleCoords = true
 	self.transforms = {self.transform}
 	
 	self.quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
@@ -244,51 +243,55 @@ function Font:draw(x, y, transforms)
 	UIContainer.draw(self, x, y)
 end
 function Font:render(x, y, transforms)
+	love.graphics.push()
+	love.graphics.translate(x, y)
+	love.graphics.translate(self.canvasPadding, self.canvasPadding)
+	
+	if self._dirty then
+		self:recalculate()
+		
+		if self.useCanvas then self:renderToCanvas() end
+	end
+	
 	local pop = Reanimation.applyTransform(transforms or self.transforms)
 	
 	if self.useCanvas then
-		if self._dirty then self:renderToCanvas() self._dirty = false end
-		
-		self:renderCanvas(x, y)
+		self:renderCanvas()
 	else
-		self:renderText(x, y)
+		self:renderText()
 	end
 	
 	for _ = 1, pop do love.graphics.pop() end
+	love.graphics.pop()
 end
-function Font:renderCanvas(x, y, transforms)
-	love.graphics.push('all')
-	
-	love.graphics.draw(self.canvas, x, y)
+function Font:renderCanvas()
+	love.graphics.draw(self.canvas)
 	
 	if debugMode or self.debug then
 		local canvasWidth, canvasHeight = self.canvas:getPixelDimensions()
 		
+		love.graphics.push('all')
+		
 		love.graphics.setColor(1, 0, 1)
-		love.graphics.line(x, y, x + canvasWidth, y)
-		love.graphics.line(x + canvasWidth, y, x + canvasWidth, y + canvasHeight)
-		love.graphics.line(x + canvasWidth, y + canvasHeight, x, y + canvasHeight)
-		love.graphics.line(x, y + canvasHeight, x, y)
+		love.graphics.rectangle('line', 0, 0, canvasWidth, canvasHeight)
+		
+		love.graphics.pop()
 	end
-	
-	love.graphics.pop()
 end
 function Font:renderToCanvas()
-	self:recalculate()
-	
 	love.graphics.push('all')
 	
 	love.graphics.setCanvas(self.canvas)
 	love.graphics.origin()
 	love.graphics.clear()
 	
-	self:renderText(self.canvasPadding, self.canvasPadding)
+	self:renderText()
 	
 	love.graphics.pop()
 end
 
-function Font:renderText(x, y)
-	local x, y = (x or 0), (y or 0)
+function Font:renderText()
+	local r, g, b, a = love.graphics.getColor()
 	
 	for i, layer in ipairs(self.fontData.layers) do
 		local transform = self.layerTransform[layer.name:lower()]
@@ -314,16 +317,16 @@ function Font:renderText(x, y)
 					local texture = Cache.image(layer.textureName, self.fontData.origin)
 					local xOffset, yOffset = layer:getOffset(char)
 					local rX, rY, rW, rH = layer:getRect(char)
-					local glyphX, glyphY = math.round(x + xx + xOffset + xOffsetT), math.round(y + yy + yOffset + yOffsetT)
+					local glyphX, glyphY = math.round(xx + xOffset + xOffsetT), math.round(yy + yOffset + yOffsetT)
 					
 					local multR, multG, multB = (bit.rshift(layer.color, 16) % 256 / 255), (bit.rshift(layer.color, 8) % 256 / 255), (layer.color % 256 / 255)
 					local addR, addG, addB = (bit.rshift(layer.colorAdd, 16) % 256 / 255), (bit.rshift(layer.colorAdd, 8) % 256 / 255), (layer.colorAdd % 256 / 255)
 					
 					self.quad:setViewport(rX, rY, rW, rH, texture:getPixelDimensions())
-					love.graphics.setColor(transform.r * multR + addR, transform.g * multG + addG, transform.b * multB + addB, transform.a)
+					love.graphics.setColor(r * transform.r * multR + addR, g * transform.g * multG + addG, b * transform.b * multB + addB, a * transform.a)
 					love.graphics.draw(texture, self.quad, glyphX, glyphY)
 					
-					if self.debug then
+					if debugMode or self.debug then
 						love.graphics.setColor(0, 0, 1)
 						love.graphics.rectangle('line', glyphX, glyphY, rW, rH)
 					end
@@ -335,6 +338,8 @@ function Font:renderText(x, y)
 			yy = (yy + self._lineHeights[i])
 		end
 	end
+	
+	love.graphics.setColor(r, g, b, a)
 end
 
 return Font
