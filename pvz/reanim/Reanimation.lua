@@ -10,9 +10,7 @@ function Reanimation:init(kind, x, y)
 	
 	self.shader = nil
 	self.hiddenLayers = {}
-	
-	self.transform = ReanimFrame:new()
-	self.transforms = {self.transform}
+	self.renderGroup = nil
 	
 	self.animation = AnimationController:new()
 	
@@ -144,71 +142,55 @@ function Reanimation:shouldTriggerTimedEvent(t)
 	return (((self.frameFloat - 1) / (self.animation.length - 1)) >= t and ((self.prevFrame - 1) / (self.animation.length - 1)) < t)
 end
 
-function Reanimation:draw(x, y, transforms)
-	UIContainer.draw(self, x, y, transforms)
+function Reanimation:draw(x, y, transforms, renderGroup)
+	UIContainer.draw(self, x, y, transforms, renderGroup)
 end
-function Reanimation:drawRenderGroup(renderGroup, x, y, transforms)
-	if not self.reanim or not self.visible then return end
-	
-	love.graphics.setShader(self.shader)
-	self:render(x, y, transforms, renderGroup)
-	love.graphics.setShader(nil)
+function Reanimation:render(renderGroup)
+	Reanimation.drawReanim(renderGroup, self.animation.current.layers, self.images, self.hiddenLayers, self.shader)
 end
 
-Reanimation.transformStack = {}
-
-function Reanimation:render(x, y, transforms, renderGroup)
-	local transforms = (transforms or self.transforms)
-	
-	love.graphics.push()
-	love.graphics.translate(x, y)
-	
-	local pop = Reanimation.applyTransform(transforms)
-	
-	Reanimation.drawReanim(renderGroup or 1, self.animation.current.layers, self.images, self.hiddenLayers)
-	
-	for _ = 1, pop do love.graphics.pop() end
-	
-	love.graphics.setColor(1, 1, 1, 1)
-	love.graphics.pop()
-end
-
-function Reanimation.drawReanim(renderGroup, layers, textures, hiddenLayers)
+function Reanimation.drawReanim(renderGroup, layers, textures, hiddenLayers, shader)
 	for i = 1, #layers do
 		local layer = layers[i]
 		
-		if layer.renderGroup == renderGroup and layer.active and not (hiddenLayers and hiddenLayers[layer.layerName]) then
-			Reanimation.drawLimb(layer, textures)
+		if not renderGroup or layer.renderGroup == renderGroup and layer.active and not (hiddenLayers and hiddenLayers[layer.layerName]) then
+			Reanimation.drawLimb(renderGroup, layer, textures, shader)
 		end
 	end
 end
-function Reanimation.drawLimb(limb, textures)
+function Reanimation.drawLimb(renderGroup, limb, textures, shader)
 	if not limb.active or limb.alpha <= 0 then return end
 	
-	local image = textures[limb.image]
 	local pop = Reanimation.applyTransform(limb)
+	local image = textures[limb.image]
+	
+	if shader then love.graphics.setShader(shader) end
 	
 	if image then love.graphics.draw(image) end
 	
-	if #limb.attachments > 0 then
-		for i = 1, #limb.attachments do
-			local attachment = limb.attachments[i]
-			local object = attachment.object
-			
-			if object.visible then
-				object:render(0, 0, {attachment.transform, object.transforms})
-			end
+	for i = 1, #limb.attachments do
+		local attachment = limb.attachments[i]
+		local object = attachment.object
+		
+		local pop = Reanimation.applyTransform(attachment.transform)
+		
+		if object.visible then
+			object:draw(0, 0)
 		end
+		
+		for _ = 1, pop do love.graphics.pop() end
 	end
 	
-	if limb.attachment then limb.attachment:render(0, 0) end
+	if limb.attachment then
+		limb.attachment:draw(0, 0)
+	end
 	
 	for _ = 1, pop do love.graphics.pop() end
 end
 
 local dcos, dsin = math.dcos, math.dsin
 function Reanimation.applyTransform(frame)
-	local r, g, b, a = love.graphics.getColor()
+	if not frame then return 0 end
 	
 	if type(frame) == 'table' and not class.isInstance(frame) then
 		local pop = 0
@@ -219,6 +201,8 @@ function Reanimation.applyTransform(frame)
 		
 		return pop
 	end
+	
+	local r, g, b, a = love.graphics.getColor()
 	
 	love.graphics.push('all')
 	love.graphics.setColor(r * frame.red, g * frame.green, b * frame.blue, a * frame.alpha)

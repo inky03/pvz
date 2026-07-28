@@ -34,9 +34,6 @@ function ParticleObject:init(fields, emitter)
 	self.fieldInterp = table.populate(#Particles.fieldTypes, function() return { random.number() ; random.number() } end)
 	self.interp = table.populate(#Particles.definitions, function() return random.number() end)
 	
-	self.transform = ReanimFrame:new()
-	self.transforms = {self.transform}
-	
 	self.images = self.emitter.system.images
 	
 	UIContainer.init(self, x, y, 1, 1)
@@ -185,16 +182,7 @@ function ParticleObject:reloadTexture()
 	self:setHitbox(-self.w * .5, -self.h * .5, self.w, self.h)
 end
 
-function ParticleObject:draw(x, y)
-	self:render(x, y)
-	
-	UIContainer.draw(self, x, y)
-end
-function ParticleObject:render(x, y)
-	local x, y = ((x or 0) + self.shake.x), ((y or 0) + self.shake.y)
-	local additive = Particles.getEmitterFlag(self.emitter.emitter, 'additive')
-	local fullscreen = Particles.getEmitterFlag(self.emitter.emitter, 'fullscreen')
-	
+function ParticleObject:render(renderGroup)
 	local oldTexture = self.texture
 	self.texture = (self.images[self.textureKey] or Cache.unknownTexture)
 	if oldTexture ~= self.texture then
@@ -202,9 +190,12 @@ function ParticleObject:render(x, y)
 	end
 	
 	love.graphics.push()
-	love.graphics.translate(fullscreen and 0 or x, fullscreen and 0 or y)
 	
-	local pop = Reanimation.applyTransform(self.transforms)
+	if Particles.getEmitterFlag(self.emitter.emitter, 'fullscreen') then
+		love.graphics.origin()
+	end
+	
+	love.graphics.translate(self.shake.x, self.shake.y)
 	
 	local blend = love.graphics.getBlendMode()
 	local r, g, b, a = love.graphics.getColor()
@@ -217,7 +208,7 @@ function ParticleObject:render(x, y)
 		a * self:evaluateParticleTrack('particleAlpha') * self.emitter.systemAlpha
 	)
 	
-	if additive then love.graphics.setBlendMode('add') end
+	if Particles.getEmitterFlag(self.emitter.emitter, 'additive') then love.graphics.setBlendMode('add') end
 	
 	ParticleObject.quad:setViewport(self.textureCoord.x, self.textureCoord.y, self.textureCoord.w, self.textureCoord.h, self.texture:getPixelDimensions())
 	
@@ -225,8 +216,6 @@ function ParticleObject:render(x, y)
 	
 	love.graphics.setColor(r, g, b, a)
 	love.graphics.setBlendMode(blend)
-	
-	for i = 1, pop do love.graphics.pop() end
 	
 	love.graphics.pop()
 end

@@ -23,28 +23,28 @@ function DayLawn:init(challenge, x, y)
 	end
 end
 
-function DayLawn:drawBackground(x, y)
-	Lawn.drawBackground(self, x, y)
+function DayLawn:drawBackground()
+	Lawn.drawBackground(self)
 	
 	local xx, yy = self.sodRollX, gameHeight
 	if self.challenge.challenge <= 3 then
 		if self.challenge.challenge > 1 then
 			if self.sodRollX < gameWidth then
-				love.graphics.setScissor(xx, 0, gameWidth - xx, yy)
-				love.graphics.draw(Cache.image('images/sod1row'), x + 239, y + 265)
+				love.graphics.setScissor(rectToWindow(xx, 0, gameWidth - xx, yy))
+				love.graphics.draw(Cache.image('images/sod1row'), 239, 265)
 			end
 			
 			love.graphics.setScissor(rectToWindow(0, 0, xx, yy))
-			love.graphics.draw(Cache.image('images/sod3row'), x + 235, y + 149)
+			love.graphics.draw(Cache.image('images/sod3row'), 235, 149)
 		else
 			love.graphics.setScissor(rectToWindow(0, 0, xx, yy))
-			love.graphics.draw(Cache.image('images/sod1row'), x + 239, y + 265)
+			love.graphics.draw(Cache.image('images/sod1row'), 239, 265)
 		end
 	else
-		if self.sodRollX < gameWidth then love.graphics.draw(Cache.image('images/sod3row'), x + 235, y + 149) end
+		if self.sodRollX < gameWidth then love.graphics.draw(Cache.image('images/sod3row'), 235, 149) end
 		
 		love.graphics.setScissor(rectToWindow(0, 0, xx, yy))
-		love.graphics.draw(self.soddedTexture, x + (self.w - self.tW) * .5, y + (self.h - self.tH) * .5)
+		love.graphics.draw(self.soddedTexture, (self.w - self.tW) * .5, (self.h - self.tH) * .5)
 	end
 	
 	love.graphics.setScissor()

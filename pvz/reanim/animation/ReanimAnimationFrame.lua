@@ -48,6 +48,7 @@ function ReanimAnimationFrame:updateAttacher()
 			end
 			
 			self.attachment:setText(self.text)
+			
 			return
 		elseif self.text then
 			local attacherInfo = self.text:split('__')
@@ -88,6 +89,7 @@ function ReanimAnimationFrame:updateAttacher()
 						if f then self.attachment.animation._cur.fps = f end
 					end
 				end
+				
 				return
 			end
 		end
@@ -95,6 +97,20 @@ function ReanimAnimationFrame:updateAttacher()
 	
 	if self.attachment then self.attachment:destroy() end
 	self.attachment = nil
+end
+
+function ReanimAnimationFrame:__tostring()
+	local function round(n)
+		return (math.round(n * 100) / 100)
+	end
+	
+	return ('ReanimAnimationFrame(x:%s, y:%s, xShear:%s, yShear:%s, xScale:%s, yScale:%s, active:%s, alpha:%s, attachment:%s)'):format(
+		round(self.x), round(self.y),
+		round(self.xShear), round(self.yShear),
+		round(self.xScale), round(self.yScale),
+		tostring(self.active), round(self.alpha),
+		tostring(self.attachment)
+	)
 end
 
 return ReanimAnimationFrame

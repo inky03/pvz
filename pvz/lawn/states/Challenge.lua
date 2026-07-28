@@ -88,7 +88,7 @@ function Challenge:init(challenge)
 	self.streetZombieGrid = table.populate(5, table.populate(5, false))
 	self.streetZombies = {}
 	
-	self.collectibles = self:addElement(UIContainer:new(0, 0, gameWidth, gameHeight))
+	self.collectibles = self.lawn:addElement(UIContainer:new(220, 0, gameWidth, gameHeight))
 	self.collectibles.drawToTop = true
 	self.collectibles.canClick = false
 	

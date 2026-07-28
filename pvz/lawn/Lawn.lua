@@ -135,9 +135,12 @@ function Lawn:pickPlant(entity, packet, mouseX, mouseY)
 		self.selectedPacket = packet
 		
 		love.graphics.setCanvas(self.hoverCanvas)
+		love.graphics.push()
+		love.graphics.origin()
 		love.graphics.clear()
 		self.hoveringEntity:drawBack(40, 40)
 		self.hoveringEntity:draw(40, 40)
+		love.graphics.pop()
 		love.graphics.setCanvas()
 		
 		self:updateHover(mouseX or 0, mouseY or 0)
@@ -239,35 +242,25 @@ function Lawn:onPlant(entity, col, row)
 	end
 end
 
-function Lawn:draw(x, y)
-	if not self.visible then return end
-	
-	self:drawBackground(x, y)
+function Lawn:render(renderGroup)
+	self:drawBackground()
 	
 	for _, unit in ipairs(self.units) do
-		unit:drawShadow(x + unit.x, y + unit.y)
-		unit:drawBack(x + unit.x, y + unit.y)
+		unit:drawShadow(unit.x, unit.y)
+		unit:drawBack(unit.x, unit.y)
 	end
-	
-	if debugMode then self:debugDraw(x, y) end
-	
-	UIContainer.draw(self, x, y)
 end
-function Lawn:drawBackground(x, y)
-	love.graphics.draw(self.texture, x + (self.w - self.tW) * .5, y + (self.h - self.tH) * .5)
+function Lawn:drawBackground()
+	love.graphics.draw(self.texture, (self.w - self.tW) * .5, (self.h - self.tH) * .5)
 end
-function Lawn:drawTop(x, y) -- draw units
-	if not self.visible then return end
+function Lawn:renderTop() -- draw units
+	for _, unit in ipairs(self.units) do unit:draw(unit.x, unit.y) end
 	
-	for _, unit in ipairs(self.units) do unit:draw(x + unit.x, y + unit.y) end
-	
-	UIContainer.drawTop(self, x, y)
-	
-	self:drawHover(x, y)
+	self:drawHover()
 end
-function Lawn:drawHover(x, y)
+function Lawn:drawHover()
 	if self.hoveringEntity then
-		local mouseX, mouseY = windowToGame(love.mouse.getPosition())
+		local mouseX, mouseY = self:screenToElement(windowToGame(love.mouse.getPosition()))
 		
 		love.graphics.setBlendMode('alpha', 'premultiplied')
 		
@@ -279,7 +272,7 @@ function Lawn:drawHover(x, y)
 			end
 			
 			love.graphics.setColor(.5, .5, .5, .5)
-			love.graphics.draw(self.hoverCanvas, x + self.hoveringEntity.x - 40 + xOffset, y + self.hoveringEntity.y - 40 + yOffset)
+			love.graphics.draw(self.hoverCanvas, self.hoveringEntity.x - 40 + xOffset, self.hoveringEntity.y - 40 + yOffset)
 		end
 		
 		love.graphics.setColor(1, 1, 1)

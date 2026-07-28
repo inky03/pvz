@@ -55,7 +55,7 @@ function Unit:init(x, y, challenge)
 	self:setupEvent('draw', {'x', 'y', 'transforms'})
 	self:setupEvent('drawBack', {'x', 'y'})
 	self:setupEvent('drawShadow', {'x', 'y'})
-	self:setupEvent('debugDraw', {'x', 'y'})
+	self:setupEvent('debugRender', {})
 	
 	self:setupEvent('hurt', {'damage', 'glow'}, {
 		cancelledDamage = false;
@@ -297,30 +297,29 @@ end
 function Unit:drawSprite(x, y, transforms)
 	Reanimation.draw(self, x, y, transforms)
 end
-function Unit:debugDraw(x, y)
-	local x, y = (x or 0), (y or 0)
-	local event = self:dispatchEvent('debugDraw', x, y)
+function Unit:debugRender()
+	local event = self:dispatchEvent('debugRender')
 	
 	if event.cancelled then return false end
 	
 	if self.flags.ignoreCollisions then return false end
 	
-	Reanimation.debugDraw(self, event.x, event.y)
+	Reanimation.debugRender(self)
 	
 	love.graphics.setColor(1, 1, 0)
-	love.graphics.rectangle('line', event.x + self.hurtbox.x + 1, event.y + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
+	love.graphics.rectangle('line', self.hurtbox.x + 1, self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
 	love.graphics.setColor(1, 1, 0, UIContainer.debugBoxFillAlpha)
-	love.graphics.rectangle('fill', event.x + self.hurtbox.x + 1, event.y + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
+	love.graphics.rectangle('fill', self.hurtbox.x + 1, self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
 	
 	love.graphics.setColor(1, 1, 1)
 	
 	self.debugInfo:setText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)))
-	self.debugInfo:draw(math.floor(event.x), math.floor(event.y))
+	self.debugInfo:draw(0, 0)
 end
 function Unit:drawSeedPacket()
 	self.xOffset, self.yOffset = 0, 0
 	self.transform:setScale(.5, .5)
-	self:render(4.75, 8.75)
+	self:draw(4.75, 8.75)
 end
 
 function Unit:getMultiplier(tag, base)

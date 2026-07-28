@@ -45,13 +45,17 @@ end
 function SeedPacket:renderToCanvas(entity)
 	love.graphics.setCanvas(self.displayCanvas)
 	
+	love.graphics.push()
+	
 	love.graphics.clear()
-	love.graphics.setColor(1, 1, 1)
+	love.graphics.origin()
 	love.graphics.draw(self.texture, (self.frame - 1) * -50, 0)
 	
 	if entity then
 		entity:new():drawSeedPacket()
 	end
+	
+	love.graphics.pop()
 	
 	love.graphics.setCanvas()
 end
@@ -105,25 +109,23 @@ function SeedPacket:onReturned()
 	self.picking = false
 end
 
-function SeedPacket:draw(x, y)
+function SeedPacket:render()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.setBlendMode('alpha', 'premultiplied')
-	love.graphics.draw(self.displayCanvas, x, y)
+	love.graphics.draw(self.displayCanvas)
 	love.graphics.setBlendMode('alpha')
 	
 	local challengeStarted = self.lawn.challenge.challengeStarted
 	if not self.ready or self.picking or not challengeStarted then
 		love.graphics.setColor(0, 0, 0, .5)
-		love.graphics.rectangle('fill', x, y, self.w, self.h)
+		love.graphics.rectangle('fill', 0, 0, self.w, self.h)
 		
 		if challengeStarted then
-			love.graphics.rectangle('fill', x, y, self.w, self.h * (self.picking and 1 or 1 - self.recharged / self.maxRecharge))
+			love.graphics.rectangle('fill', 0, 0, self.w, self.h * (self.picking and 1 or 1 - self.recharged / self.maxRecharge))
 		end
 		
 		love.graphics.setColor(1, 1, 1)
 	end
-	
-	UIContainer.draw(self, x, y)
 end
 
 return SeedPacket

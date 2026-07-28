@@ -8,9 +8,6 @@ function Font:init(kind, size, x, y, w, h, extra)
 	
 	UIContainer.init(self, x, y, w or 0, h or 0)
 	
-	self.transform = ReanimFrame:new()
-	self.transforms = {self.transform}
-	
 	self.quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
 	self.layerTransform = {}
 	self.mainLayer = ''
@@ -233,16 +230,8 @@ function Font:recalculate()
 	end
 end
 
-function Font:draw(x, y, transforms)
+function Font:render(renderGroup)
 	if not self.fontData then return end
-	
-	self:render(x, y, transforms)
-	
-	UIContainer.draw(self, x, y)
-end
-function Font:render(x, y, transforms)
-	love.graphics.push()
-	love.graphics.translate(x, y)
 	
 	if self._dirty then
 		self:recalculate()
@@ -252,16 +241,11 @@ function Font:render(x, y, transforms)
 		self._dirty = false
 	end
 	
-	local pop = Reanimation.applyTransform(transforms or self.transforms)
-	
 	if self.useCanvas then
 		self:renderCanvas()
 	else
 		self:renderText()
 	end
-	
-	for _ = 1, pop do love.graphics.pop() end
-	love.graphics.pop()
 end
 function Font:renderCanvas()
 	local r, g, b, a = love.graphics.getColor()
