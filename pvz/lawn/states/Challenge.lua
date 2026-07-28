@@ -99,6 +99,7 @@ function Challenge:init(challenge)
 	self.zombieCountdownStart = self.zombieCountdown
 	
 	self.debugInfo = Font:new('Pico12', 9, 0, 0, 220, 120)
+	self.debugInfo.debug = false
 	self.challengeDebug = true
 	
 	self.seeds:kill()

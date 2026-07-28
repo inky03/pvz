@@ -17,9 +17,6 @@ ReanimFrame.layerName = ''
 ReanimFrame.xOffset = 0
 ReanimFrame.yOffset = 0
 
-ReanimFrame._internalXOffset = 0
-ReanimFrame._internalYOffset = 0
-
 ReanimFrame.lerpFields = {
 	'red'; 'green'; 'blue'; 'alpha';
 	'xOrigin'; 'yOrigin';
@@ -125,7 +122,7 @@ function ReanimFrame.toLoveTransform(frame, transform)
 	local transform = (transform or ReanimFrame._tempTransform)
 	
 	transform:reset()
-	transform:translate(frame.x + frame.xOrigin - frame.xOffset - frame._internalXOffset, frame.y + frame.yOrigin - frame.yOffset - frame._internalYOffset)
+	transform:translate(frame.x + frame.xOrigin - frame.xOffset, frame.y + frame.yOrigin - frame.yOffset)
 	transform:rotate(yShear)
 	transform:scale(xScale, yScale)
 	transform:rotate(xShear)

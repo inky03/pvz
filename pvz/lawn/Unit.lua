@@ -68,15 +68,32 @@ function Unit:init(x, y, challenge)
 	self:setupEvent('hitBy', {'collision', 'multiplier'})
 	
 	self:setupEvent('die', {})
+	
+	self._initializedHurtbox = false
 end
 
 function Unit:setHitbox(x, y, w, h, hurtX, hurtY, hurtW, hurtH)
 	Reanimation.setHitbox(self, x, y, w, h)
-	self.hurtbox = (self.hurtbox or {})
-	self.hurtbox.x = (hurtX or self.hitbox.x)
-	self.hurtbox.y = (hurtY or self.hitbox.y)
-	self.hurtbox.w = (hurtW or self.hitbox.w)
-	self.hurtbox.h = (hurtH or self.hitbox.h)
+	
+	if not self._initializedHurtbox then
+		self.hurtbox = { x = self.hitbox.x ; y = self.hitbox.y ; w = self.hitbox.w; h = self.hitbox.h }
+		self._initializedHurtbox = true
+	end
+	
+	if hurtX then self:setHurtbox(hurtX, hurtY, hurtW, hurtH) end
+end
+
+function Unit:setHurtbox(x, y, w, h)
+	self.hurtbox.x = (x or self.hitbox.x)
+	self.hurtbox.y = (y or self.hitbox.y)
+	self.hurtbox.w = (w or self.hitbox.w)
+	self.hurtbox.h = (h or self.hitbox.h)
+end
+function Unit:getHurtboxPosition()
+	return (self.x + self.hurtbox.x), (self.y + self.hurtbox.y)
+end
+function Unit:getHurtboxDimensions()
+	return self.hurtbox.w, self.hurtbox.h
 end
 
 function Unit:update(dt)
@@ -109,9 +126,14 @@ end
 function Unit:proxy()
 	return self
 end
-function Unit:collidesWith(unit)
-	return (math.within(self.x - self.xOffset + self.hitbox.x, unit.x - unit.xOffset + unit.hurtbox.x - self.hitbox.w, unit.x - unit.xOffset + unit.hurtbox.x + unit.hitbox.w)
-		and math.within(self.y - self.yOffset + self.hitbox.y, unit.y - unit.yOffset + unit.hurtbox.y - self.hitbox.h, unit.y - unit.yOffset + unit.hurtbox.y + unit.hitbox.h))
+function Unit:collidesWith(other)
+	local hitX, hitY = self:getHitboxPosition()
+	local hurtX, hurtY = other:getHurtboxPosition()
+	
+	return (
+		math.max(hitY, hurtY) < math.min(hitY + self.hitbox.h, hurtY + other.hurtbox.h) and
+		math.max(hitX, hurtX) < math.min(hitX + self.hitbox.w, hurtX + other.hurtbox.w)
+	)
 end
 function Unit:getHurtboxCenter(x, y)
 	local x, y = (x or self.x), (y or self.y)
@@ -277,16 +299,21 @@ function Unit:drawSprite(x, y, transforms)
 end
 function Unit:debugDraw(x, y)
 	local x, y = (x or 0), (y or 0)
+	local event = self:dispatchEvent('debugDraw', x, y)
 	
-	if self:dispatchEvent('debugDraw', x, y).cancelled then return false end
+	if event.cancelled then return false end
 	
 	if self.flags.ignoreCollisions then return false end
 	
 	Reanimation.debugDraw(self, event.x, event.y)
 	
-	love.graphics.setColor(0, 1, 0)
+	love.graphics.setColor(1, 1, 0)
 	love.graphics.rectangle('line', event.x + self.hurtbox.x + 1, event.y + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
+	love.graphics.setColor(1, 1, 0, UIContainer.debugBoxFillAlpha)
+	love.graphics.rectangle('fill', event.x + self.hurtbox.x + 1, event.y + self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
+	
 	love.graphics.setColor(1, 1, 1)
+	
 	self.debugInfo:setText(('%d,%d'):format(math.round(self.boardX), math.round(self.boardY)))
 	self.debugInfo:draw(math.floor(event.x), math.floor(event.y))
 end

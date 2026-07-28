@@ -9,8 +9,6 @@ function Font:init(kind, size, x, y, w, h, extra)
 	UIContainer.init(self, x, y, w or 0, h or 0)
 	
 	self.transform = ReanimFrame:new()
-	self.transform._internalXOffset = self.canvasPadding
-	self.transform._internalYOffset = self.canvasPadding
 	self.transforms = {self.transform}
 	
 	self.quad = love.graphics.newQuad(0, 0, 1, 1, 1, 1)
@@ -245,12 +243,13 @@ end
 function Font:render(x, y, transforms)
 	love.graphics.push()
 	love.graphics.translate(x, y)
-	love.graphics.translate(self.canvasPadding, self.canvasPadding)
 	
 	if self._dirty then
 		self:recalculate()
 		
 		if self.useCanvas then self:renderToCanvas() end
+		
+		self._dirty = false
 	end
 	
 	local pop = Reanimation.applyTransform(transforms or self.transforms)
@@ -265,18 +264,21 @@ function Font:render(x, y, transforms)
 	love.graphics.pop()
 end
 function Font:renderCanvas()
-	love.graphics.draw(self.canvas)
+	local r, g, b, a = love.graphics.getColor()
+	love.graphics.setColor(r * a, g * a, b * a, a)
 	
-	if debugMode or self.debug then
+	love.graphics.setBlendMode('alpha', 'premultiplied')
+	love.graphics.draw(self.canvas, -self.canvasPadding, -self.canvasPadding)
+	love.graphics.setBlendMode('alpha')
+	
+	if self.debug then
 		local canvasWidth, canvasHeight = self.canvas:getPixelDimensions()
-		
-		love.graphics.push('all')
 		
 		love.graphics.setColor(1, 0, 1)
 		love.graphics.rectangle('line', 0, 0, canvasWidth, canvasHeight)
-		
-		love.graphics.pop()
 	end
+	
+	love.graphics.setColor(r, g, b, a)
 end
 function Font:renderToCanvas()
 	love.graphics.push('all')
@@ -284,6 +286,8 @@ function Font:renderToCanvas()
 	love.graphics.setCanvas(self.canvas)
 	love.graphics.origin()
 	love.graphics.clear()
+	
+	love.graphics.translate(self.canvasPadding, self.canvasPadding)
 	
 	self:renderText()
 	
@@ -326,7 +330,7 @@ function Font:renderText()
 					love.graphics.setColor(r * transform.r * multR + addR, g * transform.g * multG + addG, b * transform.b * multB + addB, a * transform.a)
 					love.graphics.draw(texture, self.quad, glyphX, glyphY)
 					
-					if debugMode or self.debug then
+					if self.debug then
 						love.graphics.setColor(0, 0, 1)
 						love.graphics.rectangle('line', glyphX, glyphY, rW, rH)
 					end

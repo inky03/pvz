@@ -18,7 +18,7 @@ function UIContainer:init(x, y, w, h)
 	self.hovering = false
 	self.dragging = false
 	self.visible = true
-	self.debug = false
+	self.debug = debugMode
 	self.children = {}
 	self.parent = nil
 	
@@ -183,11 +183,11 @@ end
 function UIContainer:draw(x, y, ...)
 	if not self.visible then return end
 	
-	self:drawRenderGroup(1, x, y, ...)
+	if self.debug and self.renderGroup == 1 then self:debugDraw(x, y, ...) end
 	
-	if debugMode or self.debug then self:debugDraw(x, y, ...) end
+	self:drawRenderGroup(1, x, y, ...)
 end
-function UIContainer:drawRenderGroup(renderGroup, x, y)
+function UIContainer:drawRenderGroup(renderGroup, x, y, ...)
 	if not self.visible then return end
 	
 	local children = self.children
@@ -217,11 +217,19 @@ function UIContainer:drawWindow()
 		end
 	end
 end
+
+UIContainer.debugBoxFillAlpha = (1 / 10)
 function UIContainer:debugDraw(x, y)
 	love.graphics.setColor(0, 0, 1)
 	love.graphics.rectangle('line', x + 1, y + 1, self.w - 1, self.h - 1)
+	love.graphics.setColor(0, 0, 1, UIContainer.debugBoxFillAlpha)
+	love.graphics.rectangle('fill', x + 1, y + 1, self.w - 1, self.h - 1)
+	
 	love.graphics.setColor(1, 0, 0)
 	love.graphics.rectangle('line', x + 1 + self.hitbox.x, y + 1 + self.hitbox.y, self.hitbox.w - 1, self.hitbox.h - 1)
+	love.graphics.setColor(1, 0, 0, UIContainer.debugBoxFillAlpha)
+	love.graphics.rectangle('fill', x + 1 + self.hitbox.x, y + 1 + self.hitbox.y, self.hitbox.w - 1, self.hitbox.h - 1)
+	
 	love.graphics.setColor(1, 1, 1)
 end
 

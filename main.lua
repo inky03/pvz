@@ -36,6 +36,7 @@ function love.load(arguments)
 	state = game:addElement(Cache.module('pvz.lawn.challenges.DayChallenge'):new(9))
 	debugInfo = Font:new('Pico12', 9, 0, 0, 400, 60)
 	debugInfo:setLayerColor('Main')
+	debugInfo.debug = false -- hm
 	
 	debugCanvas = love.graphics.newCanvas(400, 200)
 end

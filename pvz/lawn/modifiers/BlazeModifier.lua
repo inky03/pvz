@@ -28,8 +28,6 @@ function BlazeModifier:die(event)
 	else
 		self.blazeTransform = ReanimFrame:new()
 		self.blazeTransform:setColor(0, 0, 0)
-		
-		self.parent.animation.paused = true
 	end
 end
 
@@ -43,7 +41,7 @@ function BlazeModifier:update(event)
 	event:stopPropagation()
 	event:cancel()
 	
-	Reanimation.update(self.parent, event.dt)
+	if self.charredReanim then Reanimation.update(self.parent, event.dt) end
 end
 
 function BlazeModifier:draw(event)
