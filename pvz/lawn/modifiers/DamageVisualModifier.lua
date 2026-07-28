@@ -21,7 +21,7 @@ function DamageModifier:test(health)
 	for i = (self.damagePhase + 1), #self.damagePhases do
 		local phase = self.damagePhases[i]
 		
-		if health <= phase.health then
+		if health < phase.health then
 			self.damagePhase = i
 			
 			if phase.trigger then phase.trigger(self.parent) end

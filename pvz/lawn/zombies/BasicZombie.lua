@@ -44,6 +44,8 @@ function BasicZombie:init(x, y, challenge)
 	elseif random.bool(50) then
 		self.animation:get('death'):setTrack(self.reanim:getTrack('death2'))
 		self.fallTime = .71
+	else
+		self.fallTime = .77
 	end
 	
 	self.animation.onFrame:add(function(animation)
@@ -58,7 +60,7 @@ function BasicZombie:init(x, y, challenge)
 	
 	self:applyModifier(DamageVisualModifier, false, {
 		{
-			health = (self.maxHealth / 2);
+			health = (self.maxHealth * 2 / 3);
 			trigger = function(parent)
 				Sound.play('limbs_pop', 10)
 				
@@ -70,7 +72,7 @@ function BasicZombie:init(x, y, challenge)
 			end
 		};
 		{
-			health = 0;
+			health = (self.maxHealth * 1 / 3);
 			trigger = function(parent)
 				Sound.play('limbs_pop', 10)
 				

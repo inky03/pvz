@@ -23,7 +23,7 @@ function Zombie:init(x, y, challenge)
 	
 	self.animation.speed = self.speed
 	
-	self.fallTime = .5
+	self.fallTime = -1
 	
 	self.damageGroup = Plant
 	self.collision = nil
@@ -75,7 +75,7 @@ function Zombie:update(dt)
 			self:setState('normal')
 		end
 	elseif not self.dead then
-		if self.fallTime >= 0 and self:shouldTriggerTimedEvent(self.fallTime) then
+		if self.health <= 0 or (self.fallTime >= 0 and self:shouldTriggerTimedEvent(self.fallTime)) then
 			self:die()
 		end
 	end
