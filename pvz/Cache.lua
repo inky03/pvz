@@ -45,6 +45,36 @@ function Cache.module(path)
 	end
 end
 
+Cache.bleedAlphaThreshold = (5 / 255)
+Cache.bleedAlphaOffsets = { 1, 0 ; 0, 1 ; -1, 0 ; 0, -1 ; 1, -1 ; 1, 1 ; -1, 1 ; -1, -1 }
+function Cache.fixImageData(imageData)
+	--[[
+	basically just tries to fix the colors on neighboring transparent pixels of an image
+	to prevent white edges when rendering
+	]]
+	
+	local w, h = imageData:getDimensions()
+	local thresh, offsets = Cache.bleedAlphaThreshold, Cache.bleedAlphaOffsets
+	
+	imageData:mapPixel(function(x, y, r, g, b, a)
+		if a < thresh then
+			for i = 1, 15, 2 do
+				local xx, yy = (x + offsets[i]), (y + offsets[i + 1])
+				
+				if xx >= 0 and yy >= 0 and xx < w and yy < h then
+					local rr, gg, bb, aa = imageData:getPixel(xx, yy)
+					
+					if aa > thresh then return rr, gg, bb, a end
+				end
+			end
+		end
+		
+		return r, g, b, a
+	end)
+	
+	return imageData
+end
+
 function Cache.image(path, folder, eval, maskPath)
 	if path == nil then return nil end
 	
@@ -72,10 +102,10 @@ function Cache.image(path, folder, eval, maskPath)
 					return r, g, b, a
 				end)
 				
-				img = love.graphics.newImage(image, {mipmaps = true})
+				img = love.graphics.newImage(Cache.fixImageData(image), {mipmaps = true})
 				goto loaded
 			else
-				img = love.graphics.newImage(fpath, {mipmaps = true})
+				img = love.graphics.newImage(Cache.fixImageData(love.image.newImageData(fpath)), {mipmaps = true})
 				goto loaded
 			end
 		end
@@ -111,6 +141,7 @@ function Cache.image(path, folder, eval, maskPath)
 	cached.images[key] = img
 	local mipmap = img:getMipmapFilter()
 	if mipmap ~= 'none' then img:setMipmapFilter('linear', .75) end
+	
 	return img
 end
 
