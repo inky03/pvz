@@ -14,8 +14,8 @@ function Zombie:init(x, y, challenge)
 	Unit.init(self, x, y, challenge)
 	
 	self:setHitbox(
-		7, 7, 20, 115,
-		23, 7, 42, 115
+		7, 0, 20, 80,
+		23, 0, 42, 80
 	)
 	
 	self.groanCounter = random.int(300, 400)
