@@ -25,8 +25,8 @@ function Pea:drawShadow(x, y)
 	love.graphics.draw(self.shadow, self.shadowQuad, x + self.shadowOffset.x, y + self.shadowOffset.y)
 end
 
-function Pea:drawSprite(x, y)
-	love.graphics.draw(self.texture, math.round(x), math.round(y))
+function Pea:render(renderGroup)
+	love.graphics.draw(self.texture)
 end
 
 return Pea

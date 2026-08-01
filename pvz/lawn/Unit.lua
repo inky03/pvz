@@ -3,8 +3,7 @@ ModifierMixin = require 'pvz.lawn.ModifierMixin'
 local Unit = Reanimation:extend('Unit'):with(ModifierMixin)
 
 Unit.pvzShader = Cache.shader('pvz')
-
-Unit.reanimName = 'SunFlower'
+Unit.reanimName = ''
 Unit.previewAnimation = 'idle'
 Unit.packetRecharge = 750
 Unit.packetCost = 100
@@ -49,12 +48,15 @@ function Unit:init(x, y, challenge)
 	self.shadowOffset = {x = -3; y = 50}
 	
 	self.debugInfo = Font:new('Pico12', 9, 0, 0, self.w)
+	self.debugInfo.debug = false
 	
 	self:setupEvent('update', {'dt'})
 	
 	self:setupEvent('draw', {'x', 'y', 'transforms'})
 	self:setupEvent('drawBack', {'x', 'y'})
 	self:setupEvent('drawShadow', {'x', 'y'})
+	self:setupEvent('render', {'renderGroup'})
+	self:setupEvent('renderPost', {'renderGroup'})
 	self:setupEvent('debugRender', {})
 	
 	self:setupEvent('hurt', {'damage', 'glow'}, {
@@ -292,10 +294,23 @@ function Unit:draw(x, y, transforms)
 	
 	if event.cancelled then return false end
 	
-	self:drawSprite(event.x - self.xOffset, event.y - self.yOffset, event.transforms)
+	Reanimation.draw(self, event.x, event.y, event.transforms)
 end
-function Unit:drawSprite(x, y, transforms)
-	Reanimation.draw(self, x, y, transforms)
+function Unit:renderChildren(renderGroup)
+	love.graphics.push()
+	love.graphics.translate(-self.xOffset, -self.yOffset)
+	
+	local event = self:dispatchEvent('render', renderGroup)
+	
+	if not event.cancelled then
+		Reanimation.renderChildren(self, event.renderGroup)
+		
+		self:dispatchEvent('renderPost', event.renderGroup)
+	end
+	
+	love.graphics.pop()
+	
+	if event.cancelled then return false end
 end
 function Unit:debugRender()
 	local event = self:dispatchEvent('debugRender')
@@ -304,12 +319,14 @@ function Unit:debugRender()
 	
 	if self.flags.ignoreCollisions then return false end
 	
-	Reanimation.debugRender(self)
-	
+	love.graphics.setLineWidth(2)
 	love.graphics.setColor(1, 1, 0)
-	love.graphics.rectangle('line', self.hurtbox.x + 1, self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
+	love.graphics.rectangle('line', self.hurtbox.x + 1, self.hurtbox.y + 1, self.hurtbox.w - 2, self.hurtbox.h - 2)
 	love.graphics.setColor(1, 1, 0, UIContainer.debugBoxFillAlpha)
-	love.graphics.rectangle('fill', self.hurtbox.x + 1, self.hurtbox.y + 1, self.hurtbox.w - 1, self.hurtbox.h - 1)
+	love.graphics.rectangle('fill', self.hurtbox.x + 1, self.hurtbox.y + 1, self.hurtbox.w - 2, self.hurtbox.h - 2)
+	love.graphics.setLineWidth(1)
+	
+	Reanimation.debugRender(self)
 	
 	love.graphics.setColor(1, 1, 1)
 	

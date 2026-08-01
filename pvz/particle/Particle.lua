@@ -80,4 +80,11 @@ function Particle:replaceImage(image, newResource)
 	trace(('%s: Could not find image ID %s'):format(self.data.name, tostr(img)))
 end
 
+function Particle:getName()
+	return self.data.name
+end
+function Particle:__tostring()
+	return ('Particle(name:%s, x:%d, y:%d, speed:%d)'):format(self:getName(), self.x, self.y, self.speed)
+end
+
 return Particle

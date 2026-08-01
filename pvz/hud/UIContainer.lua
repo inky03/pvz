@@ -12,8 +12,9 @@ function UIContainer:init(x, y, w, h)
 	self.canClick = true
 	self.active = true
 	self.alive = true
-	self.renderGroup = 1
+	self.renderGroup = nil
 	self.destroyed = false
+	self.renderPixelPerfect = true
 	
 	self.hovering = false
 	self.dragging = false
@@ -30,9 +31,14 @@ function UIContainer:init(x, y, w, h)
 	self:setHitbox()
 end
 
-function UIContainer:addElement(element, index)
+function UIContainer:addElement(element, index, renderGroup)
+	if renderGroup then
+		element.renderGroup = renderGroup
+	end
+	
 	table.insert(self.children, index or #self.children + 1, element)
 	element.parent = self
+	
 	return element
 end
 function UIContainer:indexOf(element)
@@ -202,37 +208,36 @@ function UIContainer:update(dt)
 end
 
 function UIContainer:draw(x, y, transforms, ...)
-	if not self.visible then return end
-	
 	self:drawRenderGroup(1, x, y, transforms, ...)
-	
-	if self.debug then self:debugDraw(x, y, transforms, ...) end
 end
 function UIContainer:render(renderGroup)
 	-- render here !!!
 end
 function UIContainer:drawRenderGroup(renderGroup, x, y, transforms, ...)
-	if not self.visible then return end
-	
 	love.graphics.push()
-	love.graphics.translate(x, y)
+	if self.renderPixelPerfect then love.graphics.translate(math.round(x), math.round(y)) else love.graphics.translate(x, y) end
+	
+	if self.debug then self:debugRender(renderGroup) end
+	
 	local pop = (Reanimation.applyTransform(self.transforms) + Reanimation.applyTransform(transforms))
-	
-	if (not renderGroup or not self.renderGroup or self.renderGroup == renderGroup) then
-		self:render(renderGroup or 1)
-	end
-	
-	local children = self.children
-	for i = 1, #children do
-		local child = children[i];
 		
-		if (not renderGroup or not child.renderGroup or child.renderGroup == renderGroup) and not child.drawToTop and child.alive then
-			child:draw(child.x, child.y)
-		end
-	end
+	self:render(renderGroup)
+	self:renderChildren(renderGroup)
 	
 	for _ = 1, pop do love.graphics.pop() end
 	love.graphics.pop()
+end
+function UIContainer:renderChildren(renderGroup)
+	local children = self.children
+	for i = 1, #children do
+		local child = children[i]
+		
+		if not child.renderGroup then child.renderGroup = renderGroup end
+		
+		if child.renderGroup == renderGroup and child.visible and child.alive and not child.drawToTop then
+			child:draw(child.x, child.y)
+		end
+	end
 end
 function UIContainer:drawTop(x, y)
 	if not self.visible then return end
@@ -247,7 +252,7 @@ function UIContainer:drawTop(x, y)
 	for i = 1, #children do
 		local child = children[i];
 		
-		if child.drawToTop and child.alive then
+		if child.visible and child.drawToTop and child.alive then
 			child:draw(child.x, child.y)
 		end
 		
@@ -271,18 +276,10 @@ function UIContainer:drawWindow()
 	end
 end
 
-UIContainer.debugBoxFillAlpha = (1 / 10)
-function UIContainer:debugDraw(x, y, transforms)
-	love.graphics.push()
-	love.graphics.translate(x, y)
-	-- local pop = (Reanimation.applyTransform(self.transforms)]] + Reanimation.applyTransform(transforms))
+UIContainer.debugBoxFillAlpha = (1 / 8)
+function UIContainer:debugRender(renderGroup)
+	local r, g, b, a = love.graphics.getColor()
 	
-	self:debugRender()
-	
-	-- for _ = 1, pop do love.graphics.pop() end
-	love.graphics.pop()
-end
-function UIContainer:debugRender()
 	love.graphics.setColor(0, 0, 1)
 	love.graphics.rectangle('line', 1, 1, self.w - 1, self.h - 1)
 	love.graphics.setColor(0, 0, 1, UIContainer.debugBoxFillAlpha)
@@ -293,7 +290,7 @@ function UIContainer:debugRender()
 	love.graphics.setColor(1, 0, 0, UIContainer.debugBoxFillAlpha)
 	love.graphics.rectangle('fill', 1 + self.hitbox.x, 1 + self.hitbox.y, self.hitbox.w - 1, self.hitbox.h - 1)
 	
-	love.graphics.setColor(1, 1, 1)
+	love.graphics.setColor(r, g, b, a)
 end
 
 return UIContainer

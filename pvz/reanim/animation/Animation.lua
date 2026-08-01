@@ -115,18 +115,38 @@ function Animation:setFrame(index, next, lerp) -- set frame to index in animatio
 	end
 end
 
-function Animation:setTrack(track)
+function Animation:setTrack(track, after)
 	if not track then return end
 	
-	self.first = track.first
-	self.last = track.last
-	self.track = track
+	local first, last
 	
-	self.length = (track.last - track.first + 1)
+	if after then
+		for i = 1, #track.keyframes do
+			local keyframe = track.keyframes[i]
+			
+			if after >= keyframe.first and after <= keyframe.last then
+				first, last = after, keyframe.last
+				
+				break
+			end
+		end
+	elseif #track.keyframes > 0 then
+		first, last = track.keyframes[1].first, track.keyframes[1].last
+	end
+	
+	if not first then
+		trace('Track ' .. track.name .. ' has no visible keyframes')
+		
+		return
+	end
+	
+	self.track, self.first, self.last = track, first, last
+	
+	self.length = (self.last - self.first + 1)
 end
 
 function Animation:__tostring()
-	return ('Animation(name:%s, first:%s, last:%s, length:%s)'):format(self.name, self.first, self.last, self.length)
+	return ('Animation(name:%s, frame: %s, first:%s, last:%s, length:%s)'):format(self.name, self.frame, self.first, self.last, self.length)
 end
 
 return Animation

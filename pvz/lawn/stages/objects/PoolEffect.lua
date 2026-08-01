@@ -65,15 +65,14 @@ function PoolEffect:update(dt)
 	UIContainer.update(self, dt)
 end
 
-function PoolEffect:draw(x, y)
-	if not self.visible then return end
-	
+function PoolEffect:render(renderGroup)
 	local poolWidth, poolHeight = self.texture:getPixelDimensions()
 	local gridW, gridH = (poolWidth / 15), (poolHeight / 5)
 	local off = self.offsets
 	
-	if not (complex and shaders) then
-		love.graphics.draw(self.texture, x, y)
+	if not complex or not shaders then
+		love.graphics.draw(self.texture)
+		
 		goto noshader
 	end
 	
@@ -141,16 +140,18 @@ function PoolEffect:draw(x, y)
 		end
 	end
 	
+	love.graphics.push('all')
+	
 	self.mesh:setVertices(self.vertMap[1])
 	self.mesh:setTexture(self.baseTexture)
-	love.graphics.draw(self.mesh, x, y)
+	love.graphics.draw(self.mesh)
 	self.mesh:setVertices(self.vertMap[2])
 	self.mesh:setTexture(self.shadingTexture)
-	love.graphics.draw(self.mesh, x, y)
+	love.graphics.draw(self.mesh)
 	self.mesh:setVertices(self.vertMap[3])
 	self.mesh:setTexture(self.causticTexture)
 	love.graphics.setShader(self.causticShader)
-	love.graphics.draw(self.mesh, x, y)
+	love.graphics.draw(self.mesh)
 	love.graphics.setShader()
 	
 	if self.debug then
@@ -158,12 +159,14 @@ function PoolEffect:draw(x, y)
 		self.mesh:setVertices(self.vertMap[1])
 		love.graphics.setColor(1, 0, 1)
 		love.graphics.setWireframe(true)
-		love.graphics.draw(self.mesh, x, y)
+		love.graphics.draw(self.mesh)
 		love.graphics.setWireframe(false)
 	end
 	
+	love.graphics.pop()
+	
 	::noshader::
-	UIContainer.draw(self, x, y)
+	UIContainer.render(self, renderGroup)
 end
 
 return PoolEffect

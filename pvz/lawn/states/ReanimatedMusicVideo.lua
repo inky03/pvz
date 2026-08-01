@@ -314,9 +314,14 @@ function ReanimatedMusicVideo:init()
 	
 	self.song = Sound.play('ZombiesOnYourLawn', 0, 1, 'stream', false)
 	
-	self.nightPool = NightPool:new()
-	self.nightPool.size.x = 14 -- well this is cheating
-	self.fog = self:addElement(FogEffect:new(self.nightPool, self.nightPool.size.x))
+	self.poolEffect = self:addElement(DayPool.poolEffect:new())
+	self.poolEffect.transform:setPosition(34 + 220, 278)
+	self.poolEffect.renderGroup = -1
+	self.poolEffect:kill()
+	
+	self._nightPool = NightPool:new() self._nightPool.size.x = 14 -- well this is cheating
+	self.fogEffect = FogEffect:new(self._nightPool, self._nightPool.size.x)
+	self.fogEffect.renderGroup = -1
 	
 	self.discoVert = {{0, 0; 0, 0}; {0, 0; 0, 0}; {0, 0; 0, 0}; {0, 0; 0, 0}}
 	self.discoMesh = love.graphics.newMesh(4, 'strip', 'stream')
@@ -340,6 +345,7 @@ function ReanimatedMusicVideo:init()
 			trace('Credits sequence finished')
 			return
 		end
+		
 		self:newPhase(self.creditsPhase)
 	end)
 	self:newPhase(1)
@@ -357,15 +363,33 @@ end
 function ReanimatedMusicVideo:newPhase(phase)
 	self.credits:assignRenderGroupToPrefix('Background', 2)
 	self.credits:assignRenderGroupToPrefix('attacher__', 3)
+	self.credits:assignRenderGroupToPrefix('SpotFront', 4)
 	self.credits:assignRenderGroupToPrefix('SpotBack', 3)
 	self.credits:assignRenderGroupToPrefix('Words', 4)
 	self.credits:assignRenderGroupToPrefix('Mic', 3)
 	self.credits.animation:add('main', nil, false)
 	self.credits.animation:play('main', true)
 	
-	if self.pool then self.pool:destroy() end
-	self.pool = self:addElement((phase == 2 and NightPool or DayPool).poolEffect:new())
-	self.pool.renderGroup = 2
+	self.poolEffect:kill()
+	self.fogEffect:kill()
+	
+	if phase == 1 then
+		self.credits:attach('Background2', self.poolEffect, 'Background2', nil, false)
+		self.poolEffect:revive()
+	elseif phase == 2 then
+		self.clippedBackgrounds = {
+			{ self.credits:getAnimationLayer('Background2') ; Resources.fetch('IMAGE_BACKGROUND1', 'Image') ; { -300 ; 0 } };
+			{ self.credits:getAnimationLayer('Background3') ; Resources.fetch('IMAGE_BACKGROUND1', 'Image') ; { -100 ; 0 } };
+			{ self.credits:getAnimationLayer('Background4') ; Resources.fetch('IMAGE_BACKGROUND2', 'Image') ; { -300 ; 0 } };
+		}
+	elseif phase == 3 then
+		self.poolEffect:revive()
+		self.clippedBackgrounds = {
+			{ self.credits:getAnimationLayer('Background') ; Resources.fetch('IMAGE_BACKGROUND1', 'Image') ; { -620 ; 60 } };
+			{ self.credits:getAnimationLayer('Background3') ; Resources.fetch('IMAGE_BACKGROUND3', 'Image') ; { -460 ; -40 } ; self.poolEffect };
+			{ self.credits:getAnimationLayer('Background4') ; Resources.fetch('IMAGE_BACKGROUND2', 'Image') ; { -300 ; 0 } };
+		}
+	end
 end
 
 function ReanimatedMusicVideo:jump(time)
@@ -386,11 +410,11 @@ function ReanimatedMusicVideo:update(dt)
 end
 
 function ReanimatedMusicVideo:updateTiming()
-	self.songTime = self.song:tell()
-	self.beat = (self.songTime / (60 / self.bpm))
 	self.creditsFrame = (self.credits.animation.frameFloat + self.creditsOffsets[self.creditsPhase])
 	
-	if self.creditsFrame < self.timing[1].frame then
+	local timingFrame = self.creditsFrame -- todo: brain timing is a bit off (and idk why)
+	
+	if timingFrame < self.timing[1].frame then
 		self.previousTiming = nil
 		self.afterTiming = self.timing[1]
 	else
@@ -398,16 +422,19 @@ function ReanimatedMusicVideo:updateTiming()
 			self.previousTiming = timing
 			self.afterTiming = self.timing[i + 1]
 			
-			if not self.afterTiming or self.afterTiming.frame >= self.creditsFrame then
+			if not self.afterTiming or self.afterTiming.frame >= timingFrame then
 				break
 			end
 		end
 	end
 	
-	self.timingFraction = ((self.previousTiming and self.afterTiming) and (math.remap(self.creditsFrame, self.previousTiming.frame, self.afterTiming.frame, 0, 1)) or 0)
+	self.timingFraction = ((self.previousTiming and self.afterTiming) and (math.remap(timingFrame, self.previousTiming.frame, self.afterTiming.frame, 0, 1)) or 0)
 end
 
 function ReanimatedMusicVideo:updateMovie()
+	self.songTime = math.max(self.song:tell() - 1 / 7, 0)
+	self.beat = (self.songTime / (60 / self.bpm))
+	
 	self.credits.animation:setFrame(math.max(self.credits.animation.frameFloat, self.songTime * self.credits.reanim.fps + 1 - (self.creditsOffsets[self.creditsPhase] or 0)))
 	
 	self:updateTiming()
@@ -422,9 +449,9 @@ function ReanimatedMusicVideo:updateMovie()
 			self.credits:shouldTriggerTimedEvent(frameFactor * 138) or
 			self.credits:shouldTriggerTimedEvent(frameFactor * 140) or
 			self.credits:shouldTriggerTimedEvent(frameFactor * 142) then
-			self:addElement(Particle:new('Credits_Strobe'))
+			self:addElement(Particle:new('Credits_Strobe'), nil, 4)
 		end if self.credits:shouldTriggerTimedEvent(frameFactor * 136.5) then
-			self:addElement(Particle:new('Credits_RaysWipe', gameWidth * .5, gameHeight * .5))
+			self:addElement(Particle:new('Credits_RaysWipe', gameWidth * .5, gameHeight * .5), nil, 4)
 		end if self.credits:shouldTriggerTimedEvent(frameFactor * 331.5) then
 			self.scream = Sound.play('scream')
 		end if self.credits:shouldTriggerTimedEvent(frameFactor * 337) and self.scream then
@@ -435,11 +462,25 @@ function ReanimatedMusicVideo:updateMovie()
 		if self.creditsPhase == 2 then
 			for t = 111.5, 243.5, 4 do
 				if self.credits:shouldTriggerTimedEvent(frameFactor * t) then
-					self:addElement(Particle:new('Credits_Strobe'))
+					self:addElement(Particle:new('Credits_Strobe'), nil, 4)
 				end
 			end
+			if self.credits:shouldTriggerTimedEvent(frameFactor * 188) then
+				local pool, transform = self.credits:attach('Background2', NightPool.poolEffect:new(), 'Background2', 189)
+				transform:concat(ReanimFrame:new(34 + 220, 278))
+				
+				local machine, transform = self.credits:attach('Background2', Image:new(Resources.fetch('IMAGE_REANIM_CREDITS_FOGMACHINE', 'Image')), 'Background2', 189)
+				transform:concat(ReanimFrame:new(600 + 220, 200))
+				
+				local particle, transform = self.credits:attach('Background2', Particle:new('Credits_fog'), 'Background2', 189)
+				particle.renderGroup = 4
+				transform:concat(ReanimFrame:new(856, 230))
+				
+				local fog, transform = self.credits:attach('Background2', self.fogEffect, 'Background2', 189)
+				fog.renderGroup = 4
+			end
 			if self.credits:shouldTriggerTimedEvent(frameFactor * 332) then
-				self:addElement(Particle:new('MelonImpact', 678, 352))
+				self:addElement(Particle:new('MelonImpact', 678, 352), nil, 4)
 			end
 			if self.credits:shouldTriggerTimedEvent(frameFactor * 336) then
 				for _, child in ipairs(self.children) do
@@ -450,28 +491,44 @@ function ReanimatedMusicVideo:updateMovie()
 				end
 			end
 			if self.credits:shouldTriggerTimedEvent(frameFactor * 342) then
-				self:addElement(Particle:new('Credits_Strobe'))
+				self:addElement(Particle:new('Credits_Strobe'), nil, 4)
+			end
+			
+			if self.credits.animation.frameFloat >= 190 and self.credits.animation.frameFloat < 249 then
+				for row = 1, #self.fogEffect.fogAlpha do
+					local fogRow = self.fogEffect.fogAlpha[row]
+					
+					for col = 1, #fogRow do
+						fogRow[col] = (row >= 3 and math.remap(self.credits.animation.frameFloat, 190, 248, 0, 255) or 0)
+					end
+				end
 			end
 		elseif self.creditsPhase == 3 then
 			if self.credits:shouldTriggerTimedEvent(frameFactor * 240) then -- circle fade
-				self.credits:assignRenderGroupToTrack('attacher__Zombie1', 1)
-				self.credits:assignRenderGroupToTrack('attacher__Zombie2', 1)
-				self.credits:assignRenderGroupToTrack('attacher__Zombie3', 1)
+				self.credits:assignRenderGroupToPrefix('attacher__Zombie', 4)
 			end
 			if self.credits:shouldTriggerTimedEvent(frameFactor * 64) then
 				Sound.play('dolphin_appears')
 			end
 			for t = 111, 247, 4 do
 				if self.credits:shouldTriggerTimedEvent(frameFactor * t) then
-					self:addElement(Particle:new('Credits_Strobe'))
+					self:addElement(Particle:new('Credits_Strobe'), nil, 4)
 				end
 			end
 		end
+		
 		if self.credits:shouldTriggerTimedEvent(frameFactor * 120) then
-			self:addElement(Particle:new('Credits_ZombieHeadWipe', gameWidth * .5, gameHeight * .5))
+			self:addElement(Particle:new('Credits_ZombieHeadWipe', gameWidth * .5, gameHeight * .5), nil, 4)
+		end
+		if self.credits:shouldTriggerTimedEvent(frameFactor * 125) then
+			self.poolEffect:kill()
 		end
 		if self.credits.animation.frame < 125 then
-			for _, layer in ipairs(self.credits.animation.current.layers) do
+			local layers = self.credits.animation.current.layers
+			
+			for i = 1, #layers do
+				local layer = layers[i]
+				
 				if layer.font then
 					layer.font = 'FONT_BRIANNETOD32BLACK'
 					layer:updateAttacher()
@@ -479,14 +536,24 @@ function ReanimatedMusicVideo:updateMovie()
 				end
 			end
 		end
-		local undead = self.credits:findAttachment('Credits_WeAreTheUndead')
+		
+		local undead, transform = self.credits:findAttachment('Credits_WeAreTheUndead')
 		if undead then
-			for _, layer in ipairs(undead.animation.current.layers) do
+			local layers = undead.animation.current.layers
+			
+			for i = 1, #layers do
+				local layer = layers[i]
+				
 				if layer.font then
 					layer.font = 'FONT_BRIANNETOD32BLACK'
 					layer:updateAttacher()
 					layer:setColor(0, 0, 0)
 				end
+			end
+			
+			if self.credits.animation.frameFloat >= 112 then
+				local shake = undead:getAnimationLayer('ShakyText')
+				shake:setOffset(random.number(-2, 2), random.number(-2, 2))
 			end
 		end
 	end
@@ -560,126 +627,116 @@ function ReanimatedMusicVideo:updateMovie()
 	self._prevSunflowerFace = self.sunflowerFace
 end
 
-function ReanimatedMusicVideo:draw(x, y)
-	local background1 = self.credits:getAnimationLayer('Background')
-	local background2 = self.credits:getAnimationLayer('Background2')
+function ReanimatedMusicVideo:draw(x, y, transforms, ...)
+	self:drawRenderGroup(1, x, y, transforms, ...)
+	self:drawRenderGroup(2, x, y, transforms, ...)
+	self:drawRenderGroup(3, x, y, transforms, ...)
+	self:drawRenderGroup(4, x, y, transforms, ...)
+end
+
+function ReanimatedMusicVideo:renderChildren(renderGroup)
+	--  i coudl probably turn all this into reanim attachemnts liek i did with the fog but .. im too lazy now ..
 	
-	local drawClippedBackgrounds = (self.creditsPhase >= 2 and self.credits.animation.frameFloat < 126)
-	local drawPool = (self.creditsPhase == 1 or (self.creditsPhase == 2 and self.credits.animation.frameFloat >= 126))
-	local drawInterior = (self.creditsPhase == 1 and math.within(self.credits.animation.frameFloat, 305, 339) and drawPool)
-	local drawDiscoLights = (self.creditsPhase >= 2 and math.within(self.credits.animation.frameFloat, 126, 256))
-	local drawChimney = (self.creditsPhase == 3 and not drawClippedBackgrounds)
-	local drawFog = (self.creditsPhase == 2 and not drawClippedBackgrounds)
+	local drawInterior = (self.creditsPhase == 1 and math.within(self.credits.animation.frameFloat, 305, 339))
 	
-	if drawClippedBackgrounds then
-		local backgrounds
-		local background3 = self.credits:getAnimationLayer('Background3')
-		local background4 = self.credits:getAnimationLayer('Background4')
+	if renderGroup == 2 then
+		local drawClippedBackgrounds = (self.creditsPhase >= 2 and self.credits.animation.frameFloat < 126)
 		
-		local bg1 = Resources.fetch('IMAGE_BACKGROUND1', 'Image')
-		local bg2 = Resources.fetch('IMAGE_BACKGROUND2', 'Image')
-		local bg3 = Resources.fetch('IMAGE_BACKGROUND3', 'Image')
-		
-		if self.creditsPhase == 2 then
-			backgrounds = {
-				{ background2 ; bg1 ; { 0 ; 0 } };
-				{ background3 ; bg1 ; { 0 ; 0 } };
-				{ background4 ; bg2 ; { 0 ; 0 } };
-			}
-		elseif self.creditsPhase == 3 then
-			backgrounds = {
-				{ background1 ; bg1 ; { -620 ; 0 } };
-				{ background3 ; bg3 ; { -460 ; -100 } };
-				{ background4 ; bg2 ; { 0 ; 0 } };
-			}
-		end
-		
-		for _, bg in ipairs(backgrounds) do
-			local transform, image, offset = bg[1], bg[2], bg[3]
-			local transformImage = self.credits.images[transform.image]
-			if transformImage and transform.active then
-				local xx, yy = (transform.x - image:getPixelWidth() * .5 - offset[1]), (transform.y - image:getPixelHeight() * .5 - offset[2])
-				love.graphics.setScissor(rectToWindow(transform.x, transform.y, transformImage:getPixelDimensions())) -- football
-				love.graphics.draw(image, xx, yy)
+		if drawClippedBackgrounds and self.clippedBackgrounds then
+			for _, bg in ipairs(self.clippedBackgrounds) do
+				local transform, image, offset, extra = bg[1], bg[2], bg[3], bg[4]
+				local transformImage = self.credits.images[transform.image]
 				
-				if image == bg3 then
-					self.pool.visible = true
-					self.pool:draw(xx + 34 + 220, yy + 278)
+				if transformImage and transform.active then
+					local pop = Reanimation.applyTransform(transform)
+					
+					local left, top = love.graphics.transformPoint(0, 0)
+					local right, bottom = love.graphics.transformPoint(transformImage:getPixelDimensions())
+					
+					love.graphics.translate(-image:getPixelWidth() * .5 - offset[1], -image:getPixelHeight() * .5 - offset[2])
+					love.graphics.setScissor(left, top, right - left, bottom - top) -- football
+					love.graphics.draw(image)
+					
+					if extra then extra:draw(0, 0) end
+					
+					for i = 1, pop do love.graphics.pop() end
 				end
 			end
 		end
-		love.graphics.setScissor()
-	end
-	
-	self.credits:drawRenderGroup(2, x, y) -- background render group
-	if drawPool then
-		self.pool.visible = background2.active
-		if background2.active then
-			self.pool:setPosition(
-				background2.x + 34 + 220,
-				background2.y + 278
-			)
-			
-			if drawInterior then
-				local doorX = (background2.x - 173 + 220)
-				love.graphics.draw(Resources.fetch('IMAGE_BACKGROUND3_GAMEOVER_INTERIOR_OVERLAY', 'Image'), doorX, background2.y + 234)
-			end
+	elseif renderGroup == 4 then
+		local drawDiscoLights = false
+		if self.creditsPhase == 2 and math.within(self.credits.animation.frameFloat, 124, 250) then
+			drawDiscoLights = true
+		elseif self.creditsPhase == 3 and self.credits.animation.frameFloat >= 217 then
+			drawDiscoLights = true
 		end
-	else
-		self.pool.visible = false
-	end
-	self:drawRenderGroup(2, x, y)
-	
-	self.credits:drawRenderGroup(3, x, y) -- characters render group
-	if background2.active then
-		if drawInterior then
-			local doorX = (background2.x - 172 + 220)
-			local image = self.credits.images[background2.image]
+		
+		local drawChimney = (self.creditsPhase == 3 and self.credits.animation.frameFloat >= 126)
+		
+		local bg = self.credits:getAnimationLayer('Background2')
+		
+		if not bg.active then
+			-- lol
+		elseif drawInterior then
+			local pop = Reanimation.applyTransform(bg)
 			
-			love.graphics.draw(Resources.fetch('IMAGE_BACKGROUND3_GAMEOVER_MASK', 'Image'), doorX, background2.y + 234)
-			love.graphics.setScissor(rectToWindow(0, 0, doorX, image:getPixelHeight()))
-			love.graphics.draw(image, background2.x, background2.y)
-			love.graphics.setScissor()
+			local doorX = (-172 + 220)
+			
+			love.graphics.draw(Resources.fetch('IMAGE_BACKGROUND3_GAMEOVER_MASK', 'Image'), doorX, 234)
+			
+			local bgImage = self.credits.images[bg.image]
+			local right, bottom = love.graphics.transformPoint(doorX + 1, bgImage:getPixelHeight())
+			love.graphics.setScissor(0, 0, math.max(right, 0), math.max(bottom, 0))
+			love.graphics.draw(bgImage)
+			
+			for i = 1, pop do love.graphics.pop() end
 		elseif drawChimney then
-			love.graphics.draw(Resources.fetch('IMAGE_BACKGROUND5_GAMEOVER_MASK', 'Image'), background2.x, background2.y + 81)
+			local pop = Reanimation.applyTransform(bg)
+			
+			love.graphics.draw(Resources.fetch('IMAGE_BACKGROUND5_GAMEOVER_MASK', 'Image'), 0, 81)
+			
+			for i = 1, pop do love.graphics.pop() end
 		end
-	end
-	self:drawRenderGroup(3, x, y)
-	
-	if drawDiscoLights then
-		local bg = (background2.active and background2 or background1)
 		
-		if bg.active then
-			love.graphics.setBlendMode('add')
+		if drawDiscoLights then
+			local bg = bg
 			
-			local discoTime = (self.credits.animation.frameFloat / self.credits.reanim.fps * math.pi * .5)
-			self:drawDisco(200 + bg.x, 450 + bg.y, discoTime)
-			self:drawDisco(600 + bg.x, 450 + bg.y, discoTime)
+			if not bg.active then bg = self.credits:getAnimationLayer('Background') end
 			
-			love.graphics.setBlendMode('alpha')
-		end
-	end
-	
-	self.fog.visible = false
-	if background2.active and drawFog then
-		for row = 1, #self.fog.fogAlpha do
-			local fogRow = self.fog.fogAlpha[row]
-			for col = 1, #fogRow do
-				fogRow[col] = (row >= 3 and math.remap(self.credits.animation.frameFloat, 190, 248, 0, 255) or 0)
+			if bg.active then
+				local pop = Reanimation.applyTransform(bg)
+				
+				love.graphics.setBlendMode('add')
+				
+				local discoTime = (self.credits.animation.frameFloat / self.credits.reanim.fps * math.pi * .5)
+				self:renderDisco(200, 450, discoTime)
+				self:renderDisco(600, 450, discoTime)
+				
+				for i = 1, pop do love.graphics.pop() end
 			end
 		end
-		
-		self.fog.visible = true
-		self.fog:setPosition(background2.x - self.nightPool.tileSize.x * 3, background2.y)
 	end
 	
-	UIContainer.draw(self, x, y)
+	if renderGroup ~= 1 then self.credits:drawRenderGroup(renderGroup, self.credits.x, self.credits.y) end
 	
-	self.credits:drawRenderGroup(4, x, y)
-	self:drawRenderGroup(4, x, y)
+	State.renderChildren(self, renderGroup)
+	
+	if renderGroup == 2 then
+		if drawInterior then
+			local bg = self.credits:getAnimationLayer('Background2')
+			
+			if bg.active then
+				local pop = Reanimation.applyTransform(bg)
+				
+				love.graphics.draw(Resources.fetch('IMAGE_BACKGROUND3_GAMEOVER_INTERIOR_OVERLAY', 'Image'), -173 + 220, 234)
+				
+				for i = 1, pop do love.graphics.pop() end
+			end
+		end
+	end
 end
 
-function ReanimatedMusicVideo:drawDisco(x, y, time)
+function ReanimatedMusicVideo:renderDisco(x, y, time)
 	self.discoVert[1] = { math.cos(time) * 600, math.sin(time) * 200; 0, 0 }
 	self.discoVert[2] = { math.cos(time + math.pi / 2) * 600, math.sin(time + math.pi / 2) * 200; 1, 0 }
 	self.discoVert[3] = { math.cos(time + math.pi / 2 * 3) * 600, math.sin(time + math.pi / 2 * 3) * 200; 0, 1 }
@@ -690,7 +747,9 @@ function ReanimatedMusicVideo:drawDisco(x, y, time)
 	love.graphics.setColor(1, 1, 1, .5)
 	love.graphics.draw(self.discoMesh, x, y)
 	
-	if debugMode or self.debug then
+	if self.debug then
+		local vert = self.discoVert
+		
 		self.discoMesh:setTexture()
 		love.graphics.setColor(1, 0, 1)
 		love.graphics.line(x + vert[1][1], y + vert[1][2], x + vert[2][1], y + vert[2][2])

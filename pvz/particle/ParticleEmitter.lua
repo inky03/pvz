@@ -180,6 +180,7 @@ function ParticleEmitter:spawnParticle(index, spawnCount)
 		particle.x + Particles.evaluateTrack(self.emitter.emitterOffsetX, t, random.number()) - particle.textureCoord.w * .5,
 		particle.y + Particles.evaluateTrack(self.emitter.emitterOffsetY, t, random.number()) - particle.textureCoord.h * .5
 	)
+	particle.renderGroup = self.renderGroup
 	
 	if self.emitter.animated or self.emitter.animationRate then
 		particle.frame = 1
@@ -212,6 +213,13 @@ function ParticleEmitter:evaluateFieldTrack(fieldTrack, var, t)
 end
 function ParticleEmitter:getSystemTrack(systemTrack)
 	return self.emitter[systemTrack]
+end
+
+function ParticleEmitter:getName()
+	return self.system:getName()
+end
+function ParticleEmitter:__tostring()
+	return ('ParticleEmitter(name:%s, x:%d, y:%d, speed:%d, systemAge:%d, systemDuration:%d)'):format(self:getName(), self.x, self.y, self.speed, self.systemAge, self.systemDuration)
 end
 
 return ParticleEmitter

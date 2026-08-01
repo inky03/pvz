@@ -4,17 +4,54 @@ function ReanimAnimationFrame:init(frame)
 	ReanimFrame.init(self, frame)
 	
 	self.renderGroup = 1
+	self.attachmentRenderGroups = {}
 	self.attachments = {}
 	self.attachment = nil
 	self.font = nil
 end
 
-function ReanimAnimationFrame:attach(object, transform)
+function ReanimAnimationFrame:attach(object, transform, update)
+	if not object then
+		trace(('%s: Tried to attach null object'):format(self.layerName))
+		
+		return
+	end
+	
+	local update = update if update == nil then update = true end
+	
 	table.insert(self.attachments, {
 		object = object;
+		update = update;
 		transform = transform;
 	})
+	
+	self._dirtyAttachments = true
+	
+	return object, transform
 end
+function ReanimAnimationFrame:detach(object, destroy)
+	local attachment, i = lambda.find(self.attachments, function(attachment) return attachment.object == object end)
+	
+	if attachment then
+		if destroy ~= false then attachment.object:destroy() end
+		
+		table.remove(self.attachments, i)
+		
+		self._dirtyAttachments = true
+	else
+		trace(('%s: %s is not attached'):format(self.layerName, object))
+	end
+end
+function ReanimAnimationFrame:detachAll(destroy)
+	if destroy ~= false then
+		for i = 1, #self.attachments do
+			self.attachments[i].object:destroy()
+		end
+	end
+	
+	table.clear(self.attachments)
+end
+
 function ReanimAnimationFrame:findAttachment(needle)
 	if not self.active then return end
 	
@@ -37,6 +74,18 @@ function ReanimAnimationFrame:findAttachment(needle)
 	end
 end
 function ReanimAnimationFrame:updateAttacher()
+	if self._dirtyAttachments then
+		table.clear(self.attachmentRenderGroups)
+		
+		for i = 1, #self.attachments do
+			local object = self.attachments[i].object
+			
+			if object and object.renderGroup then self.attachmentRenderGroups[object.renderGroup] = true end
+		end
+		
+		self._dirtyAttachments = false
+	end
+	
 	if self.active then
 		if self.font then
 			if not self.attachment or not self.attachment:instanceOf(Font) then
@@ -76,14 +125,14 @@ function ReanimAnimationFrame:updateAttacher()
 					if animFake then
 						self.attachment.animation:add(anim, anim)
 					end
-					self.attachment.animation:play(anim, animFake)
+					if self.attachment.animation.name ~= anim then
+						self.attachment.animation:play(anim, animFake)
+					end
 				end
 				
 				for _, tag in ipairs(tags) do
-					if tag == 'hold' then
-						self.attachment.animation.current.loop = false
-					elseif tag == 'once' then
-						self.attachment.animation.current.loop = false
+					if tag == 'hold' or tag == 'once' then
+						self.attachment.animation:setLoop(false)
 					else
 						local f = tonumber(tag)
 						if f then self.attachment.animation._cur.fps = f end

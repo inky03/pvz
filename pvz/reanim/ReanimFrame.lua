@@ -93,6 +93,15 @@ function ReanimFrame:__tostring()
 	)
 end
 
+function ReanimFrame:concat(frame, concatColor)
+	self:setShear(self.xShear + frame.xShear, self.yShear + frame.yShear)
+	self:setScale(self.xScale * frame.xScale, self.yScale * frame.yScale)
+	self:setPosition(self.x + frame.x, self.y + frame.y) -- well im lazy
+	
+	if concatColor then self:setColor(self.red * frame.red, self.green * frame.green, self.blue * frame.blue) end
+	
+	return self
+end
 function ReanimFrame:negate()
 	local loveTransform = self:toLoveTransformWithoutOffset()
 	

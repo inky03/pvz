@@ -61,9 +61,9 @@ function Reanim.loadXML(path, kind)
 		local frames = {}
 		local anim = {
 			name = track.name;
-			first = 1;
-			last = -1;
+			keyframes = {};
 		}
+		local currentKeyframe = nil
 		local previousFrame = ReanimFrame:new()
 		previousFrame.layerName = anim.name
 		
@@ -75,16 +75,6 @@ function Reanim.loadXML(path, kind)
 				reanim.images[frame.i] = Reanim.getResource(frame.i)
 			end
 			
-			local active
-			if frame.f then
-				active = (frame.f == 0 and true or false)
-				if frame.f == 0 then
-					anim.first = i
-				elseif frame.f == -1 then
-					anim.last = (i - 1)
-				end
-			end
-			
 			previousFrame.x = (frame.x or previousFrame.x)
 			previousFrame.y = (frame.y or previousFrame.y)
 			previousFrame.image = (frame.i or previousFrame.image)
@@ -93,13 +83,23 @@ function Reanim.loadXML(path, kind)
 			previousFrame.yScale = (frame.sy or previousFrame.yScale)
 			previousFrame.xShear = (frame.ky or previousFrame.xShear)
 			previousFrame.yShear = (frame.kx or previousFrame.yShear) -- its goofy for some reason, so invert X and Y
-			previousFrame.active = (active == nil and previousFrame.active or active or false) -- yup !
+			if frame.f then previousFrame.active = (frame.f >= 0) end
 			previousFrame.text = (frame.text or previousFrame.text)
 			previousFrame.font = (frame.font or previousFrame.font)
 			
+			if previousFrame.active then
+				if not currentKeyframe then
+					currentKeyframe = { first = i ; last = i }
+					table.insert(anim.keyframes, currentKeyframe)
+				end
+			elseif currentKeyframe then
+				currentKeyframe.last = (i - 1)
+				currentKeyframe = nil
+			end
+			
 			table.insert(frames, ReanimFrame:new(previousFrame))
 		end
-		if anim.last < anim.first then anim.last = #track.t end
+		if currentKeyframe then currentKeyframe.last = reanim.length end
 		
 		table.insert(reanim.guides, anim)
 		table.insert(reanim.layers, {
@@ -153,9 +153,9 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 		local frames = {}
 		local anim = {
 			name = trackName;
-			first = 1;
-			last = -1;
+			keyframes = {};
 		}
+		local currentKeyframe = nil
 		local previousFrame = ReanimFrame:new()
 		previousFrame.layerName = anim.name
 		
@@ -166,21 +166,23 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 			f = readByte('f32'); previousFrame.xShear = (f == null and previousFrame.xShear or f)
 			f = readByte('f32'); previousFrame.xScale = (f == null and previousFrame.xScale or f)
 			f = readByte('f32'); previousFrame.yScale = (f == null and previousFrame.yScale or f)
-			f = readByte('f32'); previousFrame.active = (f == null and previousFrame.active or f >= 0); local active = f
+			f = readByte('f32'); if f ~= null then previousFrame.active = (f >= 0) end
 			f = readByte('f32'); previousFrame.alpha = (f == null and previousFrame.alpha or f)
 			bytePos = (bytePos + 12)
 			
-			if active ~= null then
-				if active >= 0 then
-					anim.first = i
-				else
-					anim.last = (i - 1)
+			if previousFrame.active then
+				if not currentKeyframe then
+					currentKeyframe = { first = i ; last = i }
+					table.insert(anim.keyframes, currentKeyframe)
 				end
+			elseif currentKeyframe then
+				currentKeyframe.last = (i - 1)
+				currentKeyframe = nil
 			end
 			
 			table.insert(frames, ReanimFrame:new(previousFrame))
 		end
-		if anim.last < anim.first then anim.last = transforms[i] end
+		if currentKeyframe then currentKeyframe.last = transforms[i] end
 		
 		local lastImg, lastFont, lastText
 		if (anim.name == '_ground') then

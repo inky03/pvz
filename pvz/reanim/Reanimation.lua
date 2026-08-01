@@ -10,7 +10,6 @@ function Reanimation:init(kind, x, y)
 	
 	self.shader = nil
 	self.hiddenLayers = {}
-	self.renderGroup = nil
 	
 	self.animation = AnimationController:new()
 	
@@ -18,21 +17,25 @@ function Reanimation:init(kind, x, y)
 	self.groundVelocity = 0
 	self.groundVelocityMultiplier = 1
 	
-	self.prevFrame = 0
-	self.frameFloat = 0
-	
-	self:setReanim(Cache.reanim(kind))
+	self:setReanim(kind ~= '' and Cache.reanim(kind) or nil)
 end
 
 function Reanimation:setReanim(reanim)
-	if not reanim then return end
+	if not reanim then
+		self.reanim = nil
+		self.images = nil
+		
+		return
+	end
 	
 	self.reanim = reanim
 	self.images = table.copy(self.reanim.images)
 	
 	self.animation:setReanim(reanim)
 	
-	self.hiddenLayers['_ground'] = true
+ 	self.hiddenLayers['_ground'] = true
+ 	
+ 	self:updateAnimation(0)
 end
 
 function Reanimation:replaceImage(image, newResource)
@@ -56,8 +59,14 @@ function Reanimation:replaceImage(image, newResource)
 	
 	trace(('%s: Could not find image ID %s'):format(self.reanim.name, tostr(img)))
 end
-function Reanimation:attach(layer, object, basePose, offset)
-	return self.animation:attach(layer, object, basePose, offset)
+function Reanimation:attach(layer, object, basePose, after, update)
+	return self.animation:attach(layer, object, basePose, after, update)
+end
+function Reanimation:detach(layer, object, destroy)
+	return self.animation:detach(layer, object, destroy)
+end
+function Reanimation:detachAll(layer, destroy)
+	return self.animation:detachAll(layer, destroy)
 end
 function Reanimation:findAttachment(needle)
 	local layers = self.animation.current.layers
@@ -127,7 +136,7 @@ function Reanimation:update(dt)
 end
 
 function Reanimation:updateAnimation(dt)
-	if not self.animation or not self.animation._cur then return end
+	if not self.reanim then return end
 	
 	self.prevFrame = self.animation.frameFloat
 	
@@ -145,28 +154,37 @@ end
 function Reanimation:draw(x, y, transforms, renderGroup)
 	UIContainer.draw(self, x, y, transforms, renderGroup)
 end
-function Reanimation:render(renderGroup)
-	Reanimation.drawReanim(renderGroup, self.animation.current.layers, self.images, self.hiddenLayers, self.shader)
+function Reanimation:renderChildren(renderGroup)
+	if self.reanim then Reanimation.drawReanim(renderGroup, self.animation.current.layers, self.images, self.hiddenLayers, self.shader) end
+	
+	UIContainer.renderChildren(self, renderGroup)
 end
 
 function Reanimation.drawReanim(renderGroup, layers, textures, hiddenLayers, shader)
 	for i = 1, #layers do
 		local layer = layers[i]
 		
-		if not renderGroup or layer.renderGroup == renderGroup and layer.active and not (hiddenLayers and hiddenLayers[layer.layerName]) then
+		if not layer.renderGroup then layer.renderGroup = renderGroup end
+		
+		if (layer.renderGroup == renderGroup or layer.attachmentRenderGroups[renderGroup])
+		and layer.active and not (hiddenLayers and hiddenLayers[layer.layerName]) then
 			Reanimation.drawLimb(renderGroup, layer, textures, shader)
 		end
 	end
 end
 function Reanimation.drawLimb(renderGroup, limb, textures, shader)
-	if not limb.active or limb.alpha <= 0 then return end
+	if limb.alpha <= 0 then return end
 	
 	local pop = Reanimation.applyTransform(limb)
 	local image = textures[limb.image]
 	
 	if shader then love.graphics.setShader(shader) end
 	
-	if image then love.graphics.draw(image) end
+	if limb.renderGroup == renderGroup then
+		if image then love.graphics.draw(image) end
+		
+		if limb.attachment then limb.attachment:draw(0, 0) end
+	end
 	
 	for i = 1, #limb.attachments do
 		local attachment = limb.attachments[i]
@@ -174,15 +192,13 @@ function Reanimation.drawLimb(renderGroup, limb, textures, shader)
 		
 		local pop = Reanimation.applyTransform(attachment.transform)
 		
-		if object.visible then
+		if not object.renderGroup then object.renderGroup = renderGroup end
+		
+		if object.renderGroup == renderGroup and object.visible then
 			object:draw(0, 0)
 		end
 		
 		for _ = 1, pop do love.graphics.pop() end
-	end
-	
-	if limb.attachment then
-		limb.attachment:draw(0, 0)
 	end
 	
 	for _ = 1, pop do love.graphics.pop() end

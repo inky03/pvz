@@ -28,7 +28,7 @@ function love.conf(t)
 	-- project flags
 	flags = {
 		complex = true;
-		debugMode = true;
+		debugMode = false;
 		useFrameskip = false;
 		maxFrameskip = 15;
 		maxFramerate = 120;

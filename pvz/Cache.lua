@@ -112,11 +112,11 @@ function Cache.image(path, folder, eval, maskPath)
 		
 		local fpathPngAlpha = Cache.main(folder .. '_' .. path .. '.png')
 		if love.filesystem.getInfo(fpathPngAlpha) then
-			local png = love.image.newImageData(fpathPngAlpha)
+			local image = love.image.newImageData(fpathPngAlpha)
 			
-			png:mapPixel(function(x, y, r, g, b) return 1, 1, 1, r end)
+			image:mapPixel(function(x, y, r, g, b) return 1, 1, 1, r end)
 			
-			img = love.graphics.newImage(png, {mipmaps = true})
+			img = love.graphics.newImage(image, {mipmaps = true})
 			goto loaded
 		end
 		

@@ -77,7 +77,6 @@ end
 function Lawn:spawnParticle(part, x, y, top)
 	local part = self:addElement(Particle:new(part, x, y))
 	part.drawToTop = (top ~= false)
-	part:update(0)
 	
 	return part
 end
@@ -242,13 +241,15 @@ function Lawn:onPlant(entity, col, row)
 	end
 end
 
-function Lawn:render(renderGroup)
+function Lawn:renderChildren(renderGroup)
 	self:drawBackground()
 	
 	for _, unit in ipairs(self.units) do
 		unit:drawShadow(unit.x, unit.y)
 		unit:drawBack(unit.x, unit.y)
 	end
+	
+	UIContainer.renderChildren(self, renderChildren)
 end
 function Lawn:drawBackground()
 	love.graphics.draw(self.texture, (self.w - self.tW) * .5, (self.h - self.tH) * .5)

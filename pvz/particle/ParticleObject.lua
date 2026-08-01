@@ -37,6 +37,8 @@ function ParticleObject:init(fields, emitter)
 	self.images = self.emitter.system.images
 	
 	UIContainer.init(self, x, y, 1, 1)
+	
+	self:updateFields(0)
 end
 
 function ParticleObject:destroy()
@@ -70,24 +72,25 @@ function ParticleObject:update(dt)
 	end
 	
 	self.timeValue = (self.age / self.duration)
-	self:updateParticle(dt * speedMultiplier)
+	self:updateMovement(dt * speedMultiplier)
 	self:updateFields(dt * speedMultiplier)
 	self.lastTimeValue = self.timeValue
 	
 	UIContainer.update(self, dt)
 end
 
-function ParticleObject:updateParticle(dt)
-	if self.emitter:getSystemTrack('animationRate') then
-		local fps = self:evaluateParticleTrack('animationRate')
-		self.frame = ((self.frame + fps * dt - 1) % self.frames + 1)
-	end
-	
+function ParticleObject:updateMovement(dt)
 	self.x, self.y = (self.x + self.velocity.x * dt * Constants.tickPerSecond), (self.y + self.velocity.y * dt * Constants.tickPerSecond)
 	
 	local spinSpeed = self:evaluateParticleTrack('particleSpinSpeed')
 	local diffSpinAngle = (self:evaluateParticleTrack('particleSpinAngle') - self:evaluateParticleTrack('particleSpinAngle', self.lastTimeValue))
 	self.angle = (self.angle - math.rad(diffSpinAngle) - (math.rad(spinSpeed) - self.angleVelocity) * dt)
+end
+function ParticleObject:updateFields(dt)
+	if self.emitter:getSystemTrack('animationRate') then
+		local fps = self:evaluateParticleTrack('animationRate')
+		self.frame = ((self.frame + fps * dt - 1) % self.frames + 1)
+	end
 	
 	local stretch = self:evaluateParticleTrack('particleStretch')
 	self.scale = self:evaluateParticleTrack('particleScale')
@@ -95,8 +98,7 @@ function ParticleObject:updateParticle(dt)
 	local ang = math.deg(self.angle)
 	self.transform:setShear(ang, ang)
 	self.transform:setScale(self.scale, self.scale * stretch)
-end
-function ParticleObject:updateFields(dt)
+	
 	local pos = self.fields.Friction if pos then
 		if pos.x then self.velocity.x = (self.velocity.x * math.pow(1 - self:evaluateFieldTrack('Friction', 'x'), dt * Constants.tickPerSecond)) end
 		if pos.y then self.velocity.y = (self.velocity.y * math.pow(1 - self:evaluateFieldTrack('Friction', 'y'), dt * Constants.tickPerSecond)) end
@@ -182,20 +184,29 @@ function ParticleObject:reloadTexture()
 	self:setHitbox(-self.w * .5, -self.h * .5, self.w, self.h)
 end
 
-function ParticleObject:render(renderGroup)
+function ParticleObject:drawRenderGroup(renderGroup, x, y, transforms)
 	local oldTexture = self.texture
 	self.texture = (self.images[self.textureKey] or Cache.unknownTexture)
+	
 	if oldTexture ~= self.texture then
 		self:reloadTexture()
 	end
 	
+	UIContainer.drawRenderGroup(self, renderGroup, x, y, transforms)
+end
+
+function ParticleObject:render(renderGroup)
 	love.graphics.push()
 	
 	if Particles.getEmitterFlag(self.emitter.emitter, 'fullscreen') then
+		local ratio = getAspectRatio()
+		
 		love.graphics.origin()
+		love.graphics.translate(gameToWindow(0, 0))
+		love.graphics.scale(gameWidth / self.textureCoord.w * ratio, gameHeight / self.textureCoord.h * ratio)
+	else
+		love.graphics.translate(self.shake.x, self.shake.y)
 	end
-	
-	love.graphics.translate(self.shake.x, self.shake.y)
 	
 	local blend = love.graphics.getBlendMode()
 	local r, g, b, a = love.graphics.getColor()
@@ -219,16 +230,24 @@ function ParticleObject:render(renderGroup)
 	
 	love.graphics.pop()
 end
-function ParticleObject:debugDraw(x, y)
+function ParticleObject:debugRender()
+	UIContainer.debugRender(self)
+	
 	if self.floorY then
-		local _, emitterY = self.emitter:elementToScreen()
-		local floorY = (emitterY + self.emitter.systemCenter.y + self.floorY)
+		local r, g, b, a = love.graphics.getColor()
+		local floorY = (self.emitter.systemCenter.y + self.floorY)
 		
 		love.graphics.setColor(1, 1, 0)
-		love.graphics.line(x, floorY, x + self.w, floorY)
+		love.graphics.line(0, floorY, self.w, floorY)
+		love.graphics.setColor(r, g, b, a)
 	end
-	
-	UIContainer.debugDraw(self, x, y)
+end
+
+function ParticleObject:getName()
+	return self.emitter:getName()
+end
+function ParticleObject:__tostring()
+	return ('ParticleObject(name:%s, x:%d, y:%d, age:%d, duration:%d)'):format(self:getName(), self.x, self.y, self.age, self.duration)
 end
 
 return ParticleObject

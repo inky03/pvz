@@ -25,9 +25,6 @@ function BlazeModifier:die(event)
 	if self.charredReanim then
 		self.parent:setReanim(Cache.reanim(self.charredReanim))
 		self.parent.animation:setLoop(false)
-	else
-		self.blazeTransform = ReanimFrame:new()
-		self.blazeTransform:setColor(0, 0, 0)
 	end
 end
 
@@ -44,14 +41,11 @@ function BlazeModifier:update(event)
 	if self.charredReanim then Reanimation.update(self.parent, event.dt) end
 end
 
-function BlazeModifier:draw(event)
+function BlazeModifier:render(event)
 	if self.charredReanim then return end
 	
-	local transforms = (event.transforms or {})
-	
-	table.insert(transforms, self.blazeTransform)
-	
-	event.transforms = transforms
+	local a = select(4, love.graphics.getColor())
+	love.graphics.setColor(0, 0, 0, a)
 end
 
 function BlazeModifier:drawShadow(event)

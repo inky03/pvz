@@ -268,6 +268,7 @@ function Font:renderToCanvas()
 	love.graphics.push('all')
 	
 	love.graphics.setCanvas(self.canvas)
+	love.graphics.setColor(1, 1, 1)
 	love.graphics.origin()
 	love.graphics.clear()
 	

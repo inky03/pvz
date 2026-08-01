@@ -12,6 +12,7 @@ Constants = require 'pvz.Constants'
 Curve = require 'pvz.animate.Curve'
 
 UIContainer = require 'pvz.hud.UIContainer'
+Image = require 'pvz.hud.Image'
 
 Button = require 'pvz.lawn.hud.Button'
 Dialog = require 'pvz.lawn.hud.Dialog'

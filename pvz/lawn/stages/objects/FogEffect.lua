@@ -56,9 +56,7 @@ function FogEffect:updateFog(dt)
 	end
 end
 
-function FogEffect:draw(x, y)
-	if not self.visible then return end
-	
+function FogEffect:render(renderGroup)
 	for row = 1, #self.fogAlpha do
 		for col = 1, #self.fogAlpha[row] do
 			local xx, yy = (col - 1), (row - 1)
@@ -90,14 +88,11 @@ function FogEffect:draw(x, y)
 				love.graphics.setColor(1, 1, 1, alpha / 255)
 			end
 			
-			love.graphics.draw(fogTexture, self.quad, x + fogX + fogOffset.x, y + fogY + fogOffset.y)
+			love.graphics.draw(fogTexture, self.quad, fogX + fogOffset.x, fogY + fogOffset.y)
 			
 			::continue::
 		end
 	end
-	
-	love.graphics.setColor(1, 1, 1)
-	UIContainer.draw(self, x, y)
 end
 
 return FogEffect

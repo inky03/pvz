@@ -3,7 +3,7 @@ local AnimationController = class('AnimationController')
 Animation = require 'pvz.reanim.animation.Animation'
 
 function AnimationController:init(reanim)
-	if reanim then self:setReanim(reanim) end
+	self.list = {}
 	
 	self.onFinish = Signal:new()
 	self.onFrame = Signal:new()
@@ -19,6 +19,8 @@ function AnimationController:init(reanim)
 	self.crossFadeLength = 0
 	self.crossFade = 0
 	
+	if reanim then self:setReanim(reanim) end
+	
 	self:reset()
 end
 
@@ -26,12 +28,13 @@ function AnimationController:setReanim(reanim)
 	if not reanim then return end
 	
 	self.reanim = reanim
-	self.list = {}
+	
+	table.clear(self.list)
 	
 	self._prev = nil
 	self._cur = self:add('')
-	self._ghost = Animation:new(self, self.reanim)
-	self.current = Animation:new(self, self.reanim)
+	self._ghost = Animation:new(self, reanim)
+	self.current = Animation:new(self, reanim)
 	
 	self:reset()
 end
@@ -100,8 +103,11 @@ function AnimationController:updateFrame(dt)
 		
 		if layer.active then
 			for i = 1, #layer.attachments do
-				layer.attachments[i].object:update(dt)
+				if layer.attachments[i].update then
+					layer.attachments[i].object:update(dt)
+				end
 			end
+			
 			if layer.attachment then layer.attachment:update(dt) end
 		end
 		
@@ -113,7 +119,7 @@ function AnimationController:framesToSeconds(n)
 	return (n / self.reanim.fps / self.speed)
 end
 
-function AnimationController:attach(layer, object, basePose)
+function AnimationController:attach(layer, object, basePose, after, update)
 	local basePose = (basePose or (#self.name > 0 and self.name or nil))
 	local baseLayer = self:getLayer(layer)
 	
@@ -125,7 +131,7 @@ function AnimationController:attach(layer, object, basePose)
 			local reanimTrack = self.reanim:getTrack(basePose)
 			
 			if reanimTrack then
-				base:setTrack(reanimTrack)
+				base:setTrack(reanimTrack, after)
 				base:reset()
 				base:updateFrame(0)
 				
@@ -136,9 +142,33 @@ function AnimationController:attach(layer, object, basePose)
 			end
 		end
 		
-		baseLayer:attach(object, transform)
+		return baseLayer:attach(object, transform, update)
 	else
 		print(('%s: Layer %s doesn\'t exist'):format(self.reanim.name, layer))
+		
+		return nil
+	end
+end
+function AnimationController:detach(layer, object, destroy)
+	local baseLayer = self:getLayer(layer)
+	
+	if baseLayer then
+		baseLayer:detach(object, destroy)
+	else
+		print(('%s: Layer %s doesn\'t exist'):format(self.reanim.name, layer))
+		
+		return nil
+	end
+end
+function AnimationController:detachAll(layer, destroy)
+	local baseLayer = self:getLayer(layer)
+	
+	if baseLayer then
+		baseLayer:detachAll(destroy)
+	else
+		print(('%s: Layer %s doesn\'t exist'):format(self.reanim.name, layer))
+		
+		return nil
 	end
 end
 
