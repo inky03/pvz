@@ -113,6 +113,8 @@ function ReanimAnimationFrame:updateAttacher()
 				end
 				
 				if not self.attachment or not self.attachment:instanceOf(Reanimation) then
+					if self.attachment then self.attachment:destroy() end
+					
 					self.attachment = Reanimation:new(attacherInfo[2])
 				elseif self.attachment.reanim.name ~= attacherInfo[2] then
 					self.attachment:setReanim(Cache.reanim(attacherInfo[2]))

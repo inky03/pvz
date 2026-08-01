@@ -250,7 +250,7 @@ function UIContainer:drawTop(x, y)
 	
 	local children = self.children
 	for i = 1, #children do
-		local child = children[i];
+		local child = children[i]
 		
 		if child.visible and child.drawToTop and child.alive then
 			child:draw(child.x, child.y)
@@ -267,10 +267,11 @@ function UIContainer:renderTop()
 	-- i shoud just deprecate this in favor of rendergroup though probably. .
 end
 function UIContainer:drawWindow()
-	if not self.visible then return end
-	
-	for _, child in ipairs(self.children) do
-		if child.alive then
+	local children = self.children
+	for i = 1, #children do
+		local child = children[i]
+		
+		if child.visible and child.alive then
 			child:drawWindow()
 		end
 	end

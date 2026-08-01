@@ -194,7 +194,7 @@ function Reanimation.drawLimb(renderGroup, limb, textures, shader)
 		
 		if not object.renderGroup then object.renderGroup = renderGroup end
 		
-		if object.renderGroup == renderGroup and object.visible then
+		if object.renderGroup == renderGroup and object.visible and object.alive then
 			object:draw(0, 0)
 		end
 		

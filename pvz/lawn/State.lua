@@ -9,7 +9,6 @@ function State:init(superState)
 	self.activeCutscene = nil
 	
 	self.subState = nil
-	self.updateFun = self.tryUpdate
 	
 	self.onStartCutscene = Signal:new()
 	self.onFinishCutscene = Signal:new()
@@ -87,7 +86,7 @@ function State:startNextCutscene()
 	end
 end
 
-function State:tryUpdate(dt)
+function State:update(dt)
 	if not self.subState and not self.activeCutscene and #self.cutscenes > 0 then
 		self:startNextCutscene()
 	end
@@ -97,7 +96,7 @@ function State:tryUpdate(dt)
 	elseif self.activeCutscene and self.activeCutscene.pauseState then
 		self.activeCutscene:update(dt)
 	else
-		self:update(dt)
+		UIContainer.update(self, dt)
 	end
 end
 
