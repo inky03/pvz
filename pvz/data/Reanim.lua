@@ -213,6 +213,27 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 	return reanim
 end
 
+function Reanim.preload(reanim, _preloaded)
+	if type(reanim) == 'string' then
+		return Reanim.preload(Cache.reanim(reanim), recursive)
+	elseif reanim then
+		local root = (not _preloaded)
+		
+		local _preloaded = (_preloaded or {})
+		_preloaded[reanim.name] = true
+		
+		for _, layer in ipairs(reanim.layers) do
+			for _, frame in ipairs(layer.frames) do
+				frame:preload(_preloaded)
+			end
+		end
+		
+		if root then
+			trace('Preloaded ' .. reanim.name)
+		end
+	end
+end
+
 function Reanim.getResource(key)
 	return (key and (Cache.image(key:gsub('IMAGE_REANIM_', ''), 'reanim', true) or Resources.fetch(key, 'Image')))
 end

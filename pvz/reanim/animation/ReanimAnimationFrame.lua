@@ -100,7 +100,8 @@ function ReanimAnimationFrame:updateAttacher()
 			
 			return
 		elseif self.text then
-			local attacherInfo = self.text:split('__')
+			local attacherInfo = self.text:split('__') -- todo need to unify this with Reanim
+			
 			if #attacherInfo >= 2 then
 				local tags = {}
 				for i, s in ipairs(attacherInfo) do

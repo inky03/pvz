@@ -211,4 +211,26 @@ function ReanimFrame:getColor()
 	return self.red, self.green, self.blue, self.alpha
 end
 
+function ReanimFrame.preload(frame, _preloaded)
+	if frame.font then
+		Resources.fetch(frame.font, 'Font')
+	elseif frame.text then
+		local str = frame.text
+		
+		if _preloaded[str] then return end
+		_preloaded[str] = true
+		
+		local _, idx = str:find('__')
+		
+		if idx then
+			local cut = (str:find('__', idx) or str:find('%[', idx))
+			local attacherName = str:sub(idx + 1, cut and (cut - 1) or nil)
+			
+			if not _preloaded or not _preloaded[attacherName] then
+				Reanim.preload(Cache.reanim(attacherName), _preloaded)
+			end
+		end
+	end
+end
+
 return ReanimFrame
