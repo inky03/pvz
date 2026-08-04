@@ -191,6 +191,8 @@ function table.shuffle(tbl) -- https://gist.github.com/Uradamus/10323382
 	return tbl
 end
 
+table.unpack = unpack
+
 
 -- other
 

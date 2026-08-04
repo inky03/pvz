@@ -71,7 +71,7 @@ function Reanim.loadXML(path, kind)
 			previousFrame.image = 'IMAGE_REANIM_GROUND'
 		end
 		for i, frame in ipairs(track.t) do
-			if frame.i then
+			if frame.i and not reanim.images[frame.i] then
 				reanim.images[frame.i] = Reanim.getResource(frame.i)
 			end
 			
@@ -111,6 +111,7 @@ function Reanim.loadXML(path, kind)
 	return reanim
 end
 
+local I32, F32, STRING = 0, 1, 2
 function Reanim.loadBinary(path, kind) -- .reanim.compiled
 	local reanim = Reanim:new(kind)
 	local bytePos = 0x08
@@ -118,37 +119,36 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 	
 	local data = Cache.decompressFile(path)
 	local function readByte(kind, count)
-		local prevByte = bytePos
-		count = (count or 4)
+		local prevByte, count = bytePos, (count or 4)
 		
 		bytePos = (bytePos + count)
-		local v = data:sub(prevByte + 1, prevByte + count)
+		local v = data:sub(prevByte + 1, bytePos)
 		
-		if kind == 'i32' then v = love.data.unpack('<i4', v)
-		elseif kind == 'f32' then v = love.data.unpack('f', v)
-		elseif kind == 'string' then --[[ well its already a string ]] end
-		
-		return v
+		if kind == I32 then return (love.data.unpack('<i4', v))
+		elseif kind == F32 then return (love.data.unpack('f', v))
+		elseif kind == STRING then return v end
 	end
-	local function throw(expected)
-		error(('Reanimation file format mismatch at 0x%08x (expected 0x%02x)'):format(bytePos, expected))
+	local function assertByte(byte, expected)
+		if byte ~= expected then
+			error(('Reanimation file format mismatch at 0x%08x (expected 0x%02x)'):format(bytePos, byte))
+		end
 	end
 	
-	local tracks = readByte('i32')
-	reanim.fps = readByte('f32')
+	local tracks = readByte(I32)
+	reanim.fps = readByte(F32)
 	
 	bytePos = (bytePos + 4)
-	if readByte('i32') ~= 0x0c then throw(0x0c) end
+	assertByte(readByte(I32), 0x0c)
 	
 	local transforms = {}
 	for i = 1, tracks do
 		bytePos = (bytePos + 8)
-		table.insert(transforms, readByte('i32'))
+		table.insert(transforms, readByte(I32))
 	end
 	
 	for i = 1, tracks do
-		local trackName, f = readByte('string', readByte('i32')), nil
-		if readByte('i32') ~= 0x2c then throw(0x2c) end
+		local trackName, f = readByte(STRING, readByte(I32)), nil
+		assertByte(readByte(I32), 0x2c)
 		
 		local frames = {}
 		local anim = {
@@ -160,14 +160,14 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 		previousFrame.layerName = anim.name
 		
 		for i = 1, transforms[i] do
-			f = readByte('f32'); previousFrame.x = (f == null and previousFrame.x or f)
-			f = readByte('f32'); previousFrame.y = (f == null and previousFrame.y or f)
-			f = readByte('f32'); previousFrame.yShear = (f == null and previousFrame.yShear or f)
-			f = readByte('f32'); previousFrame.xShear = (f == null and previousFrame.xShear or f)
-			f = readByte('f32'); previousFrame.xScale = (f == null and previousFrame.xScale or f)
-			f = readByte('f32'); previousFrame.yScale = (f == null and previousFrame.yScale or f)
-			f = readByte('f32'); if f ~= null then previousFrame.active = (f >= 0) end
-			f = readByte('f32'); previousFrame.alpha = (f == null and previousFrame.alpha or f)
+			f = readByte(F32); previousFrame.x = (f == null and previousFrame.x or f)
+			f = readByte(F32); previousFrame.y = (f == null and previousFrame.y or f)
+			f = readByte(F32); previousFrame.yShear = (f == null and previousFrame.yShear or f)
+			f = readByte(F32); previousFrame.xShear = (f == null and previousFrame.xShear or f)
+			f = readByte(F32); previousFrame.xScale = (f == null and previousFrame.xScale or f)
+			f = readByte(F32); previousFrame.yScale = (f == null and previousFrame.yScale or f)
+			f = readByte(F32); if f ~= null then previousFrame.active = (f >= 0) end
+			f = readByte(F32); previousFrame.alpha = (f == null and previousFrame.alpha or f)
 			bytePos = (bytePos + 12)
 			
 			if previousFrame.active then
@@ -189,13 +189,15 @@ function Reanim.loadBinary(path, kind) -- .reanim.compiled
 			lastImg = 'IMAGE_REANIM_GROUND'
 		end
 		for i = 1, transforms[i] do
-			local f = readByte('string', readByte('i32'))
-			if (#f > 0) then
-				reanim.images[f] = Reanim.getResource(f)
+			local f = readByte(STRING, readByte(I32))
+			if #f > 0 then
+				if not reanim.images[f] then
+					reanim.images[f] = Reanim.getResource(f)
+				end
 				lastImg = f
 			end
-			local f = readByte('string', readByte('i32')) if (#f > 0) then lastFont = f end
-			local f = readByte('string', readByte('i32')) if (#f > 0) then lastText = f end
+			local f = readByte(STRING, readByte(I32)) if #f > 0 then lastFont = f end
+			local f = readByte(STRING, readByte(I32)) if #f > 0 then lastText = f end
 			
 			frames[i].image = lastImg
 			frames[i].font = lastFont

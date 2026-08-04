@@ -315,7 +315,7 @@ function Cache.decompressFile(path)
 			output = function(b) table.insert(bytes, string.char(b)) end;
 		})
 		
-		return table.concat(bytes, '') -- mayb i shoudl just read table data lmao
+		return table.concat(bytes) -- mayb i shoudl just read table data lmao
 	else
 		return file:read()
 	end
