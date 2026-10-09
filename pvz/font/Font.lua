@@ -177,14 +177,14 @@ function Font:recalculate()
 		if layer:hasCharacter(char) then
 			local _, _, w, h = layer:getRect(char)
 			charWidth = (layer:getWidth(char) + self.characterSpacing + layer:getKerning(char, self.text:sub(cursor + 1, cursor + 1)))
-			lineHeight = math.max(lineHeight + layer.lineSpacing + self.lineSpacing, h)
+			lineHeight = (math.max(lineHeight + layer.lineSpacing, h) + self.lineSpacing)
 			fullHeight = math.max(fullHeight, yy + lineHeight)
 		else
 			charWidth = 0
 			
 			if layer:hasCharacter('W') then
 				local _, _, w, h = layer:getRect('W')
-				lineHeight = math.max(lineHeight + layer.lineSpacing + self.lineSpacing, h)
+				lineHeight = (math.max(lineHeight + layer.lineSpacing, h) + self.lineSpacing)
 			end
 		end
 		

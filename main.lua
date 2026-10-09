@@ -3,6 +3,7 @@ hoveringElement = nil
 draggingElement = nil
 username = 'Player'
 accumulator = 0
+total = 0
 
 local gc = 0
 local objs = 0
@@ -163,6 +164,8 @@ function love.run()
 	end
 end
 function love.update(dt)
+	total = (total + dt * Constants.tickPerSecond)
+	
 	game:update(dt)
 	
 	updateHover(windowToGame(love.mouse:getPosition()))
@@ -237,7 +240,7 @@ function drawDebug()
 	
 	local time = love.timer.getTime()
 	table.insert(drawtime, time)
-	while drawtime[1] < time - 1 do
+	while drawtime[1] < (time - 1) do
 		table.remove(drawtime, 1)
 	end
 	local fps = math.min(math.round((fpsCount + #drawtime) / 2), flags.maxFramerate)

@@ -292,6 +292,10 @@ ReanimatedMusicVideo.timing = {
 function ReanimatedMusicVideo:init()
 	State.init(self)
 	
+	Reanim.preload('Credits_Main')
+	Reanim.preload('Credits_Main2')
+	Reanim.preload('Credits_Main3')
+	
 	self.creditsFrame = 0
 	self.creditsPhase = 1
 	self.creditsOffsets = {0, 400, 785}
@@ -378,7 +382,7 @@ function ReanimatedMusicVideo:jump(time)
 end
 
 function ReanimatedMusicVideo:update(dt)
-	State.update(self, dt)
+	if not State.update(self, dt) then return false end
 	
 	self.blinkCountdown = (self.blinkCountdown - dt * Constants.tickPerSecond)
 	if self.blinkCountdown < 0 then
@@ -388,6 +392,8 @@ function ReanimatedMusicVideo:update(dt)
 	end
 	
 	self:updateMovie()
+	
+	return true
 end
 
 function ReanimatedMusicVideo:updateTiming()

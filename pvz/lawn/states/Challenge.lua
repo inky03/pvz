@@ -279,13 +279,15 @@ function Challenge:clearStreetZombies()
 end
 
 function Challenge:update(dt)
-	State.update(self, dt)
+	if not State.update(self, dt) then return false end
 	
 	if self.challengeStarted and not self.challengeCompleted then
 		self:updateSun(dt)
 		self:updateChallenge(dt)
 		self:updateWaveMeter(dt)
 	end
+	
+	return true
 end
 function Challenge:updateSun(dt)
 	if not self.flags.fallingSun then return end

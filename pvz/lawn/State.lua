@@ -97,7 +97,10 @@ function State:update(dt)
 		self.activeCutscene:update(dt)
 	else
 		UIContainer.update(self, dt)
+		return true
 	end
+	
+	return false
 end
 
 return State
