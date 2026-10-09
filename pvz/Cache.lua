@@ -18,7 +18,7 @@ local Cache = {
 		entities = {};
 	};
 	
-	openFile = (major >= 12 and love.filesystem.openFile or love.filesystem.newFile)
+	openFile = (major >= 12 and love.filesystem.openFile or love.filesystem.newFile);
 }
 
 local cached = Cache.cached
@@ -82,8 +82,8 @@ function Cache.image(path, folder, eval, maskPath)
 	local key = path:lower()
 	local folder = (folder and folder .. '/' or '')
 	if not cached.images[key] then
-		local fpathMaskPng, fpathMaskJpg = Cache.main(folder .. (maskPath or path .. '_') .. '.png'), Cache.main(folder .. (maskPath or path .. '_') .. '.jpg')
-		local fpathPng, fpathJpg = Cache.main(folder .. path .. '.png'), Cache.main(folder .. path .. '.jpg')
+		local fpathMaskPng, fpathMaskJpg = Cache.path(folder .. (maskPath or path .. '_') .. '.png'), Cache.path(folder .. (maskPath or path .. '_') .. '.jpg')
+		local fpathPng, fpathJpg = Cache.path(folder .. path .. '.png'), Cache.path(folder .. path .. '.jpg')
 		local fpath = (
 			(love.filesystem.getInfo(fpathPng) and fpathPng) or
 			(love.filesystem.getInfo(fpathJpg) and fpathJpg)
@@ -110,7 +110,7 @@ function Cache.image(path, folder, eval, maskPath)
 			end
 		end
 		
-		local fpathPngAlpha = Cache.main(folder .. '_' .. path .. '.png')
+		local fpathPngAlpha = Cache.path(folder .. '_' .. path .. '.png')
 		if love.filesystem.getInfo(fpathPngAlpha) then
 			local image = love.image.newImageData(fpathPngAlpha)
 			
@@ -120,7 +120,7 @@ function Cache.image(path, folder, eval, maskPath)
 			goto loaded
 		end
 		
-		local fpathGifAlpha = Cache.main(folder .. '_' .. path .. '.gif')
+		local fpathGifAlpha = Cache.path(folder .. '_' .. path .. '.gif')
 		if love.filesystem.getInfo(fpathGifAlpha) then
 			local gif = Cache.loadGifFile(fpathGifAlpha, 1).imgs[3]
 			
@@ -148,7 +148,7 @@ end
 function Cache.sound(snd, eval, kind)
 	local key = snd:lower()
 	if not cached.sounds[key] then
-		local fpathOgg = Cache.main('sounds/' .. snd .. '.ogg')
+		local fpathOgg = Cache.path('sounds/' .. snd .. '.ogg')
 		local fpath = (
 			(love.filesystem.getInfo(fpathOgg) and fpathOgg)
 		)
@@ -172,8 +172,8 @@ function Cache.reanim(kind, folder)
 	local key = kind:lower()
 	if not cached.reanim[key] then
 		local path = (folder and (folder .. '/' .. kind) or ('compiled/reanim/' .. kind))
-		local fpathCompiled = Cache.main(path .. '.reanim.compiled')
-		local fpath = Cache.main(path .. '.reanim')
+		local fpathCompiled = Cache.path(path .. '.reanim.compiled')
+		local fpath = Cache.path(path .. '.reanim')
 		local format = ''
 		
 		if love.filesystem.getInfo(fpath) then
@@ -201,8 +201,8 @@ function Cache.particle(kind, folder)
 	local key = kind:lower()
 	if not cached.particles[key] then
 		local path = (folder and (folder .. '/' .. kind) or ('compiled/particles/' .. kind))
-		local fpathCompiled = Cache.main(path .. '.xml.compiled')
-		local fpath = Cache.main(path .. '.xml')
+		local fpathCompiled = Cache.path(path .. '.xml.compiled')
+		local fpath = Cache.path(path .. '.xml')
 		local format = ''
 		
 		if love.filesystem.getInfo(fpath) then
@@ -226,7 +226,7 @@ function Cache.font(name, folder, eval)
 	
 	local key = name:lower()
 	if not cached.font[key] then
-		local folder = Cache.main(folder and folder .. '/' or 'data/')
+		local folder = Cache.path(folder and folder .. '/' or 'data/')
 		local fpath = (folder .. name .. '.txt')
 		
 		if love.filesystem.getInfo(fpath) then
@@ -246,7 +246,7 @@ function Cache.shader(name)
 	if name == nil then return nil end
 	
 	local key = name:lower()
-	local fpathFrag, fpathVert = ('resources/love/shaders/' .. name .. '.frag'), ('resources/love/shaders/' .. name .. '.vert')
+	local fpathFrag, fpathVert = Cache.path('shaders/' .. name .. '.frag'), Cache.path('shaders/' .. name .. '.vert')
 	local frag, vert =
 		(love.filesystem.getInfo(fpathFrag) and love.filesystem.read(fpathFrag)),
 		(love.filesystem.getInfo(fpathVert) and love.filesystem.read(fpathVert))
@@ -289,6 +289,18 @@ function Cache.resources(path)
 end
 function Cache.main(path)
 	return Cache.resources('main/' .. path)
+end
+function Cache.love(path)
+	return Cache.resources('love/' .. path)
+end
+function Cache.path(path)
+	local l = Cache.love(path)
+	
+	if love.filesystem.getInfo(l) then
+		return l
+	else
+		return Cache.main(path)
+	end
 end
 function Cache.plants(path)
 	return ('pvz.lawn.plants.' .. path)
