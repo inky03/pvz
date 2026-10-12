@@ -12,6 +12,7 @@ function Font:init(kind, size, x, y, w, h, extra)
 	self.layerTransform = {}
 	self.mainLayer = ''
 	
+	self.renderPixelPerfect = true
 	self.canClick = false
 	self.extra = extra
 	self.kind = kind

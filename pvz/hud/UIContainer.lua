@@ -14,7 +14,7 @@ function UIContainer:init(x, y, w, h)
 	self.alive = true
 	self.renderGroup = nil
 	self.destroyed = false
-	self.renderPixelPerfect = true
+	self.renderPixelPerfect = false
 	
 	self.hovering = false
 	self.dragging = false
