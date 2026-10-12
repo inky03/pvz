@@ -79,6 +79,9 @@ end
 function Animation:getLayer(find)
 	if type(find) ~= 'string' then return nil end
 	
+	local layer = lambda.find(self.layers, function(layer) return (layer.layerName == find) end)
+	if layer then return layer end
+	
 	local find = find:gsub('anim_', '')
 	
 	return lambda.find(self.layers, function(layer) return (layer.layerName:gsub('anim_', '') == find) end)
@@ -113,6 +116,12 @@ function Animation:setFrame(index, next, lerp) -- set frame to index in animatio
 	if self.frame < self.length then
 		self.finished = false
 	end
+end
+function Animation:setTime(perc) -- set frame from percent(0 to 1) in animation
+	self:setFrame(perc * self.length)
+end
+function Animation:setFrameRate(fps)
+	self.speed = (fps / self.reanim.fps / self.controller.speed)
 end
 
 function Animation:setTrack(track, after)

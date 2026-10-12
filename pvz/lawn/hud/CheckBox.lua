@@ -47,11 +47,10 @@ function CheckBox:mouseReleasedAnywhere(mouseX, mouseY, button, isTouch, presses
 	end
 end
 
-function CheckBox:draw(x, y)
+function CheckBox:render(renderGroup)
 	local o = (self.pushed and 1 or 0)
-	love.graphics.draw(self.checked and self.checkedTexture or self.uncheckedTexture, x + self.w - self.uncheckedTexture:getPixelWidth() + o, y + o)
 	
-	UIContainer.draw(self, x, y)
+	love.graphics.draw(self.checked and self.checkedTexture or self.uncheckedTexture, self.w - self.uncheckedTexture:getPixelWidth() + o, o)
 end
 
 return CheckBox

@@ -2,6 +2,7 @@ local Button = UIContainer:extend('Button')
 
 Button.slice = true
 Button.useHand = true
+Button.hoverSound = nil
 Button.clickSound = 'buttonclick'
 Button.fontName = 'DwarvenTodcraft'
 Button.fontSize = 18
@@ -23,6 +24,7 @@ Button.textureNames = {
 Button.buttonOffsets = {
 	down = {x = 1; y = 0};
 }
+Button.folder = 'images'
 Button.defaultOffsets = {x = 0; y = 0}
 
 function Button:init(x, y, text, fun, w)
@@ -56,14 +58,14 @@ end
 function Button:create()
 	if self.slice then
 		for _, tex in ipairs({ 'left' ; 'middle' ; 'right' }) do
-			self.textures.hovering[tex] = Cache.image(self.textureNames.hovering .. '_' .. tex, 'images')
-			self.textures.normal[tex] = Cache.image(self.textureNames.normal .. '_' .. tex, 'images')
-			self.textures.down[tex] = Cache.image(self.textureNames.down .. '_' .. tex, 'images')
+			self.textures.hovering[tex] = Cache.image(self.textureNames.hovering .. '_' .. tex, self.folder)
+			self.textures.normal[tex] = Cache.image(self.textureNames.normal .. '_' .. tex, self.folder)
+			self.textures.down[tex] = Cache.image(self.textureNames.down .. '_' .. tex, self.folder)
 		end
 	else
-		self.textures.hovering.left = Cache.image(self.textureNames.hovering, 'images')
-		self.textures.normal.left = Cache.image(self.textureNames.normal, 'images')
-		self.textures.down.left = Cache.image(self.textureNames.down, 'images')
+		self.textures.hovering.left = Cache.image(self.textureNames.hovering, self.folder)
+		self.textures.normal.left = Cache.image(self.textureNames.normal, self.folder)
+		self.textures.down.left = Cache.image(self.textureNames.down, self.folder)
 	end
 end
 
@@ -77,23 +79,27 @@ function Button:mouseReleasedAnywhere(mouseX, mouseY, button, isTouch, presses)
 	
 	if button == 1 then
 		if self.hovering and self.pushed then
-			Sound.play(self.clickSound)
+			if self.clickSound then Sound.play(self.clickSound) end
 			self.onPress:dispatch(self)
 		end
 		self.pushed = false
 	end
+end
+function Button:mouseEntered()
+	if self.hoverSound then Sound.play(self.hoverSound) end
+	UIContainer.mouseEntered(self)
 end
 
 function Button:getState()
 	return (self.hovering and (self.pushed and 'down' or 'hovering') or 'normal')
 end
 
-function Button:draw(x, y)
+function Button:render(renderGroup)
 	local textures = self.textures[self:getState()]
 	local fontPos = (self.fontOffsets[self:getState()] or self.defaultOffsets)
 	local buttonPos = (self.buttonOffsets[self:getState()] or self.defaultOffsets)
 	
-	love.graphics.draw(textures.left, x + buttonPos.x, y + buttonPos.y)
+	love.graphics.draw(textures.left, buttonPos.x, buttonPos.y)
 	
 	if self.slice then
 		textures.middle:setWrap('repeat', 'clamp')
@@ -101,15 +107,14 @@ function Button:draw(x, y)
 		local middleWidth = (self.w - textures.left:getPixelWidth() - textures.right:getPixelWidth())
 		if middleWidth > 0 then
 			self.quad:setViewport(0, 0, middleWidth, textures.middle:getPixelHeight(), textures.middle:getPixelDimensions())
-			love.graphics.draw(textures.middle, self.quad, x + textures.left:getPixelWidth() + buttonPos.x, y + buttonPos.y)
+			love.graphics.draw(textures.middle, self.quad, textures.left:getPixelWidth() + buttonPos.x, buttonPos.y)
 		end
 		
-		love.graphics.draw(textures.right, x + self.w - textures.right:getPixelWidth() + buttonPos.x, y + buttonPos.y)
+		love.graphics.draw(textures.right, self.w - textures.right:getPixelWidth() + buttonPos.x, buttonPos.y)
 	end
 	
 	self.font:setPosition(fontPos.x + buttonPos.x, fontPos.y + buttonPos.y)
 	self.font:setExtra(self.fontExtra[self:getState()])
-	UIContainer.draw(self, x, y)
 end
 
 return Button

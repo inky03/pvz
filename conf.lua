@@ -5,7 +5,7 @@ function love.conf(t)
 	t.release = false
 	t.console = true
 	
-	t.modules.physics = false
+	t.modules.physics = true
 	t.modules.thread = false
 	t.modules.video = false
 	t.modules.event = true

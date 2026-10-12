@@ -26,6 +26,8 @@ function UIContainer:init(x, y, w, h)
 	self.transform = ReanimFrame:new()
 	self.transforms = {self.transform}
 	
+	self.usePolygonShape = false
+	
 	self:setDimensions(w, h)
 	self:setPosition(x, y)
 	self:setHitbox()
@@ -126,12 +128,32 @@ function UIContainer:setHitbox(x, y, w, h)
 	self.hitbox.w = (w or self.w)
 	self.hitbox.h = (h or self.h)
 end
+function UIContainer:setPolygonShape(...)
+	local poly = {...}
+	
+	if #poly >= 8 then
+		self.polygonShape = love.physics.newPolygonShape(table.unpack(poly))
+		self.usePolygonShape = true
+	else
+		self.usePolygonShape = false
+	end
+end
 function UIContainer:center(inX, inY, round)
 	if inX ~= false then self.x = ((self.parent.w - self.w) * .5) end
 	if inY ~= false then self.y = ((self.parent.h - self.h) * .5) end
 	if round ~= false then self.x, self.y = math.floor(self.x), math.floor(self.y) end
 end
 
+function UIContainer:pointWithinHitbox(x, y)
+	local ww, hh = self:getHitboxDimensions()
+	local xx, yy = self:screenToElement(x, y)
+	
+	if self.usePolygonShape then
+		return self.polygonShape:testPoint(0, 0, 0, xx, yy)
+	else
+		return (math.within(xx, self.hitbox.x, self.hitbox.x + ww) and math.within(yy, self.hitbox.y, self.hitbox.y + hh))
+	end
+end
 function UIContainer:getHoveringElement(mouseX, mouseY)
 	if not self.alive then return nil end
 	
@@ -146,10 +168,7 @@ function UIContainer:getHoveringElement(mouseX, mouseY)
 	
 	if not self.canClick then return nil end
 	
-	local ww, hh = self:getHitboxDimensions()
-	local xx, yy = self:screenToElement(mouseX, mouseY)
-	
-	return ((math.within(xx, self.hitbox.x, self.hitbox.x + ww) and math.within(yy, self.hitbox.y, self.hitbox.y + hh)) and self or nil)
+	return (self:pointWithinHitbox(mouseX, mouseY) and self or nil)
 end
 
 function UIContainer:mouseGrabbed(mouseX, mouseY, button, isTouch, presses) end
@@ -286,10 +305,19 @@ function UIContainer:debugRender(renderGroup)
 	love.graphics.setColor(0, 0, 1, UIContainer.debugBoxFillAlpha)
 	love.graphics.rectangle('fill', 1, 1, self.w - 1, self.h - 1)
 	
-	love.graphics.setColor(1, 0, 0)
-	love.graphics.rectangle('line', 1 + self.hitbox.x, 1 + self.hitbox.y, self.hitbox.w - 1, self.hitbox.h - 1)
-	love.graphics.setColor(1, 0, 0, UIContainer.debugBoxFillAlpha)
-	love.graphics.rectangle('fill', 1 + self.hitbox.x, 1 + self.hitbox.y, self.hitbox.w - 1, self.hitbox.h - 1)
+	if self.usePolygonShape then
+		local vert = {self.polygonShape:getPoints()}
+		
+		love.graphics.setColor(1, 0, 0)
+		love.graphics.polygon('line', vert)
+		love.graphics.setColor(1, 0, 0, UIContainer.debugBoxFillAlpha)
+		love.graphics.polygon('fill', vert)
+	else
+		love.graphics.setColor(1, 0, 0)
+		love.graphics.rectangle('line', 1 + self.hitbox.x, 1 + self.hitbox.y, self.hitbox.w - 1, self.hitbox.h - 1)
+		love.graphics.setColor(1, 0, 0, UIContainer.debugBoxFillAlpha)
+		love.graphics.rectangle('fill', 1 + self.hitbox.x, 1 + self.hitbox.y, self.hitbox.w - 1, self.hitbox.h - 1)
+	end
 	
 	love.graphics.setColor(r, g, b, a)
 end

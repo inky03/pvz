@@ -10,6 +10,7 @@ Dialog.columnNames = { 'left' ; 'middle' ; 'right' }
 Dialog.rowNames = { 'top' ; 'center' ; 'bottom' }
 
 function Dialog:init(x, y, w, h)
+	self.renderPixelPerfect = true
 	self.textures = {}
 	self:create()
 	
@@ -64,8 +65,7 @@ end
 function Dialog:getSliceTexture(col, row)
 	return self.textures[self:getSliceName(col, row)]
 end
-function Dialog:draw(x, y)
-	local x, y = math.round(x), math.round(y)
+function Dialog:render(renderGroup)
 	local textures = self.textures
 	local header = textures.header
 	
@@ -96,9 +96,9 @@ function Dialog:draw(x, y)
 			if w or h then
 				texture:setWrap(col == 2 and 'repeat' or 'clamp', row == 2 and 'repeat' or 'clamp')
 				self.quad:setViewport(0, 0, w or texture:getPixelWidth(), h or texture:getPixelHeight(), texture:getPixelDimensions())
-				love.graphics.draw(texture, self.quad, x + xx, y + yy)
+				love.graphics.draw(texture, self.quad, xx, yy)
 			else
-				love.graphics.draw(texture, x + xx, y + yy)
+				love.graphics.draw(texture, xx, yy)
 			end
 			
 			if not self.slice then
@@ -110,10 +110,8 @@ function Dialog:draw(x, y)
 	::noslice::
 	
 	if textures.header then
-		love.graphics.draw(header, x + math.round((self.w - header:getPixelWidth()) * .5), y)
+		love.graphics.draw(header, math.round((self.w - header:getPixelWidth()) * .5), 0)
 	end
-	
-	UIContainer.draw(self, x, y)
 end
 
 return Dialog

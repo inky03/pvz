@@ -67,11 +67,9 @@ function Slider:mouseDropped()
 	Sound.play(self.dropSound)
 end
 
-function Slider:draw(x, y)
-	love.graphics.draw(self.slotTexture, x + self.w - self.slotTexture:getPixelWidth(), y)
-	love.graphics.draw(self.knobTexture, x + self.hitbox.x, y + self.hitbox.y + (self.dragging and 1 or 0))
-	
-	UIContainer.draw(self, x, y)
+function Slider:render(renderGroup)
+	love.graphics.draw(self.slotTexture, self.w - self.slotTexture:getPixelWidth(), 0)
+	love.graphics.draw(self.knobTexture, self.hitbox.x, self.hitbox.y + (self.dragging and 1 or 0))
 end
 
 return Slider

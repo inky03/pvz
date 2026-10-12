@@ -47,6 +47,9 @@ function AnimationController:reset()
 	self.speed = 1
 end
 
+function AnimationController:setFrameRate(fps)
+	self.speed = (fps / self.reanim.fps)
+end
 function AnimationController:update(dt, noDiff)
 	if self.paused or not self.reanim then return end
 	
@@ -248,6 +251,10 @@ function AnimationController:setLoop(loop)
 end
 function AnimationController:setFrame(index, next, lerp)
 	self._cur:setFrame(index, next, lerp)
+	self:update(0)
+end
+function AnimationController:setTime(perc)
+	self._cur:setTime(perc)
 	self:update(0)
 end
 function AnimationController:getFrame()

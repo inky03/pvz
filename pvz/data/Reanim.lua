@@ -38,6 +38,9 @@ end
 function Reanim:getLayer(find)
 	if type(find) ~= 'string' then return nil end
 	
+	local layer = lambda.find(self.layers, function(layer) return (layer.name == find) end)
+	if layer then return layer end
+	
 	find = find:gsub('anim_', '')
 	
 	return lambda.find(self.layers, function(layer) return (layer.name:gsub('anim_', '') == find) end)
