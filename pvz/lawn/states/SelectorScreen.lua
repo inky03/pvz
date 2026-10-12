@@ -78,8 +78,8 @@ function SelectorScreen:init()
 	end
 end
 
-function SelectorScreen:update(elapsed)
-	if not State.update(self, elapsed) then return false end
+function SelectorScreen:update(dt)
+	if not State.update(self, dt) then return false end
 	
 	for i, button in ipairs({ 'Adventure' ; 'Survival'; 'Challenges' ; 'ZenGarden' }) do
 		local button = self.selector:getAnimationLayer('SelectorScreen_' .. button .. '_button')
