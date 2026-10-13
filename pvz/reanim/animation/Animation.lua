@@ -20,6 +20,7 @@ function Animation:init(controller, reanim, name)
 	self.paused = false
 	self.finished = false
 	self.justFinished = false
+	self.truncateActive = true
 	self.parallel = false
 	self.fps = reanim.fps
 	

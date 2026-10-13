@@ -59,14 +59,14 @@ function ReanimFrame:copy(frame)
 	return self
 end
 
-function ReanimFrame:lerp(a, b, t)
+function ReanimFrame:lerp(a, b, t, truncateActive)
 	if t == 0 then return self:copy(a)
 	elseif t == 1 then return self:copy(b) end
 	
 	self.font = a.font
 	self.text = a.text
 	self.image = a.image
-	self.active = (a.active and b.active)
+	self.active = (truncateActive ~= false and b.active or a.active)
 	for i = 1, #self.lerpFields do
 		local f = self.lerpFields[i]
 		self[f] = math.lerp(a[f], b[f], t)

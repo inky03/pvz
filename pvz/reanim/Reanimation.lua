@@ -103,6 +103,17 @@ function Reanimation:toggleLayer(layer, on)
 		trace(('%s: Could not find layer %s'):format(self.reanim.name, layer))
 	end
 end
+function Reanimation:showOnlyLayer(layer)
+	local foundLayer = self:getLayer(layer)
+	
+	if foundLayer then
+		for _, l in ipairs(self.animation.current.layers) do
+			self.hiddenLayers[l.layerName] = (l.layerName ~= foundLayer.name)
+		end
+	else
+		trace(('%s: Could not find layer %s'):format(self.reanim.name, layer))
+	end
+end
 function Reanimation:assignRenderGroupToTrack(layer, renderGroup)
 	local foundLayer = self:getAnimationLayer(layer)
 	

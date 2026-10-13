@@ -53,6 +53,8 @@ end
 function AnimationController:update(dt, noDiff)
 	if self.paused or not self.reanim then return end
 	
+	self.truncateActive = self._cur.truncateActive
+	
 	for i = 1, #self.list do
 		local anim = self.list[i]
 		if anim == self._cur or anim == self._prev or anim.parallel then
@@ -101,7 +103,8 @@ function AnimationController:updateFrame(dt)
 		local layer = self.current.layers[i]:lerp(
 			self._ghost.layers[i],
 			self._cur.layers[i],
-			self.crossFade
+			self.crossFade,
+			self.truncateActive
 		)
 		
 		if layer.active then
@@ -209,7 +212,7 @@ function AnimationController:add(name, track, loop)
 	table.insert(self.list, anim)
 	return anim
 end
-function AnimationController:play(name, force, crossFade, reset)
+function AnimationController:play(name, force, crossFade, reset, frameRate)
 	if not name then
 		self:play('')
 	elseif force or self.current.name ~= name or self.finished then
@@ -234,6 +237,7 @@ function AnimationController:play(name, force, crossFade, reset)
 			self.crossFade = 0
 			self.crossFadeLength = (crossFade or (force and 0 or self:framesToSeconds(3)))
 			
+			if frameRate then anim:setFrameRate(frameRate) end
 			if reset then anim:reset() end
 			
 			self:update(0)

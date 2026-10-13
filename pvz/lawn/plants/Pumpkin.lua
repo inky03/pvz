@@ -1,5 +1,7 @@
 local Pumpkin = Plant:extend('Pumpkin')
 
+local DamageVisualModifier = Cache.module(Cache.modifiers('DamageVisualModifier'))
+
 Pumpkin.isShield = true
 
 Pumpkin.defaultBlinkAnim = ''

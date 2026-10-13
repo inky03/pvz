@@ -4,7 +4,6 @@ local Pea = Cache.module(Cache.projectiles('Pea'))
 PeaShooter.reanimName = 'PeaShooterSingle'
 PeaShooter.previewAnimation = 'full_idle'
 PeaShooter.stemLayer = 'stem'
-PeaShooter.maxHp = 300
 PeaShooter.id = 0
 
 PeaShooter.projectile = Pea
